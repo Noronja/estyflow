@@ -71,6 +71,20 @@ input,select{font-family:inherit;color:var(--text-primary);background:var(--bg-e
   border:1px solid var(--border-muted);border-radius:var(--radius-md);padding:8px 12px;font-size:13px}
 input:focus,select:focus{outline:none;border-color:var(--teal)}
 
+     // ──────────────────────────────────────────────────
+      // 🔴 COLE AQUI SUA CONFIGURAÇÃO DO FIREBASE 🔴
+      // ──────────────────────────────────────────────────
+      const firebaseConfig = {
+        apiKey:            "AIzaSyA6aoGd1Yxj0Yn9JjzAABwQGOTkj7xEAVQ",
+        authDomain:        "estudoflow-409d4.firebaseapp.com",
+        databaseURL:       "https://estudoflow-409d4-default-rtdb.firebaseio.com",
+        projectId:         "estudoflow-409d4",
+        storageBucket:      "estudoflow-409d4.firebasestorage.app",
+        messagingSenderId: "693665289108",
+        appId:              "1:693665289108:web:bc9b93f6018690a405b581"
+      };
+      // ──────────────────────────────────────────────────
+   
 /* ═══ LAYOUT ═══ */
 .app{display:grid;grid-template-columns:var(--sidebar-w) 1fr var(--dash-w);
   grid-template-rows:var(--header-h) 1fr;grid-template-areas:"hd hd hd""sb main dash";
