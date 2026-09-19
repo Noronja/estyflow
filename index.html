@@ -2154,8 +2154,13 @@ async function driveSync(silent){
   const m=root.match(/folders\/([A-Za-z0-9_-]+)/);if(m)root=m[1];
   localStorage.setItem('drive_root',root);
   const st=$('drive-status');
-  if(st)st.innerHTML='🔄 <b>Escanando…</b>';
+    if(st)st.innerHTML='🔄 <b>Escanando…</b> <span id="drv-prog">0 pastas</span> verificadas';
   toast('🔄 Escaneando o Drive…');
+  DRV_STATS={folders:0,scOk:0,scFail:0,skipped:[]};
+  const progInt=setInterval(()=>{
+    const p=document.getElementById('drv-prog');
+    if(p)p.textContent=DRV_STATS.folders+' pastas';
+  },500);
   console.log('[Drive] Iniciando scan da pasta:',root);
   try{
     const items=await scanDrive(root,1,[]);
