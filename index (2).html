@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>MedPlan — Planejador de Residencia</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   DESIGN SYSTEM
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  --bg-void:#0b0d11;--bg-base:#11141a;--bg-surface:#181c25;--bg-elevated:#1f2532;
+  --bg-overlay:#252d3d;--bg-hover:#2a3448;--bg-active:#303c54;
+  --border-subtle:rgba(255,255,255,.05);--border-muted:rgba(255,255,255,.09);
+  --border-default:rgba(255,255,255,.14);--border-strong:rgba(255,255,255,.22);
+  --text-primary:#e8ecf2;--text-secondary:#8a96a8;--text-muted:#536074;
+  --text-disabled:#3a4455;--text-inverse:#0b0d11;
+  --teal:#00c8a8;--teal-dim:rgba(0,200,168,.1);--teal-glow:rgba(0,200,168,.25);
+  --teal-border:rgba(0,200,168,.35);--teal-text:#00e8c4;
+  --amber:#f5a623;--amber-dim:rgba(245,166,35,.1);--amber-border:rgba(245,166,35,.35);
+  --rose:#e85b7a;--rose-dim:rgba(232,91,122,.1);--rose-border:rgba(232,91,122,.35);
+  --violet:#7c6af0;--violet-dim:rgba(124,106,240,.1);--violet-border:rgba(124,106,240,.35);
+  --green:#34c97a;--green-dim:rgba(52,201,122,.1);--green-border:rgba(52,201,122,.3);
+  --font-ui:'Inter',system-ui,sans-serif;--font-mono:'JetBrains Mono',monospace;
+  --radius-sm:4px;--radius-md:8px;--radius-lg:12px;--radius-xl:16px;--radius-full:9999px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.4);--shadow-md:0 4px 12px rgba(0,0,0,.45);
+  --shadow-lg:0 12px 32px rgba(0,0,0,.55);
+  --header-h:52px;--sidebar-w:260px;--dash-w:310px;--touch:44px;
+}
+/* ═══ LIGHT MODE ═══ */
+[data-theme="light"]{
+  --bg-void:#f0f2f5;--bg-base:#ffffff;--bg-surface:#f7f8fa;--bg-elevated:#ffffff;
+  --bg-overlay:#f0f2f5;--bg-hover:#e8ebf0;--bg-active:#dde1e9;
+  --border-subtle:rgba(0,0,0,.04);--border-muted:rgba(0,0,0,.08);
+  --border-default:rgba(0,0,0,.13);--border-strong:rgba(0,0,0,.22);
+  --text-primary:#111827;--text-secondary:#4b5563;--text-muted:#9ca3af;
+  --text-disabled:#d1d5db;--text-inverse:#ffffff;
+  --teal:#00a389;--teal-dim:rgba(0,163,137,.08);--teal-glow:rgba(0,163,137,.18);
+  --teal-border:rgba(0,163,137,.3);--teal-text:#007d69;
+  --amber:#d4880a;--amber-dim:rgba(212,136,10,.08);--amber-border:rgba(212,136,10,.3);
+  --rose:#d63f62;--rose-dim:rgba(214,63,98,.08);--rose-border:rgba(214,63,98,.3);
+  --violet:#5b49d6;--violet-dim:rgba(91,73,214,.08);--violet-border:rgba(91,73,214,.3);
+  --green:#1ea85e;--green-dim:rgba(30,168,94,.08);--green-border:rgba(30,168,94,.25);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.08);--shadow-md:0 4px 12px rgba(0,0,0,.1);
+  --shadow-lg:0 12px 32px rgba(0,0,0,.13);
+  color-scheme:light;
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15)}
+[data-theme="light"] input,[data-theme="light"] select{background:var(--bg-surface)}
+
+/* ═══ THEME TOGGLE ═══ */
+.theme-toggle{position:relative;display:inline-flex;align-items:center;padding:11px 4px;cursor:pointer;background:none;border:none}
+.theme-toggle__track{position:relative;width:40px;height:22px;border-radius:11px;background:#4db6ac;transition:background .3s ease}
+[data-theme="dark"] .theme-toggle__track{background:#424242}
+.theme-toggle__thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1;transition:transform .3s ease;user-select:none}
+[data-theme="dark"] .theme-toggle__thumb{transform:translateX(18px)}
+.theme-toggle__thumb::after{content:"☀️"}
+[data-theme="dark"] .theme-toggle__thumb::after{content:"🌙"}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{height:100%;scroll-behavior:smooth}
+body{font-family:var(--font-ui);font-size:14px;color:var(--text-primary);background:var(--bg-void);
+  min-height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-muted);border-radius:99px}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:inherit;color:var(--text-primary);background:var(--bg-elevated);
+  border:1px solid var(--border-muted);border-radius:var(--radius-md);padding:8px 12px;font-size:13px}
+input:focus,select:focus{outline:none;border-color:var(--teal)}
+
+/* ═══ LAYOUT ═══ */
+.app{display:grid;grid-template-columns:var(--sidebar-w) 1fr var(--dash-w);
+  grid-template-rows:var(--header-h) 1fr;grid-template-areas:"hd hd hd""sb main dash";
+  height:100vh;height:100dvh}
+
+/* ═══ HEADER ═══ */
+.header{grid-area:hd;display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;background:var(--bg-base);border-bottom:1px solid var(--border-subtle);z-index:20}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-icon{width:30px;height:30px;border-radius:var(--radius-md);
+  background:linear-gradient(135deg,var(--teal),#009980);display:flex;align-items:center;
+  justify-content:center;font-size:16px;color:var(--text-inverse);font-weight:800}
+.brand-name{font-size:18px;font-weight:700;letter-spacing:-.03em}
+.brand-name span{color:var(--teal)}
+.header-center{display:flex;gap:4px;background:var(--bg-surface);border-radius:var(--radius-lg);padding:3px}
+.vtab{padding:6px 16px;border-radius:var(--radius-md);font-size:12px;font-weight:700;
+  color:var(--text-muted);letter-spacing:.04em;text-transform:uppercase;transition:all .15s;min-height:var(--touch)}
+.vtab:hover{color:var(--text-secondary);background:var(--bg-elevated)}
+.vtab.active{color:var(--text-primary);background:var(--bg-elevated);box-shadow:var(--shadow-sm)}
+.header-actions{display:flex;gap:6px}
+.btn-icon{width:var(--touch);height:var(--touch);border-radius:var(--radius-md);display:flex;
+  align-items:center;justify-content:center;color:var(--text-secondary);transition:all .15s}
+.btn-icon:hover{background:var(--bg-elevated);color:var(--text-primary)}
+.btn-primary{display:flex;align-items:center;gap:6px;padding:0 16px;height:36px;border-radius:var(--radius-md);
+  background:var(--teal);color:var(--text-inverse);font-size:12px;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;transition:all .15s;white-space:nowrap}
+.btn-primary:hover{background:#009980;box-shadow:0 0 20px var(--teal-glow)}
+.btn-sm{padding:0 12px;height:30px;font-size:11px;border-radius:var(--radius-sm)}
+.btn-outline{border:1px solid var(--border-muted);color:var(--text-secondary);background:transparent;
+  display:flex;align-items:center;gap:6px;padding:0 12px;height:32px;border-radius:var(--radius-md);
+  font-size:12px;font-weight:600;transition:all .15s}
+.btn-outline:hover{border-color:var(--border-default);background:var(--bg-elevated);color:var(--text-primary)}
+.btn-danger{color:var(--rose)}
+
+/* ═══ LEFT SIDEBAR ═══ */
+.sidebar{grid-area:sb;background:var(--bg-base);border-right:1px solid var(--border-subtle);
+  display:flex;flex-direction:column;overflow:hidden}
+.sidebar-scroll{flex:1;overflow-y:auto;padding:12px 0}
+.nav-section{margin-bottom:20px}
+.nav-label{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--text-disabled);padding:0 16px 6px;font-family:var(--font-mono)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:0 16px;height:var(--touch);
+  color:var(--text-secondary);transition:all .12s;border-left:2px solid transparent;font-size:13px}
+.nav-item:hover{color:var(--text-primary);background:var(--bg-surface)}
+.nav-item.active{color:var(--teal);background:var(--teal-dim);border-left-color:var(--teal);font-weight:600}
+.nav-badge{margin-left:auto;font-size:10px;font-family:var(--font-mono);font-weight:600;
+  color:var(--text-muted);background:var(--bg-elevated);padding:2px 7px;border-radius:var(--radius-full)}
+.sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border-subtle)}
+
+/* ═══ MAIN AREA ═══ */
+.main{grid-area:main;overflow-y:auto;background:var(--bg-void);display:flex;flex-direction:column}
+.toolbar{display:flex;align-items:center;gap:10px;padding:10px 20px;background:var(--bg-base);
+  border-bottom:1px solid var(--border-subtle);position:sticky;top:0;z-index:10;flex-wrap:wrap}
+.toolbar-sep{width:1px;height:20px;background:var(--border-subtle)}
+.month-nav{display:flex;align-items:center;gap:8px;margin-left:auto}
+.month-label{font-size:16px;font-weight:600;min-width:160px;text-align:center}
+.nav-btn{width:var(--touch);height:var(--touch);display:flex;align-items:center;justify-content:center;
+  border-radius:var(--radius-md);border:1px solid var(--border-subtle);color:var(--text-secondary);transition:all .15s}
+.nav-btn:hover{background:var(--bg-elevated);color:var(--text-primary)}
+
+/* ═══ CALENDAR ═══ */
+.cal-wrap{flex:1;padding:16px 20px 24px}
+.cal-header{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:8px}
+.dow{text-align:center;font-size:10px;font-family:var(--font-mono);font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--text-muted);padding:8px 0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.day{min-height:92px;border-radius:var(--radius-lg);background:var(--bg-surface);
+  border:1px solid var(--border-subtle);display:flex;flex-direction:column;padding:6px 8px;
+  cursor:pointer;transition:all .15s;position:relative;overflow:hidden;user-select:none}
+.day:hover{background:var(--bg-elevated);border-color:var(--border-default);
+  transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.day:active{transform:translateY(0)}
+.day.other{opacity:.3;pointer-events:none}
+.day.today{border-color:var(--teal-border);background:var(--teal-dim)}
+.day.today .dnum{background:var(--teal);color:var(--text-inverse);border-radius:50%;
+  width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+.day.exam{border-color:var(--amber-border);background:var(--amber-dim)}
+.day.blocked{border-color:var(--rose-border);background:var(--rose-dim)}
+.day.study{border-color:var(--violet-border);background:var(--violet-dim)}
+.day.holiday{border-color:var(--border-muted)}
+.day-bar{position:absolute;top:0;left:0;right:0;height:3px;border-radius:99px 99px 0 0}
+.day.today .day-bar{background:var(--teal)}.day.exam .day-bar{background:var(--amber)}
+.day.blocked .day-bar{background:var(--rose)}.day.study .day-bar{background:var(--violet)}
+.day.holiday .day-bar{background:var(--text-muted)}
+.dnum{font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--text-secondary);line-height:1}
+.day.exam .dnum{color:var(--amber)}.day.blocked .dnum{color:var(--rose)}
+.day.study .dnum{color:var(--violet)}.day.holiday .dnum{color:var(--text-muted)}
+.day-dots{display:flex;flex-direction:column;gap:2px;margin-top:auto;overflow:hidden}
+.day-dot{width:6px;height:6px;border-radius:50%}
+.day-chip{display:inline-flex;align-items:center;padding:2px 5px;border-radius:3px;
+  font-size:9px;font-family:var(--font-mono);font-weight:700;color:#fff;line-height:1.3;
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.day-label{font-size:8px;font-family:var(--font-mono);font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;margin-top:3px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.day.exam .day-label{color:var(--amber)}.day.blocked .day-label{color:var(--rose)}
+.day.holiday .day-label{color:var(--text-muted)}
+.day-check{position:absolute;bottom:4px;right:4px;width:14px;height:14px;border-radius:50%;
+  background:var(--green);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--text-inverse)}
+
+/* ═══ SCHEDULE VIEW ═══ */
+.schedule-view{padding:16px 20px;display:none}
+.schedule-view.active{display:block}
+.cal-wrap.active{display:flex;flex-direction:column}
+.cal-wrap:not(.active){display:none}
+.week-card{margin-bottom:16px;border:1px solid var(--border-subtle);border-radius:var(--radius-lg);overflow:hidden}
+.week-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;
+  background:var(--bg-surface);cursor:pointer}
+.week-hdr:hover{background:var(--bg-elevated)}
+.week-num{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--teal);
+  background:var(--teal-dim);padding:3px 10px;border-radius:var(--radius-full)}
+.week-progress{font-family:var(--font-mono);font-size:11px;color:var(--text-muted)}
+.week-items{padding:0}
+.week-item{display:flex;align-items:center;gap:12px;padding:10px 16px;
+  border-top:1px solid var(--border-subtle);transition:all .12s}
+.week-item:hover{background:var(--bg-surface)}
+.week-item .sdot{width:10px;height:10px}
+.week-item-code{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text-muted);min-width:70px}
+.week-item-topic{flex:1;font-size:13px;color:var(--text-secondary)}
+.week-item.completed .week-item-topic,.week-item-topic.completed{text-decoration:line-through;color:var(--text-muted)}
+.check-btn{width:24px;height:24px;border-radius:50%;border:2px solid var(--border-default);
+  display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.check-btn:hover{border-color:var(--green)}
+.check-btn.checked{background:var(--green);border-color:var(--green);color:var(--text-inverse);font-size:12px}
+
+/* ═══ RIGHT DASHBOARD ═══ */
+.dashboard{grid-area:dash;background:var(--bg-base);border-left:1px solid var(--border-subtle);
+  overflow-y:auto;display:flex;flex-direction:column;padding:16px}
+.dash-section{margin-bottom:20px}
+.dash-title{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--text-disabled);font-family:var(--font-mono);margin-bottom:10px}
+
+/* Progress Arc */
+.progress-ring-wrap{display:flex;flex-direction:column;align-items:center;padding:8px 0 16px}
+.progress-ring{position:relative;width:140px;height:140px}
+.progress-ring svg{width:140px;height:140px;transform:rotate(-90deg)}
+.progress-ring circle{fill:none;stroke-width:8;stroke-linecap:round}
+.ring-bg{stroke:var(--bg-elevated)}
+.ring-fg{stroke:var(--teal);transition:stroke-dashoffset .6s ease}
+.ring-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-pct{font-family:var(--font-mono);font-size:28px;font-weight:700;color:var(--text-primary)}
+.ring-sub{font-size:11px;color:var(--text-muted)}
+
+/* Exam Countdown */
+.exam-card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);
+  padding:12px;margin-bottom:8px;transition:all .15s}
+.exam-card:hover{border-color:var(--border-default)}
+.exam-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.exam-name{font-size:13px;font-weight:700;color:var(--text-primary)}
+.exam-urgency{font-size:9px;font-family:var(--font-mono);font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;padding:2px 8px;border-radius:var(--radius-full)}
+.urgency-relaxed{background:var(--green-dim);color:var(--green)}
+.urgency-normal{background:var(--teal-dim);color:var(--teal)}
+.urgency-urgent{background:var(--amber-dim);color:var(--amber)}
+.urgency-critical{background:var(--rose-dim);color:var(--rose)}
+.exam-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.exam-stat{text-align:center;padding:6px;background:var(--bg-elevated);border-radius:var(--radius-md)}
+.exam-stat-val{font-family:var(--font-mono);font-size:18px;font-weight:700;color:var(--text-primary)}
+.exam-stat-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em}
+
+/* Subject Progress */
+.subj-row{display:flex;align-items:center;gap:8px;padding:6px 0}
+.subj-name{font-size:11px;color:var(--text-secondary);min-width:90px;font-weight:500}
+.subj-bar{flex:1;height:6px;background:var(--bg-elevated);border-radius:var(--radius-full);overflow:hidden}
+.subj-bar-fill{height:100%;border-radius:var(--radius-full);transition:width .4s ease}
+.subj-pct{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);min-width:32px;text-align:right}
+
+/* ═══ MODAL ═══ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:30;display:none;
+  align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg-surface);border:1px solid var(--border-muted);border-radius:var(--radius-xl);
+  width:90%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg);padding:24px}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{width:32px;height:32px;border-radius:var(--radius-md);display:flex;align-items:center;
+  justify-content:center;color:var(--text-muted);transition:all .12s}
+.modal-close:hover{background:var(--bg-elevated);color:var(--text-primary)}
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:11px;font-weight:700;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-family:var(--font-mono)}
+.form-group input,.form-group select{width:100%}
+.form-row{display:flex;gap:10px}
+.form-row>*{flex:1}
+.form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+
+/* ═══ TOAST ═══ */
+.toast-container{position:fixed;top:var(--header-h);right:16px;z-index:50;display:flex;flex-direction:column;gap:8px}
+.toast{padding:10px 16px;background:var(--bg-elevated);border:1px solid var(--border-muted);
+  border-radius:var(--radius-lg);font-size:13px;box-shadow:var(--shadow-md);
+  animation:slideIn .3s ease;display:flex;align-items:center;gap:8px}
+.toast.success{border-color:var(--green-border);color:var(--green)}
+.toast.error{border-color:var(--rose-border);color:var(--rose)}
+@keyframes slideIn{from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:translateX(0)}}
+
+/* ═══ FILTER CHIPS ═══ */
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--radius-full);
+  font-size:11px;font-weight:600;border:1px solid var(--border-muted);color:var(--text-secondary);
+  transition:all .12s;font-family:var(--font-mono)}
+.chip:hover{border-color:var(--border-default);color:var(--text-primary)}
+.chip.active{color:var(--text-inverse);border-color:transparent}
+.chip.active[data-filter="all"]{background:var(--teal)}
+
+/* ═══ VIDEO TRACKER ═══ */
+.vid-bar{height:4px;background:var(--bg-active);border-radius:var(--radius-full);overflow:hidden}
+.vid-bar-fill{height:100%;background:var(--teal);border-radius:var(--radius-full);transition:width .3s ease}
+.vid-count{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--text-primary);white-space:nowrap}
+.vid-complete{color:var(--green) !important}
+/* Accordion */
+.vid-acc{margin-top:6px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow:hidden}
+.vid-acc-hdr{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;
+  background:var(--bg-elevated);transition:all .15s;user-select:none;-webkit-user-select:none}
+.vid-acc-hdr:hover{background:var(--bg-hover)}
+.vid-acc-hdr .chevron{transition:transform .2s ease;font-size:10px;color:var(--text-muted);flex-shrink:0}
+.vid-acc-hdr.open .chevron{transform:rotate(90deg)}
+.vid-acc-icon{font-size:13px;flex-shrink:0}
+.vid-acc-title{flex:1;font-size:11px;font-weight:600;color:var(--text-secondary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vid-acc-badge{font-family:var(--font-mono);font-size:10px;font-weight:700;padding:2px 8px;
+  border-radius:var(--radius-full);background:var(--bg-active);color:var(--text-muted);flex-shrink:0}
+.vid-acc-badge.done{background:var(--green-dim);color:var(--green)}
+.vid-acc-body{display:none;border-top:1px solid var(--border-subtle)}
+.vid-acc-body.open{display:block}
+.vid-section-label{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--text-disabled);padding:8px 12px 4px;font-family:var(--font-mono)}
+.vid-item{display:flex;align-items:center;gap:8px;padding:5px 12px;transition:background .1s;cursor:pointer}
+.vid-item:hover{background:var(--bg-hover)}
+.vid-item:active{background:var(--bg-active)}
+.vid-ck{width:18px;height:18px;border-radius:4px;border:2px solid var(--border-default);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-size:10px;color:transparent}
+.vid-ck.checked{background:var(--teal);border-color:var(--teal);color:#fff}
+.vid-item-name{font-size:11px;color:var(--text-secondary);line-height:1.3;flex:1;min-width:0}
+.vid-item.watched .vid-item-name{color:var(--text-muted);text-decoration:line-through}
+.vid-acc-bar{padding:4px 12px 8px}
+/* Dashboard module cards */
+.vid-module-card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);
+  margin-bottom:6px;overflow:hidden}
+.vid-mod-hdr{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;transition:background .12s}
+.vid-mod-hdr:hover{background:var(--bg-elevated)}
+.vid-mod-hdr .chevron{transition:transform .2s ease;font-size:9px;color:var(--text-muted)}
+.vid-mod-hdr.open .chevron{transform:rotate(90deg)}
+.vid-mod-name{flex:1;font-size:11px;font-weight:600;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vid-mod-body{display:none;border-top:1px solid var(--border-subtle);max-height:250px;overflow-y:auto}
+.vid-mod-body.open{display:block}
+
+/* ═══ WEEK VIEW ═══ */
+.week-view{padding:16px 20px;display:none}
+.week-view.active{display:block}
+.week-view-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.week-view-title{font-size:20px;font-weight:700;color:var(--text-primary)}
+.week-view-subtitle{font-size:13px;color:var(--text-muted);font-family:var(--font-mono)}
+.week-view-target{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);
+  padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.week-view-target-main{font-size:14px;font-weight:600;color:var(--teal)}
+.week-view-target-sub{font-size:12px;color:var(--text-muted);font-family:var(--font-mono)}
+.week-theme-card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);
+  margin-bottom:12px;overflow:hidden}
+.week-theme-hdr{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border-subtle)}
+.week-theme-name{font-size:14px;font-weight:700;color:var(--text-primary)}
+.week-theme-code{font-family:var(--font-mono);font-size:11px;color:var(--text-muted)}
+.week-theme-body{padding:0}
+.week-questions{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);
+  padding:12px 16px;margin-bottom:16px}
+.week-questions-title{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;
+  letter-spacing:.1em;margin-bottom:10px;font-family:var(--font-mono)}
+.week-q-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.week-q-label{font-size:12px;color:var(--text-secondary);min-width:100px;flex:1}
+.week-q-input{width:80px;text-align:center;font-family:var(--font-mono);font-size:13px;font-weight:600;
+  padding:6px 8px;min-height:var(--touch)}
+.week-progress-section{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);
+  padding:12px 16px;margin-bottom:16px}
+.week-progress-label{font-size:12px;color:var(--text-muted);margin-bottom:6px;font-family:var(--font-mono)}
+.week-nav{display:flex;align-items:center;gap:8px}
+
+/* ═══ SKIP/MOVE ═══ */
+.skip-btn{width:24px;height:24px;border-radius:50%;border:2px solid var(--amber-border);
+  display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--amber);
+  transition:all .15s;flex-shrink:0;cursor:pointer;background:transparent}
+.skip-btn:hover{background:var(--amber-dim);border-color:var(--amber)}
+.skip-btn:disabled{opacity:.2;pointer-events:none;cursor:default}
+.skip-tag{font-size:8px;font-family:var(--font-mono);font-weight:700;padding:1px 6px;
+  border-radius:99px;background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border);white-space:nowrap}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:1100px){
+  .app{grid-template-columns:1fr var(--dash-w);grid-template-areas:"hd hd""main dash"}
+  .sidebar{display:none}
+}
+@media(max-width:768px){
+  .app{grid-template-columns:1fr;grid-template-areas:"hd""main"}
+  .dashboard{display:none}
+  .day{min-height:56px;padding:4px}
+  .dnum{font-size:11px}
+  .day-label{display:none}
+  .header-center{display:none}
+}
+
+/* ═══ GAMIFICATION ═══ */
+.reward-overlay{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(8px)}
+.reward-overlay.open{display:flex}
+.reward-box{text-align:center;padding:32px 40px;background:var(--bg-surface);border:1px solid var(--border-muted);
+  border-radius:20px;box-shadow:0 0 60px rgba(0,200,168,.15);max-width:380px;width:90%;
+  animation:rewardIn .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes rewardIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+.reward-emoji{font-size:56px;margin-bottom:12px;animation:rewardBounce .6s ease infinite alternate}
+@keyframes rewardBounce{from{transform:translateY(0)}to{transform:translateY(-8px)}}
+.reward-title{font-size:20px;font-weight:800;color:var(--text-primary);margin-bottom:6px}
+.reward-subtitle{font-size:13px;color:var(--text-secondary);margin-bottom:12px}
+.reward-xp{font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--teal);
+  background:var(--teal-dim);padding:6px 16px;border-radius:var(--radius-full);display:inline-block}
+#confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:61}
+.game-level{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.game-level-num{font-family:var(--font-mono);font-size:16px;font-weight:800;color:var(--amber);min-width:40px}
+.game-xp-bar{flex:1;height:8px;background:var(--bg-active);border-radius:var(--radius-full);overflow:hidden}
+.game-xp-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--amber));border-radius:var(--radius-full);transition:width .4s ease}
+.game-xp-text{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);min-width:50px;text-align:right}
+.game-streak{font-family:var(--font-mono);font-size:12px;color:var(--text-secondary);margin-bottom:10px;
+  padding:8px 12px;background:var(--bg-elevated);border-radius:var(--radius-md)}
+.game-badges{display:flex;flex-wrap:wrap;gap:6px}
+.game-badge{width:36px;height:36px;border-radius:var(--radius-md);background:var(--bg-elevated);
+  border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;
+  font-size:18px;cursor:pointer;transition:all .15s;position:relative}
+.game-badge:hover{transform:scale(1.15);border-color:var(--border-default)}
+.game-badge.locked{opacity:.25;filter:grayscale(1)}
+.game-badge-tip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:var(--bg-overlay);color:var(--text-primary);font-size:10px;padding:4px 8px;
+  border-radius:var(--radius-sm);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s}
+.game-badge:hover .game-badge-tip{opacity:1}
+</style>
+</head>
+<body>
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="position:fixed;inset:0;z-index:100;background:var(--bg-void);display:flex;align-items:center;justify-content:center">
+  <div style="width:90%;max-width:360px;text-align:center">
+    <div style="font-size:36px;font-weight:800;color:var(--teal);margin-bottom:4px;font-family:var(--font-ui)">Med<span style="color:var(--text-primary)">Plan</span></div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:32px">Planejador de Estudos para Residencia</div>
+    <div style="background:var(--bg-surface);border:1px solid var(--border-muted);border-radius:16px;padding:28px 24px">
+      <div style="margin-bottom:16px;text-align:left">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-family:var(--font-mono)">Usuario</label>
+        <input id="login-user" placeholder="seu usuario" style="width:100%;padding:10px 14px;font-size:14px" autocomplete="username">
+      </div>
+      <div style="margin-bottom:20px;text-align:left">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-family:var(--font-mono)">Senha</label>
+        <input id="login-pass" type="password" placeholder="sua senha" style="width:100%;padding:10px 14px;font-size:14px" autocomplete="current-password">
+      </div>
+      <div id="login-error" style="color:var(--rose);font-size:12px;margin-bottom:12px;display:none">Usuario ou senha incorretos</div>
+      <button onclick="doLogin()" style="width:100%;padding:12px;border-radius:var(--radius-md);background:var(--teal);color:var(--text-inverse);font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all .15s">Entrar</button>
+    </div>
+    <div style="margin-top:16px;font-size:10px;color:var(--text-disabled)">v2.0</div>
+  </div>
+</div>
+
+<div class="app" style="display:none" id="app-main">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-icon">M</div>
+      <div class="brand-name">Med<span>Plan</span></div>
+    </div>
+    <div class="header-center">
+      <button class="vtab active" data-view="calendar">Calendario</button>
+      <button class="vtab" data-view="schedule">Cronograma</button>
+      <button class="vtab" data-view="week">Semana</button>
+    </div>
+    <div class="header-actions">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema" aria-label="Alternar tema"><span class="theme-toggle__track"><span class="theme-toggle__thumb"></span></span></button>
+      <button class="btn-primary btn-sm" onclick="openPlanModal()">&#9889; Planejar</button>
+      <button class="btn-icon" onclick="logout()" title="Sair" style="color:var(--rose)">&#9211;</button>
+    </div>
+  </header>
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-scroll">
+      <div class="nav-section">
+        <div class="nav-label">Filtros</div>
+        <div class="nav-item active" data-filter="all">&#128196; Todos<span class="nav-badge" id="badge-total">92</span></div>
+        <div class="nav-item" data-filter="pending">&#128215; Pendentes<span class="nav-badge" id="badge-pending">92</span></div>
+        <div class="nav-item" data-filter="completed">&#9989; Concluidos<span class="nav-badge" id="badge-done">0</span></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Materias</div>
+        <div id="subject-nav"></div>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div style="display:flex;gap:6px">
+        <button class="btn-outline" style="flex:1" onclick="exportData()">&#128190; Exportar</button>
+        <button class="btn-outline" style="flex:1" onclick="document.getElementById('import-file').click()">&#128194; Importar</button>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+    <div class="toolbar">
+      <div class="chips" id="subject-chips"></div>
+      <div class="month-nav">
+        <button class="nav-btn" onclick="changeMonth(-1)">&#9664;</button>
+        <span class="month-label" id="month-label"></span>
+        <button class="nav-btn" onclick="changeMonth(1)">&#9654;</button>
+        <button class="btn-outline btn-sm" onclick="goToday()" style="margin-left:4px">Hoje</button>
+      </div>
+    </div>
+    <div class="cal-wrap active" id="calendar-view">
+      <div class="cal-header">
+        <div class="dow">Seg</div><div class="dow">Ter</div><div class="dow">Qua</div>
+        <div class="dow">Qui</div><div class="dow">Sex</div><div class="dow">Sab</div><div class="dow">Dom</div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <div class="schedule-view" id="schedule-view"></div>
+    <div class="week-view" id="week-view"></div>
+  </main>
+
+  <!-- RIGHT DASHBOARD -->
+  <aside class="dashboard">
+    <div class="dash-section">
+      <div class="dash-title">Gamificacao</div>
+      <div class="game-level">
+        <span class="game-level-num">Lv.1</span>
+        <div class="game-xp-bar"><div class="game-xp-fill" style="width:0%"></div></div>
+        <span class="game-xp-text">0 XP</span>
+      </div>
+      <div class="game-streak">🔥 <span id="game-streak">0</span> dias | Recorde: <span id="game-streak-record">0</span></div>
+      <div id="game-badges" class="game-badges"></div>
+    </div>
+    <div class="dash-section">
+      <div class="dash-title">Progresso Geral</div>
+      <div class="progress-ring-wrap">
+        <div class="progress-ring">
+          <svg viewBox="0 0 140 140"><circle class="ring-bg" cx="70" cy="70" r="60"/>
+          <circle class="ring-fg" id="ring-fg" cx="70" cy="70" r="60" stroke-dasharray="377" stroke-dashoffset="377"/></svg>
+          <div class="ring-text"><div class="ring-pct" id="ring-pct">0%</div><div class="ring-sub">concluido</div></div>
+        </div>
+        <div style="display:flex;gap:16px;margin-top:10px;font-family:var(--font-mono);font-size:12px">
+          <div><span style="color:var(--green);font-weight:700" id="stat-done">0</span> <span style="color:var(--text-muted)">feitos</span></div>
+          <div><span style="color:var(--amber);font-weight:700" id="stat-remain">92</span> <span style="color:var(--text-muted)">restantes</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="dash-section">
+      <div class="dash-title">Provas</div>
+      <div id="exam-cards">
+        <div style="text-align:center;padding:16px;color:var(--text-muted);font-size:12px">
+          Nenhuma prova cadastrada.<br><button class="btn-outline btn-sm" style="margin-top:8px" onclick="openPlanModal()">+ Adicionar Prova</button>
+        </div>
+      </div>
+    </div>
+    <div class="dash-section">
+      <div class="dash-title">Videos EXBOM</div>
+      <div class="progress-ring-wrap" style="padding:4px 0 8px">
+        <div style="display:flex;gap:16px;font-family:var(--font-mono);font-size:12px">
+          <div><span style="color:var(--teal);font-weight:700" id="vid-watched">0</span> <span style="color:var(--text-muted)">assistidos</span></div>
+          <div><span style="color:var(--amber);font-weight:700" id="vid-remaining">0</span> <span style="color:var(--text-muted)">restantes</span></div>
+        </div>
+        <div class="vid-bar" style="width:100%;margin-top:6px;height:6px">
+          <div class="vid-bar-fill" id="vid-bar-global" style="width:0%"></div>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-top:4px" id="vid-pct-label">0% concluido</div>
+      </div>
+      <div id="video-modules" style="max-height:300px;overflow-y:auto"></div>
+    </div>
+    <div class="dash-section">
+      <div class="dash-title">Questoes</div>
+      <div style="display:flex;gap:16px;font-family:var(--font-mono);font-size:12px;padding:4px 0">
+        <div><span style="color:var(--violet);font-weight:700" id="questions-total">0</span> <span style="color:var(--text-muted)">realizadas</span></div>
+      </div>
+    </div>
+    <div class="dash-section">
+      <div class="dash-title">Progresso por Materia</div>
+      <div id="subject-progress"></div>
+    </div>
+  </aside>
+</div>
+
+<!-- DAY MODAL -->
+<div class="modal-overlay" id="day-modal">
+  <div class="modal">
+    <div class="modal-title"><span id="day-modal-title">Dia</span><button class="modal-close" onclick="closeModal('day-modal')">&#10005;</button></div>
+    <div id="day-modal-body"></div>
+  </div>
+</div>
+
+<!-- PLAN MODAL (unified exam + settings) -->
+<div class="modal-overlay" id="plan-modal">
+  <div class="modal">
+    <div class="modal-title"><span>Configurar Planejamento</span><button class="modal-close" onclick="closeModal('plan-modal')">&#10005;</button></div>
+    <div class="form-group"><label class="form-label">Nome da Prova</label><input id="plan-exam-name" placeholder="Ex: USP, UNIFESP..."></div>
+    <div class="form-group"><label class="form-label">Data da Prova</label><input type="date" id="plan-exam-date"></div>
+    <div class="form-group"><label class="form-label">Inicio dos Estudos</label><input type="date" id="plan-start-date"></div>
+    <div class="form-group"><label class="form-label">Dias de estudo</label><div style="display:flex;gap:4px;flex-wrap:wrap"><label style="display:flex;align-items:center;gap:3px;padding:6px 10px;border-radius:6px;border:1px solid var(--border-muted);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-mono)"><input type="checkbox" class="plan-day-cb" value="1" checked> Seg</label><label style="display:flex;align-items:center;gap:3px;padding:6px 10px;border-radius:6px;border:1px solid var(--border-muted);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-mono)"><input type="checkbox" class="plan-day-cb" value="2" checked> Ter</label><label style="display:flex;align-items:center;gap:3px;padding:6px 10px;border-radius:6px;border:1px solid var(--border-muted);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-mono)"><input type="checkbox" class="plan-day-cb" value="3" checked> Qua</label><label style="display:flex;align-items:center;gap:3px;padding:6px 10px;border-radius:6px;border:1px solid var(--border-muted);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-mono)"><input type="checkbox" class="plan-day-cb" value="4" checked> Qui</label><label style="display:flex;align-items:center;gap:3px;padding:6px 10px;border-radius:6px;border:1px solid var(--border-muted);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-mono)"><input type="checkbox" class="plan-day-cb" value="5" checked> Sex</label><label style="display:flex;align-items:center;gap:3px;padding:6px 10px;border-radius:6px;border:1px solid var(--border-muted);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-mono)"><input type="checkbox" class="plan-day-cb" value="6"> Sab</label><label style="display:flex;align-items:center;gap:3px;padding:6px 10px;border-radius:6px;border:1px solid var(--border-muted);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-mono)"><input type="checkbox" class="plan-day-cb" value="0"> Dom</label></div></div>
+    <div class="form-group"><label class="form-label">Dias antes da prova para terminar</label>
+      <select id="plan-buffer"><option value="0">0 dias</option><option value="7">7 dias</option>
+        <option value="14" selected>14 dias (recomendado)</option><option value="21">21 dias</option>
+        <option value="30">30 dias</option></select></div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary);cursor:pointer">
+        <input type="checkbox" id="sound-toggle" checked onchange="state.soundEnabled=this.checked;saveState()"> Sons ativados
+      </label>
+    </div>
+    <div class="form-actions">
+      <button class="btn-outline btn-danger" onclick="resetAll()">Resetar Tudo</button>
+      <button class="btn-outline" onclick="closeModal('plan-modal')">Cancelar</button>
+      <button class="btn-primary btn-sm" onclick="savePlan()">Salvar e Planejar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="skip-modal">
+  <div class="modal">
+    <div class="modal-title"><span id="skip-modal-title">Mover Conteudo</span><button class="modal-close" onclick="closeModal('skip-modal')">&#10005;</button></div>
+    <div class="form-group"><label class="form-label">Mover para qual semana?</label>
+      <select id="skip-target-week" style="width:100%"></select></div>
+    <div class="form-actions">
+      <button class="btn-outline" onclick="closeModal('skip-modal')">Cancelar</button>
+      <button class="btn-primary btn-sm" onclick="confirmSkip()">Mover e Replanejar</button>
+    </div>
+  </div>
+</div>
+<div class="toast-container" id="toasts"></div>
+
+<!-- REWARD MODAL -->
+<div class="reward-overlay" id="reward-modal">
+  <div class="reward-box">
+    <div class="reward-emoji" id="reward-emoji"></div>
+    <div class="reward-title" id="reward-title"></div>
+    <div class="reward-subtitle" id="reward-subtitle"></div>
+    <div class="reward-xp" id="reward-xp"></div>
+    <button class="btn-primary" onclick="closeReward()" style="margin-top:16px">Continuar 🚀</button>
+  </div>
+  <canvas id="confetti-canvas"></canvas>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   DATA LAYER
+   ═══════════════════════════════════════════════════════════ */
+const SUBJECTS={
+  NEF:{name:'Nefrologia',color:'#3B82F6'},CIR:{name:'Cirurgia',color:'#EF4444'},
+  GIN:{name:'Ginecologia',color:'#EC4899'},OBS:{name:'Obstetricia',color:'#F472B6'},
+  PRE:{name:'Preventiva',color:'#10B981'},PED:{name:'Pediatria',color:'#F59E0B'},
+  REU:{name:'Reumatologia',color:'#8B5CF6'},HEM:{name:'Hematologia',color:'#DC2626'},
+  GAS:{name:'Gastro',color:'#D97706'},HEP:{name:'Hepatologia',color:'#92400E'},
+  CAR:{name:'Cardiologia',color:'#EF4444'},END:{name:'Endocrinologia',color:'#14B8A6'},
+  PNE:{name:'Pneumologia',color:'#6366F1'},INF:{name:'Infectologia',color:'#059669'},
+  NEU:{name:'Neurologia',color:'#7C3AED'},PSQ:{name:'Psiquiatria',color:'#A78BFA'},
+  ORT:{name:'Ortopedia',color:'#78716C'},DER:{name:'Dermatologia',color:'#F97316'},
+  OFT:{name:'Oftalmologia',color:'#0EA5E9'}
+};
+
+const SCHEDULE=[
+  {w:1,items:[{c:'NEF-01-A',s:'NEF',t:'Glomerulopatias I (Nefritica, Alteracoes assintomaticas, GNRP)'},{c:'CIR-01-A',s:'CIR',t:'Trauma I - Primeiro atendimento, cabeca e torax'}]},
+  {w:2,items:[{c:'NEF-01-B',s:'NEF',t:'Glomerulopatias II (Nefrotica, Glomerulopatias nas desordens)'},{c:'CIR-01-B',s:'CIR',t:'Trauma II - Abdome e TCE'}]},
+  {w:3,items:[{c:'NEF-02-A',s:'NEF',t:'Doencas Tubulosintersticiais e Vasculares Renais'},{c:'GIN-01-A',s:'GIN',t:'Ciclo Menstrual e Anticoncepcao'}]},
+  {w:4,items:[{c:'NEF-03-A',s:'NEF',t:'Disturbios Hidroeletroliticos'},{c:'GIN-01-B',s:'GIN',t:'Amenorreia e Ovario Policistico'}]},
+  {w:5,items:[{c:'PRE-01-A',s:'PRE',t:'Medidas de Saude Coletiva'},{c:'NEF-03-B',s:'NEF',t:'Disturbios Acido-Basico'}]},
+  {w:6,items:[{c:'NEF-03-C',s:'NEF',t:'Insuficiencia Renal'},{c:'OBS-01-A',s:'OBS',t:'Diagnostico de Gravidez, Modificacoes do Organismo e Pre-natal'}]},
+  {w:7,items:[{c:'PRE-02-A',s:'PRE',t:'Estudos Epidemiologicos'},{c:'PED-01-A',s:'PED',t:'Neonatologia I'}]},
+  {w:8,items:[{c:'PRE-02-B',s:'PRE',t:'Epidemiologia Clinica'},{c:'PED-01-B',s:'PED',t:'Neonatologia II'}]},
+  {w:9,items:[{c:'REU-01-A',s:'REU',t:'Introducao a Reumatologia e Artrites (Reumatoide, Espondiloartropatias)'},{c:'CIR-02-A',s:'CIR',t:'Nefrolitiase, Cancer de Prostata e HPB'}]},
+  {w:10,items:[{c:'REU-01-B',s:'REU',t:'Gota e Febre Reumatica'},{c:'CIR-02-B',s:'CIR',t:'REMIT e Queimaduras'}]},
+  {w:11,items:[{c:'REU-02-A',s:'REU',t:'Colagenoses I (Polimiosite, Dermatomiosite, DMTC, Esclerodermia)'},{c:'OBS-02-A',s:'OBS',t:'Assistencia clinica ao Parto e Parto Prematuro'}]},
+  {w:12,items:[{c:'REU-02-B',s:'REU',t:'Colagenoses II (LES e Sjogren)'},{c:'PRE-03-A',s:'PRE',t:'Vigilancia da Saude e Processo Epidemico'}]},
+  {w:13,items:[{c:'REU-02-C',s:'REU',t:'Vasculites'},{c:'PED-02-A',s:'PED',t:'Aleitamento Materno'}]},
+  {w:14,items:[{c:'HEM-01-A',s:'HEM',t:'Anemias I - Ferropriva, Doencas Cronicas e Megaloblastica'},{c:'CIR-03-A',s:'CIR',t:'Hernias da Parede Abdominal'}]},
+  {w:15,items:[{c:'HEM-01-B',s:'HEM',t:'Anemias II - Hemoliticas, Falciformes e Hemoglobinopatias'},{c:'CIR-03-B',s:'CIR',t:'Preparo Pre-operatorio, Risco cirurgico e Complicacoes'}]},
+  {w:16,items:[{c:'HEM-02-A',s:'HEM',t:'Leucemias Agudas e Cronicas'},{c:'HEM-02-B',s:'HEM',t:'Linfomas e Mieloma Multiplo'}]},
+  {w:17,items:[{c:'HEM-02-C',s:'HEM',t:'Disturbios da Hemostasia'},{c:'PED-02-B',s:'PED',t:'Crescimento, Desenvolvimento e Puberdade'}]},
+  {w:18,items:[{c:'GAS-01-A',s:'GAS',t:'Doencas do Esofago'},{c:'GIN-02-A',s:'GIN',t:'Sangramento Uterino Anormal, Endometriose e Infertilidade'}]},
+  {w:19,items:[{c:'GAS-01-B',s:'GAS',t:'Doencas do Estomago e Hemorragia Digestiva Alta'},{c:'GAS-02-A',s:'GAS',t:'Sindrome de Ma-absorcao e Doenca Intestinal Inflamatoria'}]},
+  {w:20,items:[{c:'GAS-02-B',s:'GAS',t:'Doenca Vascular dos Intestinos e Obstrucao Intestinal'},{c:'OBS-03-A',s:'OBS',t:'Sangramentos na Gravidez - Parte 1'}]},
+  {w:21,items:[{c:'GAS-02-C',s:'GAS',t:'Diverticulose, Polipose, Cancer de Colon e Apendicite Aguda'},{c:'OBS-03-B',s:'OBS',t:'Sangramentos na Gravidez - Parte 2 e Doenca Hemolitica Perinatal'}]},
+  {w:22,items:[{c:'GAS-03-A',s:'GAS',t:'Pancreatite Aguda e Cronica e Cancer de Pancreas'},{c:'GAS-03-B',s:'GAS',t:'Doencas das Vias Biliares'}]},
+  {w:23,items:[{c:'HEP-01-A',s:'HEP',t:'Introducao a Hepatologia e Hepatites Virais'},{c:'HEP-02-A',s:'HEP',t:'Cirrose e suas Causas'}]},
+  {w:24,items:[{c:'HEP-02-B',s:'HEP',t:'Cirrose e Complicacoes, Hipertensao Porta, Ascite e Encefalopatia'},{c:'GIN-03-A',s:'GIN',t:'Climaterio, Distopias e Incontinencia urinaria'}]},
+  {w:25,items:[{c:'CAR-01-A',s:'CAR',t:'Arritmias I (Taquiarritmias)'},{c:'PED-03-A',s:'PED',t:'Disturbios do Crescimento, Desnutricao e Baixa estatura'}]},
+  {w:26,items:[{c:'CAR-01-B',s:'CAR',t:'Arritmias II (Bradiarritmias) e PCR'},{c:'PED-03-B',s:'PED',t:'Imunizacao'}]},
+  {w:27,items:[{c:'CAR-02-A',s:'CAR',t:'Insuficiencia Cardiaca'},{c:'GIN-04-A',s:'GIN',t:'Doencas das Mamas e Ovarios'}]},
+  {w:28,items:[{c:'CAR-02-B',s:'CAR',t:'Hipertensao Arterial Sistemica, Crise Hipertensiva'},{c:'CAR-02-C',s:'CAR',t:'Valvopatias'}]},
+  {w:29,items:[{c:'CAR-03-A',s:'CAR',t:'Doenca Arterial Coronariana: IAM e Angina'},{c:'PED-04-A',s:'PED',t:'Diarreia Aguda e Desidratacao na Infancia'}]},
+  {w:30,items:[{c:'END-01-A',s:'END',t:'Tireoide I (Hipertireoidismo)'},{c:'GIN-05-A',s:'GIN',t:'Lesoes Precursoras, Cancer de Colo Uterino e Endometrio'}]},
+  {w:31,items:[{c:'PRE-04-A',s:'PRE',t:'SUS - Evolucao historica, Diretrizes, Propostas e Financiamento'},{c:'END-01-B',s:'END',t:'Tireoide II (Tireoidites e Cancer)'}]},
+  {w:32,items:[{c:'END-02-A',s:'END',t:'Doencas da Suprarrenal'},{c:'PED-04-B',s:'PED',t:'Infeccoes Respiratorias Agudas - Parte 1'}]},
+  {w:33,items:[{c:'END-03-A',s:'END',t:'Diabetes Mellitus, Dislipidemia e Obesidade'},{c:'PED-04-C',s:'PED',t:'Infeccoes Respiratorias Agudas - Parte 2'}]},
+  {w:34,items:[{c:'PNE-01-A',s:'PNE',t:'Asma e DPOC'},{c:'OBS-04-A',s:'OBS',t:'Disturbios Hipertensivos da Gestacao, Diabetes e Gemelaridade'}]},
+  {w:35,items:[{c:'PNE-01-B',s:'PNE',t:'Cancer de Pulmao e TEP'},{c:'PED-05-A',s:'PED',t:'Nefrologia Pediatrica'}]},
+  {w:36,items:[{c:'PNE-02-A',s:'PNE',t:'Tuberculose'},{c:'PNE-02-B',s:'PNE',t:'Pneumonia e Complicacoes'}]},
+  {w:37,items:[{c:'INF-01-A',s:'INF',t:'AIDS'},{c:'OBS-05-A',s:'OBS',t:'Sofrimento Fetal, Vitalidade Fetal, Forcipes e Puerperio'}]},
+  {w:38,items:[{c:'INF-02-A',s:'INF',t:'Endocardite Infecciosa e Meningite'},{c:'INF-02-B',s:'INF',t:'Parasitoses Intestinais'}]},
+  {w:39,items:[{c:'INF-03-A',s:'INF',t:'Sindromes Febris'},{c:'GIN-06-A',s:'GIN',t:'Vulvovaginites, IST e Cervicites'}]},
+  {w:40,items:[{c:'NEU-01-A',s:'NEU',t:'Neurologia I (Sindromes Neurologicas e AVE)'},{c:'PED-05-B',s:'PED',t:'Doencas Exantematicas na Infancia'}]},
+  {w:41,items:[{c:'NEU-01-B',s:'NEU',t:'Neurologia II (Polineuropatias, Demencia e Parkinson)'},{c:'NEU-01-C',s:'NEU',t:'Neurologia III (Cefaleia e Epilepsia)'}]},
+  {w:42,items:[{c:'CIR-04-A',s:'CIR',t:'Especialidades Cirurgicas - Parte 1'},{c:'CIR-04-B',s:'CIR',t:'Especialidades Cirurgicas - Parte 2'}]},
+  {w:43,items:[{c:'PSQ-01-A',s:'PSQ',t:'Psiquiatria - Parte 1'},{c:'PSQ-01-B',s:'PSQ',t:'Psiquiatria - Parte 2'}]},
+  {w:44,items:[{c:'ORT-01-A',s:'ORT',t:'Ortopedia - Parte 1'},{c:'ORT-01-B',s:'ORT',t:'Ortopedia - Parte 2'}]},
+  {w:45,items:[{c:'DER-01-A',s:'DER',t:'Dermatologia - Parte 1'},{c:'DER-01-B',s:'DER',t:'Dermatologia - Parte 2'}]},
+  {w:46,items:[{c:'OFT-01-A',s:'OFT',t:'Oftalmologia - Parte 1'},{c:'OFT-01-B',s:'OFT',t:'Oftalmologia - Parte 2'}]}
+];
+
+const ALL_CONTENT=SCHEDULE.flatMap(w=>w.items.map(i=>({...i,week:w.w})));
+const TOTAL=ALL_CONTENT.length;
+
+const HOLIDAYS=[
+  {d:'2024-01-01',n:'Confraternizacao Universal'},{d:'2024-02-12',n:'Carnaval'},{d:'2024-02-13',n:'Carnaval'},
+  {d:'2024-03-29',n:'Sexta-feira Santa'},{d:'2024-04-21',n:'Tiradentes'},{d:'2024-05-01',n:'Dia do Trabalho'},
+  {d:'2024-05-30',n:'Corpus Christi'},{d:'2024-09-07',n:'Independencia'},{d:'2024-10-12',n:'N.S. Aparecida'},
+  {d:'2024-11-02',n:'Finados'},{d:'2024-11-15',n:'Proclamacao da Republica'},{d:'2024-11-20',n:'Consciencia Negra'},
+  {d:'2024-12-25',n:'Natal'},
+  {d:'2025-01-01',n:'Confraternizacao Universal'},{d:'2025-03-03',n:'Carnaval'},{d:'2025-03-04',n:'Carnaval'},
+  {d:'2025-04-18',n:'Sexta-feira Santa'},{d:'2025-04-20',n:'Pascoa'},{d:'2025-04-21',n:'Tiradentes'},
+  {d:'2025-05-01',n:'Dia do Trabalho'},{d:'2025-06-19',n:'Corpus Christi'},{d:'2025-09-07',n:'Independencia'},
+  {d:'2025-10-12',n:'N.S. Aparecida'},{d:'2025-11-02',n:'Finados'},{d:'2025-11-15',n:'Proclamacao da Republica'},
+  {d:'2025-11-20',n:'Consciencia Negra'},{d:'2025-12-25',n:'Natal'},
+  {d:'2026-01-01',n:'Confraternizacao Universal'},{d:'2026-02-16',n:'Carnaval'},{d:'2026-02-17',n:'Carnaval'},
+  {d:'2026-04-03',n:'Sexta-feira Santa'},{d:'2026-04-21',n:'Tiradentes'},{d:'2026-05-01',n:'Dia do Trabalho'},
+  {d:'2026-06-04',n:'Corpus Christi'},{d:'2026-09-07',n:'Independencia'},{d:'2026-10-12',n:'N.S. Aparecida'},
+  {d:'2026-11-02',n:'Finados'},{d:'2026-11-15',n:'Proclamacao da Republica'},{d:'2026-11-20',n:'Consciencia Negra'},
+  {d:'2026-12-25',n:'Natal'}
+];
+const holidayMap=new Map(HOLIDAYS.map(h=>[h.d,h.n]));
+
+/* ═══════════════════════════════════════════════════════════
+   VIDEO MAP (EXBOM drive scan)
+   Cada modulo: {aula, bonus, total}
+   ═══════════════════════════════════════════════════════════ */
+const VF = {
+'CAR-01-A':{s:'CAR',a:["ECG Taquiarritmias","Fibrilacao e Flutter Atrial","TSV Paroxistica","Taquicardia Ventricular"],b:[]},
+'CAR-01-B':{s:'CAR',a:["Bradiarritmias PCR Pt1","Bradiarritmias PCR Pt2","ECG Normal"],b:["Bloqueios de Ramo","Anatomia Cardiaca","Marca-passo Conceitos","Marca-passo Funcionamento"]},
+'CAR-02-A':{s:'CAR',a:["IC Aguda","IC Parte 1","IC Parte 2"],b:["Cardiomiopatia Hipertrofica","HAS Pulmonar","Cardiomiopatia Estresse","Cardiomiopatia Dilatada","Cardiomiopatia Restritiva","IC Aguda (bonus)","Pericardiopatias"]},
+'CAR-02-B':{s:'CAR',a:["Conceitos Iniciais","Crise Hipertensiva","HAS Abordagem Principal","HAS Secundaria"],b:[]},
+'CAR-02-C':{s:'CAR',a:["Estenose Aortica","Estenose Mitral","Insuf. Aortica","Insuf. Mitral"],b:[]},
+'CAR-03-A':{s:'CAR',a:["Sindromes Coronarianas Pt1","Sindromes Coronarianas Pt2"],b:["Complicacoes Pos-IAM"]},
+'CIR-01-A':{s:'CIR',a:["Trauma I - Avaliacao Inicial","Trauma I - Trauma de Torax"],b:["Embolia Gordurosa","Morte Encefalica","Trauma Cervical e Fraturas Face","Trauma Diafragmatico","Lesoes Uretra e Bexiga","Trauma Preparacao e Triagem","Trauma Renal","Trauma Vascular Abdominal","Coluna Vertebral e Raquimedular"]},
+'CIR-01-B':{s:'CIR',a:["Trauma II - Abdome e Pelve","Trauma II - TCE"],b:["TCE e Colar Cervical","Abdomen Lesoes Especificas"]},
+'CIR-02-A':{s:'CIR',a:["Cancer de Prostata","Hiperplasia Prostatica","Nefrolitiase"],b:["Ca Bexiga","Ca Rim","Anestesiologia","Choque Monitorizacao","Choque Tratamento","Cicatrizacao Feridas","Cirurgia Plastica","Suporte Nutricional","Ulceras Pressao"]},
+'CIR-02-B':{s:'CIR',a:["Queimaduras","REMIT"],b:[]},
+'CIR-03-A':{s:'CIR',a:["Hernias Inguinal/Femoral","Hernias Tratamento","Hernias Anatomia Virilha","Outros Tipos Hernia"],b:["Fios de Sutura","Fistulas e Deiscencia","Projeto ERAS/ACERTO","Hernias Videolaparoscopica","Anestesiologia","Profilaxia TEP/TVP","Cicatrizacao Feridas","Hernias na Infancia","Outras Hernias","Tipos de Tela"]},
+'CIR-03-B':{s:'CIR',a:["Pos-Operatorio","Pre-Operatorio","Protocolo Cirurgia Segura"],b:[]},
+'CIR-04-A':{s:'CIR',a:["Disseccao Aorta Toracica","Doenca Venosa Cronica","Doenca Arterial Periferica","Oclusao Arterial Aguda MMII","Ruptura AAA","AAA"],b:[]},
+'CIR-04-B':{s:'CIR',a:["Cirurgia Bariatrica","Proctologia"],b:["Colangite Esclerosante","Anatomia Reto/Canal Anal","Cir Ped Afeccoes Cervicais","Cir Ped GI 1","Cir Ped GI 2","Cir Ped GI 3","Cir Ped Geniturinario","Cirurgia Plastica","Cabeca e Pescoco"]},
+'DER-01-A':{s:'DER',a:["Dermatologia II Pt1","Hanseniase"],b:["Mpox"]},
+'DER-01-B':{s:'DER',a:["Dermatologia II Pt2","Outras Infeccoes"],b:["Acne"]},
+'END-01-A':{s:'END',a:["Tireoide I"],b:["Eutireoideo Doente","Hipotireoidismo Congenito","Hipofise Hipotalamo","Anat. Hipofise/Hipotalamo","Anat. Tireoide (R+)","Anat. Tireoide","Hiperparatireoidismo 1o","Hiperparatireoidismo 2o/3o","Hipofise e Hipotalamo","Hipoparatireoidismo","Raquitismo/Osteomalacia"]},
+'END-01-B':{s:'END',a:["Tireoide II Ca Tireoide","Tireoide II Hashimoto/Hipo","Tireoide II Introducao","Tireoide II Nodulo","Tireoide II Tireoidite"],b:[]},
+'END-02-A':{s:'END',a:["Doencas da Adrenal"],b:["Hiperparatireoidismo 1o","Hipofise/Hipotalamo","Anat. Adrenal","Hiperplasia Adrenal Congenita","Incidentaloma Adrenal","NEM"]},
+'END-03-A':{s:'END',a:["Complicacoes Agudas","DM Introducao/Diagnostico","Tratamento"],b:["Dislipidemia","Hipoglicemia","Obesidade Pos-Bariatrica","Obesidade Cir. Bariatrica","Obesidade Fisiopat/Tto","Obesidade Introducao","Pe Diabetico"]},
+'GAS-01-A':{s:'GAS',a:["Acalasia","Ca Esofago","DRGE","Diverticulo Zenker"],b:["Anat. Esofago","Hernia Hiato","Perfuracao Esofago","Diverticulos Esofagicos"]},
+'GAS-01-B':{s:'GAS',a:["Ca Gastrico","DUP Cirurgias","DUP Clinica/Dx/Tto","DUP Nocoes Gerais","HDA","Sind. Pos-Gastrectomias"],b:["Anat. Estomago","GIST","Linfoma Gastrico"]},
+'GAS-02-A':{s:'GAS',a:["Sind. Disabsortivas/DII Pt1","Sind. Disabsortivas/DII Pt2"],b:[]},
+'GAS-02-B':{s:'GAS',a:["HDB","Isquemia Intestinal","Obstrucao Intestinal Abordagem","Obstrucao Intestinal Causas"],b:["Sind. Intestino Irritavel"]},
+'GAS-02-C':{s:'GAS',a:["Apendicite Aguda","Ca Colorretal","Diverticulite Aguda","Doenca Diverticular Colons","Polipos/Sind. Polipose"],b:["Colite Pseudomembranosa","Tumores Carcinoides"]},
+'GAS-03-A':{s:'GAS',a:["Pancreatite Cronica/Ca Pancreas","Pancreatite Aguda"],b:["Anat. Colon","Abscesso Hepatico","Anat. Pancreas","Cirurgias Pancreaticas","Neo Cisticas Pancreas","Tumores Neuroendocrinos","Tumores Hepaticos Benignos","Tumores Hepaticos Malignos"]},
+'GAS-03-B':{s:'GAS',a:["Vias Biliares Colangite","Vias Biliares Colecistite","Vias Biliares Coledocolitiase","Vias Biliares Colelitiase","Vias Biliares Nocoes Gerais","Vias Biliares Outras Colecistites"],b:["Anat. Vias Biliares","Cistos Via Biliar","Lesao Iatrogenica Vias Biliares","Neo Vias Biliares"]},
+'GIN-01-A':{s:'GIN',a:["Anticoncepcao","Ciclo Menstrual","Ciclo Menstrual Introducao"],b:["SPM e TDPM","SPM/SDPM (bonus)"]},
+'GIN-01-B':{s:'GIN',a:["Amenorreia/SOP Introducao","Amenorreia/SOP Amenorreia","Amenorreia/SOP Amenorreia (2)","Amenorreia/SOP - SOP"],b:[]},
+'GIN-02-A':{s:'GIN',a:["Adenomiose","Endometriose","Introducao","Mioma","Polipos","SUA"],b:["Infertilidade","Polipos Endometrais/Dismenorreia"]},
+'GIN-03-A':{s:'GIN',a:["Climaterio","Distopia Genital","Incontinencia Urinaria","Introducao"],b:["Osteoporose","Fistulas Genitais/Bexiga Dolorosa"]},
+'GIN-04-A':{s:'GIN',a:["Doencas das Mamas","Doencas dos Ovarios","Introducao"],b:["Mamas e Ovarios (bonus)"]},
+'GIN-05-A':{s:'GIN',a:["Ca Colo/Lesoes Precursoras","Ca Endometrio","Introducao","Vacina/Condiloma"],b:["Dist. Humor/Tromboembolismo","Ca Vulva","NIV"]},
+'GIN-06-A':{s:'GIN',a:["Cervicite/DIP","Introducao","Ulceras","Violencia Sexual","Vulvovaginites"],b:["HIV e Gestacao","HIV e Gestacao (bonus)"]},
+'HEM-01-A':{s:'HEM',a:["Abordagem Inicial Anemia","Anemia Doenca Cronica","Anemia Ferropriva","Anemia Megaloblastica"],b:["Anemia Aplasica","Anemia Sideroblastica","Mielodisplasias"]},
+'HEM-01-B':{s:'HEM',a:["Anemias Hemoliticas Pt1","Anemias Hemoliticas Pt2"],b:["HPN","HPN Correcao","Alfa Talassemia"]},
+'HEM-02-A':{s:'HEM',a:["Intro Leucemias","LLA","LLC","LMA","LMC","Leucemias Agudas","Leucemias Cronicas"],b:[]},
+'HEM-02-B':{s:'HEM',a:["Linfomas","Mieloma"],b:["Doencas Mieloproliferativas","Esplenomegalia"]},
+'HEM-02-C':{s:'HEM',a:["Hemostasia Pt1","Hemostasia Pt2"],b:["Hemofilias","Tromboelastograma"]},
+'HEP-01-A':{s:'HEP',a:["Hepatite A/E","Hepatite B Aguda","Hepatite B Cronica","Hepatite C Cronica","Introducao Hepatologia"],b:["Insuficiencia Hepatica Aguda"]},
+'HEP-02-A':{s:'HEP',a:["Cirrose Hepatica","Doenca Hepatica Alcoolica","Esteatose Hepatica","Hepatopatias Hereditarias","Hepatopatias Autoimunes"],b:[]},
+'HEP-02-B':{s:'HEP',a:["Cirrose Complicacoes Pt1","Cirrose Complicacoes Pt2"],b:["Anat. Figado","Cirurgias HP","Transplante Hepatico"]},
+'INF-01-A':{s:'INF',a:["AIDS Patogenese/Hx Natural/Dx","AIDS Respiratoria/Neurologicas","AIDS Tratamento/Profilaxia"],b:["HTLV","Profilaxia Transmissao Vertical HIV","Abscesso Pulmonar","Derrame Pleural Parapneumonico","Sepse/Choque Septico"]},
+'INF-02-A':{s:'INF',a:["Endocardite Infecciosa","Meningite"],b:["Infeccao Cateter"]},
+'INF-02-B':{s:'INF',a:["Parasitoses Helmintos","Parasitoses Protozoarios"],b:["Acidentes Animais Peconhentos","Leishmaniose Visceral","Monkeypox","Nematelmintos","Platelmintos","Protozoarios"]},
+'INF-03-A':{s:'INF',a:["Oropouche/FA/Leptospirose","Dengue/Chikungunya/Zika"],b:["ITU","Covid-19","Covid-19 (2)","Febre Maculosa","Leishmaniose Visceral","Leishmaniose Visceral (2)","Malaria","Malaria (bonus)","Monkeypox"]},
+'NEF-01-A':{s:'NEF',a:["Alteracao Urinaria Assintomatica","Conceitos Basicos","GNRP","Introducao","SHU","Sind. Nefritica"],b:["Rim e HAS/Hemato","Rim Situacoes Diversas","Rim e Colagenoses","Rim e Doencas Infecciosas","Rim e Vasculites","Rim e Diabetes"]},
+'NEF-01-B':{s:'NEF',a:["Sind. Nefrotica Conceito/Clinica","Sind. Nefrotica Etiologias"],b:[]},
+'NEF-02-A':{s:'NEF',a:["Ateroembolismo","Dist. Tubulares Especificos","Estenose Art. Renal","NTA","Necrose Papila","NIA"],b:["Nefrotox. Antimicrobianos","Nefrotox. Analgesicos","Nefrotox. Metais Pesados","Nefrotox. Contraste","Acidose Tubular Renal","Rabdomiolise"]},
+'NEF-03-A':{s:'NEF',a:["Funcoes Renais","Dist. Sodio","Dist. Potassio","Hipercalemia","Hipocalemia","Hiponatremia","Introducao"],b:["Tto Hiponatremia","Tto Hiponatremia (bonus)"]},
+'NEF-03-B':{s:'NEF',a:["DAB Acidose/Alcalose Met.","DAB Intro/Definicoes"],b:["Delta-Delta"]},
+'NEF-03-C':{s:'NEF',a:["DRC","LRA"],b:["TRS HD/DP","TRS Transplante"]},
+'NEU-01-A':{s:'NEU',a:["Sindromes Neurologicas","Neuroanatomia","AVE Isquemico","AVE Hemorragico"],b:["Intoxicacoes Exogenas","HIC"]},
+'NEU-01-B':{s:'NEU',a:["Fraqueza Muscular","Demencia","Doenca de Parkinson"],b:["Doencas Placa Motora"]},
+'NEU-01-C':{s:'NEU',a:["Cefaleia","Epilepsia/Crises Febris"],b:[]},
+'OBS-01-A':{s:'OBS',a:["Assistencia Pre-Natal","Dx Gravidez","Hiperemese Gravidica","Introducao","Modificacoes Organismo"],b:["Aconselhamento Genetico"]},
+'OBS-02-A':{s:'OBS',a:["Amniorrexe Prematura","Introducao","Parto Assistencia","Parto Trajeto/Estatica","Prematuridade"],b:[]},
+'OBS-03-A':{s:'OBS',a:["Abortamento","DTG","Gravidez Ectopica","Introducao (1o tri)"],b:[]},
+'OBS-03-B':{s:'OBS',a:["DPP","DHPN","Introducao (2o tri)","Placenta Previa","Roturas/Dx Diferenciais"],b:[]},
+'OBS-04-A':{s:'OBS',a:["DM Gestacional","Gestacao Gemelar","HAS","Introducao"],b:[]},
+'OBS-05-A':{s:'OBS',a:["Forcipe","Introducao","Puerperio","Sofrimento Fetal"],b:[]},
+'OFT-01-A':{s:'OFT',a:["Anatomia","Anatomia (bonus)","Conjuntivite/Dx Diferenciais","Conjuntivite/Dx Diferenciais (2)"],b:[]},
+'OFT-01-B':{s:'OFT',a:["Glaucoma","Retinoblastoma","Retinopatias"],b:[]},
+'ORT-01-A':{s:'ORT',a:["Orto Ped MS","Orto Ped Quadril","Orto Ped MI"],b:["Osteomielite"]},
+'ORT-01-B':{s:'ORT',a:["Ortopedia Clinica","Traumato-Ortopedia"],b:["Doencas Periarticulares"]},
+'PED-01-A':{s:'PED',a:["Dist. Respiratorio Pt1","Dist. Respiratorio Pt2","Introducao Neonatal","Reanimacao Neonatal"],b:["Miscelanea","Triagem Neonatal","Doencas TGI","Miscelanea (longo)","Exame Fisico Neonatal","Triagem Neonatal (longo)"]},
+'PED-01-B':{s:'PED',a:["Ictericia Neonatal","Inf. Congenitas HIV","Inf. Congenitas Outras","Inf. Congenitas Sifilis"],b:[]},
+'PED-02-A':{s:'PED',a:["Aleitamento Aspectos Praticos","Aleitamento Definicoes/Composicao","Aleitamento Queixas/CI","Suplementacao Micronutrientes"],b:[]},
+'PED-02-B':{s:'PED',a:["Crescimento","Desenvolvimento","Puberdade"],b:[]},
+'PED-03-A':{s:'PED',a:["Avaliacao Nutricional","Desnutricao Grave","Obesidade/Baixa Estatura"],b:[]},
+'PED-03-B':{s:'PED',a:["Vacinas Pt1","Vacinas Pt2","Calendarios Vacinais","Imunizacoes Aspectos Iniciais"],b:[]},
+'PED-04-A':{s:'PED',a:["Diarreia Aguda Pt1","Diarreia Aguda Pt2"],b:[]},
+'PED-04-B':{s:'PED',a:["Epiglotite/Laringotraqueite","Resfriado/OMA","Sinusite/Faringite"],b:[]},
+'PED-04-C':{s:'PED',a:["Bronquiolite Viral","Pneumonia Afebril/Coqueluche","Pneumonia Bacteriana"],b:[]},
+'PED-05-A':{s:'PED',a:["ITU","Outros Dist. Urologicos"],b:[]},
+'PED-05-B':{s:'PED',a:["Sarampo/Rubeola","Exantema Subito/Eritema Infeccioso","Varicela/Mao-Pe-Boca","Escarlatina/Mononucleose"],b:[]},
+'PNE-01-A':{s:'PNE',a:["DPOC","Espirometria/Asma"],b:["SDRA","Pneumopatias Intersticiais","Sarcoidose","SDRA (2)","Ventilacao Mecanica"]},
+'PNE-01-B':{s:'PNE',a:["Ca Pulmao","TEP"],b:["Nodulo Pulmonar Solitario"]},
+'PNE-02-A':{s:'PNE',a:["Controle TB","Hx Natural TB","TB Tratamento","TB Extrapulmonar","TB Clinica/Dx"],b:[]},
+'PNE-02-B':{s:'PNE',a:["Pneumonia Pt1","Pneumonia Pt2"],b:["Derrame Pleural"]},
+'PRE-01-A':{s:'PRE',a:["Medidas Saude Coletiva 1","Medidas Saude Coletiva 2","Medidas Saude Coletiva 3","Medidas Saude Coletiva 4"],b:["Indicadores/Censo 2022","Sistemas de Informacao"]},
+'PRE-02-A':{s:'PRE',a:["Estudos Epidemiologicos Analise","Estudos Epidemiologicos Classificacao"],b:["Estudos Descritivos/Metanalise","Variaveis"]},
+'PRE-02-B':{s:'PRE',a:["Epidemiologia Clinica"],b:["Fases Ensaio Clinico","Testes Estatisticos","Curva ROC","Medidas Tendencia Central","Verossimilhanca/Testes Multiplos"]},
+'PRE-03-A':{s:'PRE',a:["Niveis de Prevencao","Processo Epidemico","Vigilancia da Saude"],b:["Raiva","Etica Medica","Glossario Doencas Infecciosas","Saude Trabalhador Agrotoxicos","Saude Trabalhador CAT","Saude Trabalhador Pneumoconioses","Saude Trabalhador Saturnismo"]},
+'PRE-04-A':{s:'PRE',a:["Atencao Basica","Financiamento SUS/AB","SUS Historia/Leis"],b:[]},
+'PSQ-01-A':{s:'PSQ',a:["Delirium","Transt. Humor","Transt. Psicoticos"],b:["Suicidio"]},
+'PSQ-01-B':{s:'PSQ',a:["Transt. Ansiedade/TOC/TEPT/Alimentares","Transt. Uso Substancias"],b:["Transt. Neurodesenvolvimento"]},
+'REU-01-A':{s:'REU',a:["Artrite Reumatoide","Espondiloartropatias","Osteoartrite"],b:["Anti-inflamatorios/Glicocorticoides","Fibromialgia"]},
+'REU-01-B':{s:'REU',a:["Febre Reumatica","Gota"],b:["Febre Familiar Mediterraneo"]},
+'REU-02-A':{s:'REU',a:["Esclerose Sistemica","Introducao","Miosites/Doenca Mista"],b:[]},
+'REU-02-B':{s:'REU',a:["Lupus","Sind. Sjogren","SAAF"],b:[]},
+'REU-02-C':{s:'REU',a:["Vasculites Pt1","Vasculites Pt2"],b:["Artrite Septica","Amiloidoses","Policondrite Recidivante"]},
+};
+// Helpers
+function modTotal(mod){const m=VF[mod];return m?(m.a.length+m.b.length):0}
+function modWatched(mod){return(state.watchedVideos[mod]||[]).length}
+
+// Mapa: content code → VF key (identity mapping now)
+const CODE_TO_MODULE={};
+ALL_CONTENT.forEach(c=>{CODE_TO_MODULE[c.c]=c.c});
+const TOTAL_VIDEOS=Object.keys(VF).reduce((s,k)=>s+modTotal(k),0);
+
+/* ═══════════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════════ */
+const STORAGE_KEY='medplan_state';
+let state={exams:[],blockedDays:[],studyDays:{},completedContent:[],watchedVideos:{},
+  settings:{startDate:'',studyDaysPerWeek:5},activeFilter:'all',activeSubject:null,
+  weekPlan:[],questions:{},currentWeekIdx:0,movedContent:{},
+  xp:0,level:1,streak:0,lastStudyDate:'',streakRecord:0,badges:[],soundEnabled:true};
+let currentYear,currentMonth;
+let currentDayModalKey=null;
+let scheduleFilter='';
+let scheduleStatus='';
+
+function loadState(){
+  try{const raw=localStorage.getItem(STORAGE_KEY);if(raw){const p=JSON.parse(raw);
+    state={...state,...p};
+    if(!state.weekPlan)state.weekPlan=[];
+    if(!state.questions)state.questions={};
+    if(state.currentWeekIdx==null)state.currentWeekIdx=0;
+    if(state.xp==null)state.xp=0;
+    if(state.level==null)state.level=1;
+    if(state.streak==null)state.streak=0;
+    if(!state.lastStudyDate)state.lastStudyDate='';
+    if(state.streakRecord==null)state.streakRecord=0;
+    if(!state.badges)state.badges=[];
+    if(state.soundEnabled==null)state.soundEnabled=true;
+    // Migrate old module-name keys to content-code keys
+    if(state.watchedVideos && !state.migrated_vf){
+      const oldWV=state.watchedVideos;
+      const hasOldKeys=Object.keys(oldWV).some(k=>k.includes(' '));
+      if(hasOldKeys){
+        state.watchedVideos={};
+        (state.completedContent||[]).forEach(code=>{
+          if(VF[code]){
+            const total=VF[code].a.length+VF[code].b.length;
+            state.watchedVideos[code]=Array.from({length:total},(_,i)=>i);
+          }
+        });
+      }
+      state.migrated_vf=true;
+      saveState();
+    }
+  }}catch(e){}
+  const now=new Date();currentYear=now.getFullYear();currentMonth=now.getMonth();
+}
+function saveState(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}catch(e){}}
+
+/* ═══════════════════════════════════════════════════════════
+   DATE UTILS
+   ═══════════════════════════════════════════════════════════ */
+const MONTHS=['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+function fmtDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function parseDate(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)}
+function isSameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate()}
+function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r}
+function isWeekend(d){const w=d.getDay();return w===0||w===6}
+function diffDays(a,b){return Math.floor((b-a)/864e5)}
+
+function getAvailableDays(start,end){
+  const days=[];let c=new Date(start);c.setHours(0,0,0,0);
+  const fin=new Date(end);fin.setHours(0,0,0,0);
+  const blockedSet=new Set(state.blockedDays);
+  const studyDaySet=new Set(state.settings.studyDays||[1,2,3,4,5]);
+  while(c<fin){const k=fmtDate(c);
+    if(studyDaySet.has(c.getDay())&&!blockedSet.has(k)){days.push(new Date(c))}
+    c=addDays(c,1)}
+  return days;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PLANNING ENGINE
+   ═══════════════════════════════════════════════════════════ */
+function autoDistribute(){
+  if(!state.exams.length){toast('Configure a prova primeiro','error');return}
+  if(!state.settings.startDate){toast('Configure a data de inicio','error');return}
+  const today=new Date();today.setHours(0,0,0,0);
+  const examDates=state.exams.map(e=>parseDate(e.date));
+  const lastExam=new Date(Math.max(...examDates));
+  const bufferDays=state.settings.bufferDays||14;
+  const endDate=addDays(lastExam,-bufferDays);
+  const perWeek=state.settings.studyDaysPerWeek;
+
+  if(today>=endDate){toast('Prazo encerrado ou buffer muito grande!','error');return}
+
+  // Separate completed vs pending
+  const completedSet=new Set(state.completedContent);
+  let pendingWeeks=[];
+  SCHEDULE.forEach(week=>{
+    const pendingItems=week.items.filter(i=>!completedSet.has(i.c));
+    if(pendingItems.length>0) pendingWeeks.push({w:week.w,items:pendingItems});
+  });
+  // Apply moved content
+  if(state.movedContent){
+    Object.entries(state.movedContent).forEach(([code,targetW])=>{
+      pendingWeeks.forEach(pw=>{pw.items=pw.items.filter(i=>i.c!==code)});
+      let targetPW=pendingWeeks.find(pw=>pw.w===targetW);
+      if(!targetPW){targetPW={w:targetW,items:[]};pendingWeeks.push(targetPW)}
+      const item=ALL_CONTENT.find(c=>c.c===code);
+      if(item&&!completedSet.has(code))targetPW.items.push(item);
+    });
+    pendingWeeks=pendingWeeks.filter(pw=>pw.items.length>0);
+    pendingWeeks.sort((a,b)=>a.w-b.w);
+  }
+
+  if(pendingWeeks.length===0){toast('Todos os conteudos ja foram concluidos!','success');return}
+
+  // Future available days from TODAY
+  let futureDays=getAvailableDays(today,endDate);
+
+  if(futureDays.length===0){toast('Nenhum dia disponivel!','error');return}
+
+  // Calculate real weeks available
+  const baseMonday=getWeekStartMonday(today);
+  const weekBase=(baseMonday<today)?addDays(baseMonday,7):baseMonday;
+  const totalDays=diffDays(today,endDate);
+  const realWeeks=Math.max(1,Math.floor(totalDays/7));
+  const pendingTotal=pendingWeeks.length;
+
+  // Build week plan - distribute pending MEDCURSO weeks across real weeks
+  const weekPlan=[];
+  state.studyDays={};
+
+  if(realWeeks>=pendingTotal){
+    // Spread: each pending MEDCURSO week gets its own real week
+    for(let i=0;i<pendingTotal;i++){
+      const weekOffset=Math.round(i*(realWeeks/pendingTotal));
+      const ws=addDays(weekBase,weekOffset*7);
+      const medW=pendingWeeks[i];
+      const items=medW.items.map(it=>{
+        const mod=it.c;
+        return{code:it.c,subject:it.s,topic:it.t,module:mod,totalVids:modTotal(mod)};
+      });
+      const totalVids=items.reduce((s,it)=>s+it.totalVids,0);
+      const studyDaysInWeek=countStudyDaysInWeek(ws);
+      weekPlan.push({
+        realWeekStart:fmtDate(ws),medWeeks:[medW.w],items,
+        totalVideos:totalVids,videosPerDay:studyDaysInWeek>0?Math.ceil(totalVids/studyDaysInWeek):totalVids
+      });
+    }
+  }else{
+    // Compress: multiple MEDCURSO weeks per real week
+    const base=Math.floor(pendingTotal/realWeeks);
+    const extra=pendingTotal%realWeeks;
+    let medIdx=0;
+    for(let r=0;r<realWeeks&&medIdx<pendingTotal;r++){
+      const ws=addDays(weekBase,r*7);
+      const count=(r>=realWeeks-extra)?base+1:base;
+      const medWeeks=[];const items=[];
+      for(let j=0;j<count&&medIdx<pendingTotal;j++,medIdx++){
+        const medW=pendingWeeks[medIdx];
+        medWeeks.push(medW.w);
+        medW.items.forEach(it=>{
+          const mod=it.c;
+          items.push({code:it.c,subject:it.s,topic:it.t,module:mod,totalVids:modTotal(mod)});
+        });
+      }
+      const totalVids=items.reduce((s,it)=>s+it.totalVids,0);
+      const studyDaysInWeek=countStudyDaysInWeek(ws);
+      weekPlan.push({
+        realWeekStart:fmtDate(ws),medWeeks,items,
+        totalVideos:totalVids,videosPerDay:studyDaysInWeek>0?Math.ceil(totalVids/studyDaysInWeek):totalVids
+      });
+    }
+  }
+
+  // Build studyDays for calendar (only future days, only pending content)
+  weekPlan.forEach(wp=>{
+    const ws=parseDate(wp.realWeekStart);
+    const studyDays=getStudyDaysInWeek(ws);
+    const futureStudyDays=studyDays.filter(d=>d>=today);
+    const codes=wp.items.map(it=>it.code);
+    futureStudyDays.forEach((d,i)=>{
+      const k=fmtDate(d);
+      if(!state.studyDays[k])state.studyDays[k]=[];
+      const myCode=codes[i%codes.length];
+      if(myCode)state.studyDays[k].push(myCode);
+    });
+    codes.forEach(c=>{
+      const assigned=futureStudyDays.some(d=>(state.studyDays[fmtDate(d)]||[]).includes(c));
+      if(!assigned&&futureStudyDays.length>0){
+        const k=fmtDate(futureStudyDays[0]);
+        if(!state.studyDays[k])state.studyDays[k]=[];
+        state.studyDays[k].push(c);
+      }
+    });
+  });
+
+  state.weekPlan=weekPlan;
+  state.currentWeekIdx=0;
+  saveState();render();
+  toast(`Planejamento: ${pendingWeeks.length} semanas em ${realWeeks} semanas reais. ${futureDays.length} dias de estudo.`,'success');
+}
+
+function getWeekStartMonday(d){
+  const dt=new Date(d);dt.setHours(0,0,0,0);
+  const day=dt.getDay();const diff=day===0?-6:1-day;
+  dt.setDate(dt.getDate()+diff);return dt;
+}
+
+function countStudyDaysInWeek(weekStart){
+  return getStudyDaysInWeek(weekStart).length;
+}
+
+function getStudyDaysInWeek(weekStart){
+  const blockedSet=new Set(state.blockedDays);
+  const studyDaySet=new Set(state.settings.studyDays||[1,2,3,4,5]);
+  const days=[];
+  for(let i=0;i<7;i++){
+    const d=addDays(weekStart,i);const k=fmtDate(d);
+    if(blockedSet.has(k))continue;
+    if(!studyDaySet.has(d.getDay()))continue;
+    days.push(d);
+  }
+  return days;
+}
+
+function getCurrentWeekIdx(){
+  if(!state.weekPlan||!state.weekPlan.length)return 0;
+  const today=new Date();today.setHours(0,0,0,0);
+  for(let i=state.weekPlan.length-1;i>=0;i--){
+    if(parseDate(state.weekPlan[i].realWeekStart)<=today)return i;
+  }
+  return 0;
+}
+
+function getWeekWatchedVideos(wp){
+  let count=0;
+  const seen=new Set(); // avoid double counting modules
+  wp.items.forEach(it=>{
+    if(!it.module||seen.has(it.module))return;
+    seen.add(it.module);
+    count+=modWatched(it.module);
+  });
+  return count;
+}
+function getWeekTotalVideos(wp){
+  let count=0;
+  const seen=new Set();
+  wp.items.forEach(it=>{
+    if(!it.module||seen.has(it.module))return;
+    seen.add(it.module);
+    count+=modTotal(it.module);
+  });
+  return count;
+}
+
+function limitPerWeek(days,n){
+  const wkCount=new Map();const result=[];
+  for(const d of days){const wk=getISOWeek(d);const cnt=wkCount.get(wk)||0;
+    if(cnt<n){result.push(d);wkCount.set(wk,cnt+1)}}
+  return result;
+}
+function getISOWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  const n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);
+  const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return d.getFullYear()+'-'+Math.ceil(((t-y)/864e5+1)/7)}
+
+/* ═══════════════════════════════════════════════════════════
+   RENDERING
+   ═══════════════════════════════════════════════════════════ */
+function render(){
+  renderCalendar();renderSchedule();renderWeekView();renderDashboard();renderSidebar();renderChips();renderVideosDashboard();renderGameDashboard();
+}
+
+function renderCalendar(){
+  const grid=document.getElementById('cal-grid');grid.innerHTML='';
+  document.getElementById('month-label').textContent=MONTHS[currentMonth]+' '+currentYear;
+  const first=new Date(currentYear,currentMonth,1);
+  const last=new Date(currentYear,currentMonth+1,0);
+  let dow=first.getDay();dow=(dow===0)?6:dow-1;
+  const gridStart=addDays(first,-dow);
+  let endDow=last.getDay();const toSun=endDow===0?0:7-endDow;
+  const gridEnd=addDays(last,toSun);
+  const today=new Date();today.setHours(0,0,0,0);
+  const completedSet=new Set(state.completedContent);
+  // Build lookup: date -> weekPlan entry
+  const dateToWeekPlan=new Map();
+  if(state.weekPlan&&state.weekPlan.length){
+    state.weekPlan.forEach(wp=>{
+      const ws=parseDate(wp.realWeekStart);
+      for(let d=0;d<7;d++){const dd=addDays(ws,d);dateToWeekPlan.set(fmtDate(dd),wp)}
+    });
+  }
+
+  let cursor=new Date(gridStart);
+  while(cursor<=gridEnd){
+    const key=fmtDate(cursor);const inMonth=cursor.getMonth()===currentMonth&&cursor.getFullYear()===currentYear;
+    const isToday=isSameDay(cursor,today);
+    const isHol=holidayMap.has(key);const holName=holidayMap.get(key)||'';
+    const isBlocked=state.blockedDays.includes(key);
+    const exam=state.exams.find(e=>e.date===key);
+    const studyItems=state.studyDays[key]||[];
+    const dayContents=studyItems.map(id=>ALL_CONTENT.find(c=>c.c===id)).filter(Boolean);
+    const allDone=studyItems.length>0&&studyItems.every(id=>completedSet.has(id));
+    const wp=dateToWeekPlan.get(key);
+    // Filter
+    let visible=true;
+    if(state.activeSubject&&studyItems.length>0){
+      const hasSubj=dayContents.some(c=>c.s===state.activeSubject);
+      if(!hasSubj)visible=false;
+    }
+    let cls='day';
+    if(!inMonth)cls+=' other';
+    if(isToday)cls+=' today';
+    if(exam)cls+=' exam';
+    else if(isBlocked)cls+=' blocked';
+    else if(studyItems.length>0)cls+=' study';
+    if(isHol&&!exam)cls+=' holiday';
+    if(allDone&&studyItems.length>0)cls+=' completed';
+    const el=document.createElement('div');el.className=cls;
+    if(!visible&&studyItems.length>0)el.style.opacity='0.3';
+    // If weekPlan active and day has subject colors, tint the border
+    if(wp&&!exam&&!isBlocked&&dayContents.length>0){
+      const mainColor=SUBJECTS[dayContents[0].s]?.color;
+      if(mainColor)el.style.borderColor=mainColor+'55';
+    }
+    let html='<div class="day-bar"></div>';
+    // Week label from weekPlan
+    if(wp&&inMonth){
+      const wLabel=wp.medWeeks.map(w=>'S'+String(w).padStart(2,'0')).join('+');
+      html+=`<div style="position:absolute;top:3px;right:4px;font-size:7px;font-family:var(--font-mono);font-weight:700;color:var(--text-muted);opacity:.7">${wLabel}</div>`;
+    }
+    if(isToday){html+=`<div class="dnum">${cursor.getDate()}</div>`}
+    else{html+=`<div class="dnum">${cursor.getDate()}</div>`}
+    if(exam)html+=`<div class="day-label" style="color:${exam.color||'var(--amber)'}">${exam.name}</div>`;
+    else if(isBlocked)html+='<div class="day-label">Bloqueado</div>';
+    else if(isHol)html+=`<div class="day-label">${holName}</div>`;
+    // Show videos/day target on study days
+    if(wp&&studyItems.length>0&&!exam&&!isBlocked){
+      html+=`<div style="font-size:8px;font-family:var(--font-mono);color:var(--teal);margin-top:1px">${wp.videosPerDay}v/d</div>`;
+    }
+    if(dayContents.length>0){
+      html+='<div class="day-dots">';
+      dayContents.forEach(c=>{const st=c.t.substring(0,18);html+=`<div class="day-chip" style="background:${SUBJECTS[c.s]?.color||'#666'}">${c.s} ${st}</div>`});
+      html+='</div>';
+    }
+    if(allDone&&studyItems.length>0)html+='<div class="day-check">&#10003;</div>';
+    el.innerHTML=html;
+    const dateKey=key;
+    el.onclick=()=>openDayModal(dateKey);
+    grid.appendChild(el);
+    cursor=addDays(cursor,1);
+  }
+}
+
+function filterScheduleSubject(val){scheduleFilter=val;renderSchedule();}
+function filterScheduleStatus(val){scheduleStatus=val;renderSchedule();}
+
+function renderSchedule(){
+  const view=document.getElementById('schedule-view');view.innerHTML='';
+  // Add filter dropdowns
+  let filterHTML=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    <label style="font-size:11px;font-weight:700;color:var(--text-muted);font-family:var(--font-mono)">MATERIA:</label>
+    <select id="schedule-filter" onchange="filterScheduleSubject(this.value)" style="flex:1;max-width:220px">
+      <option value="">Todas</option>`;
+  Object.entries(SUBJECTS).forEach(([code,s])=>{
+    filterHTML+=`<option value="${code}"${scheduleFilter===code?' selected':''}>${s.name} (${code})</option>`;
+  });
+  filterHTML+=`</select>
+    <label style="font-size:11px;font-weight:700;color:var(--text-muted);font-family:var(--font-mono)">STATUS:</label>
+    <select id="schedule-status" onchange="filterScheduleStatus(this.value)" style="max-width:160px">
+      <option value=""${scheduleStatus===''?' selected':''}>Todos</option>
+      <option value="done"${scheduleStatus==='done'?' selected':''}>Concluidos</option>
+      <option value="pending"${scheduleStatus==='pending'?' selected':''}>Pendentes</option>
+    </select></div>`;
+  view.insertAdjacentHTML('beforeend',filterHTML);
+  const completedSet=new Set(state.completedContent);
+  const activeFilter=scheduleFilter||state.activeSubject;
+  let filtered=activeFilter?SCHEDULE.map(w=>({...w,items:w.items.filter(i=>i.s===activeFilter)})).filter(w=>w.items.length):SCHEDULE;
+  // Status filter
+  if(scheduleStatus==='done'){filtered=filtered.map(w=>({...w,items:w.items.filter(i=>completedSet.has(i.c))})).filter(w=>w.items.length)}
+  else if(scheduleStatus==='pending'){filtered=filtered.map(w=>({...w,items:w.items.filter(i=>!completedSet.has(i.c))})).filter(w=>w.items.length)}
+  filtered.forEach(week=>{
+    const done=week.items.filter(i=>completedSet.has(i.c)).length;
+    const total=week.items.length;
+    let html=`<div class="week-card"><div class="week-hdr"><span class="week-num">SEM ${String(week.w).padStart(2,'0')}</span>
+      <span class="week-progress">${done}/${total}</span></div><div class="week-items">`;
+    week.items.forEach(item=>{
+      const isDone=completedSet.has(item.c);
+      const mod=CODE_TO_MODULE[item.c];
+      const vtotal=mod?modTotal(mod):0;const vw=mod?modWatched(mod):0;
+      const vpct=vtotal>0?Math.round(vw/vtotal*100):0;const vdone=vw>=vtotal&&vtotal>0;
+      const accId='sch-'+item.c;
+      html+=`<div style="border-top:1px solid var(--border-subtle)">
+        <div class="week-item${isDone?' completed':''}" style="flex-wrap:nowrap">
+          <div class="sdot" style="background:${SUBJECTS[item.s]?.color||'#666'}"></div>
+          <div style="flex:1;min-width:0"><div class="week-item-code">${item.c.replace(/-/g,' ')} ${(state.movedContent||{})[item.c]?`<span class="skip-tag">SEM ${String(state.movedContent[item.c]).padStart(2,'0')}</span>`:''}</div>
+            <div class="week-item-topic${isDone?' completed':''}">${item.t}</div></div>
+          <button class="skip-btn" onclick="openSkipModal('${item.c}');event.stopPropagation()" title="Mover"${isDone?' disabled':''}>&#8644;</button>
+          <button class="check-btn${isDone?' checked':''}" onclick="toggleContent('${item.c}',event)">${isDone?'&#10003;':''}</button>
+        </div>
+        ${vtotal>0?`<div class="vid-acc" style="margin:4px 16px 10px 38px">
+          <div class="vid-acc-hdr" data-acc-id="${accId}" onclick="toggleAcc('${accId}')">
+            <span class="chevron">&#9654;</span>
+            <div class="vid-acc-icon">&#127909;</div>
+            <div class="vid-acc-title">${mod}</div>
+            <div class="vid-acc-badge${vdone?' done':''}" data-mod="${mod}">${vw}/${vtotal}</div>
+          </div>
+          <div class="vid-acc-body" data-acc-body="${accId}" data-mod="${mod}">
+            <div class="vid-acc-bar"><div class="vid-bar"><div class="vid-bar-fill" data-mod="${mod}" style="width:${vpct}%${vdone?';background:var(--green)':''}"></div></div></div>
+          </div>
+        </div>`:''}</div>`;
+    });
+    html+='</div></div>';view.insertAdjacentHTML('beforeend',html);
+  });
+}
+
+function renderWeekView(){
+  const view=document.getElementById('week-view');
+  if(!state.weekPlan||!state.weekPlan.length){
+    view.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px">Nenhum planejamento gerado.<br>Clique em "Planejar" para gerar o cronograma semanal.</div>';
+    return;
+  }
+  const idx=state.currentWeekIdx;
+  const wp=state.weekPlan[idx];
+  if(!wp){view.innerHTML='';return}
+  const medWeekLabels=wp.medWeeks.map(w=>'SEM '+String(w).padStart(2,'0')).join(' + ');
+  const weekTotal=getWeekTotalVideos(wp);
+  const weekWatched=getWeekWatchedVideos(wp);
+  const remaining=weekTotal-weekWatched;
+  const vpd=wp.videosPerDay||0;
+  const pct=weekTotal>0?Math.round(weekWatched/weekTotal*100):0;
+  const wsDate=parseDate(wp.realWeekStart);
+  const weDate=addDays(wsDate,6);
+  const dateRange=String(wsDate.getDate()).padStart(2,'0')+'/'+String(wsDate.getMonth()+1).padStart(2,'0')+' - '+String(weDate.getDate()).padStart(2,'0')+'/'+String(weDate.getMonth()+1).padStart(2,'0');
+
+  let html=`<div class="week-view-header">
+    <div>
+      <div class="week-view-title">Semana ${idx+1} &mdash; ${medWeekLabels}</div>
+      <div class="week-view-subtitle">${dateRange} (${wp.realWeekStart})</div>
+    </div>
+    <div class="week-nav">
+      <button class="nav-btn" onclick="changeWeek(-1)" ${idx===0?'disabled style="opacity:.3"':''}>&#9664;</button>
+      <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">${idx+1}/${state.weekPlan.length}</span>
+      <button class="nav-btn" onclick="changeWeek(1)" ${idx>=state.weekPlan.length-1?'disabled style="opacity:.3"':''}>&#9654;</button>
+      <button class="btn-outline btn-sm" onclick="goCurrentWeek()" style="margin-left:4px">Atual</button>
+    </div>
+  </div>`;
+
+  // Target
+  html+=`<div class="week-view-target">
+    <div class="week-view-target-main">~${vpd} videos/dia</div>
+    <div class="week-view-target-sub">${remaining} videos restantes na semana</div>
+    <div class="week-view-target-sub">${weekTotal} videos total</div>
+  </div>`;
+
+  // Progress bar
+  html+=`<div class="week-progress-section">
+    <div class="week-progress-label">${weekWatched}/${weekTotal} videos assistidos (${pct}%)</div>
+    <div class="vid-bar" style="height:8px"><div class="vid-bar-fill" style="width:${pct}%;${weekWatched>=weekTotal&&weekTotal>0?'background:var(--green)':''}"></div></div>
+  </div>`;
+
+  // Theme cards
+  const seenModules=new Set();
+  wp.items.forEach((item,i)=>{
+    const mod=item.module;
+    const subj=SUBJECTS[item.subject];
+    const vt=item.totalVids;
+    const vw=mod?modWatched(mod):0;
+    const vdone=vw>=vt&&vt>0;
+    const accId='wk-'+item.code;
+    html+=`<div class="week-theme-card">
+      <div class="week-theme-hdr">
+        <div class="sdot" style="background:${subj?.color||'#666'}"></div>
+        <div style="flex:1">
+          <div class="week-theme-name">${item.topic}</div>
+          <div class="week-theme-code">${item.code.replace(/-/g,' ')} &mdash; ${subj?.name||''}</div>
+        </div>
+      </div>`;
+    // Only show video accordion if module exists and not already shown
+    if(mod&&VF[mod]&&!seenModules.has(mod)){
+      seenModules.add(mod);
+      const vpct2=vt>0?Math.round(vw/vt*100):0;
+      html+=`<div class="vid-acc" style="margin:0;border:none;border-top:1px solid var(--border-subtle);border-radius:0">
+        <div class="vid-acc-hdr" data-acc-id="${accId}" onclick="toggleAcc('${accId}')">
+          <span class="chevron">&#9654;</span>
+          <div class="vid-acc-icon">&#127909;</div>
+          <div class="vid-acc-title">${mod} &mdash; ${VF[mod].a.length}A + ${VF[mod].b.length}B</div>
+          <div class="vid-acc-badge${vdone?' done':''}" data-mod="${mod}">${vw}/${vt}</div>
+        </div>
+        <div class="vid-acc-body" data-acc-body="${accId}" data-mod="${mod}"></div>
+      </div>`;
+    }
+    html+=`</div>`;
+  });
+
+  // Questions section
+  html+=`<div class="week-questions">
+    <div class="week-questions-title">Questoes realizadas</div>`;
+  wp.items.forEach(item=>{
+    const qval=state.questions[item.code]||0;
+    html+=`<div class="week-q-row">
+      <div class="week-q-label">${item.code.replace(/-/g,' ')} - ${SUBJECTS[item.subject]?.name||''}</div>
+      <input type="number" class="week-q-input" min="0" value="${qval}"
+        onchange="updateQuestions('${item.code}',this.value)" placeholder="0">
+    </div>`;
+  });
+  html+=`</div>`;
+
+  view.innerHTML=html;
+}
+
+function changeWeek(delta){
+  const newIdx=state.currentWeekIdx+delta;
+  if(newIdx<0||newIdx>=state.weekPlan.length)return;
+  state.currentWeekIdx=newIdx;saveState();renderWeekView();
+}
+
+function goCurrentWeek(){
+  state.currentWeekIdx=getCurrentWeekIdx();saveState();renderWeekView();
+}
+
+function updateQuestions(code,val){
+  if(!state.questions)state.questions={};
+  state.questions[code]=parseInt(val)||0;
+  saveState();
+}
+
+function renderDashboard(){
+  const done=state.completedContent.length;const pct=TOTAL>0?Math.round(done/TOTAL*100):0;
+  document.getElementById('ring-pct').textContent=pct+'%';
+  document.getElementById('stat-done').textContent=done;
+  document.getElementById('stat-remain').textContent=TOTAL-done;
+  const circ=377;const offset=circ-circ*(pct/100);
+  document.getElementById('ring-fg').style.strokeDashoffset=offset;
+  // Exam cards
+  const ec=document.getElementById('exam-cards');
+  if(!state.exams.length){ec.innerHTML='<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:12px">Nenhuma prova cadastrada.<br><button class="btn-outline btn-sm" style="margin-top:8px" onclick="openPlanModal()">+ Adicionar Prova</button></div>';
+  }else{
+    const today=new Date();today.setHours(0,0,0,0);
+    ec.innerHTML=state.exams.map((exam,idx)=>{
+      const ed=parseDate(exam.date);const days=Math.max(0,diffDays(today,ed));
+      const weeks=Math.floor(days/7);
+      const studyDays=getAvailableDays(addDays(today,1),ed).length;
+      const passed=diffDays(today,ed)<0;
+      const urg=passed?'critical':days>90?'relaxed':days>=30?'normal':days>=7?'urgent':'critical';
+      const urgLabel=passed?'Passou':{relaxed:'Tranquilo',normal:'Normal',urgent:'Urgente',critical:'Critico'}[urg];
+      return `<div class="exam-card"><div class="exam-card-header"><span class="exam-name" style="color:${exam.color||'var(--amber)'}">${exam.name}</span>
+        <span class="exam-urgency urgency-${urg}">${urgLabel}</span></div>
+        <div class="exam-stats"><div class="exam-stat"><div class="exam-stat-val">${days}</div><div class="exam-stat-label">Dias</div></div>
+        <div class="exam-stat"><div class="exam-stat-val">${weeks}</div><div class="exam-stat-label">Semanas</div></div>
+        <div class="exam-stat"><div class="exam-stat-val">${studyDays}</div><div class="exam-stat-label">Dias Estudo</div></div>
+        <div class="exam-stat"><div class="exam-stat-val">${TOTAL-done}</div><div class="exam-stat-label">Restantes</div></div></div>
+        ${(state.settings.bufferDays||0)>0?`<div style="text-align:center;margin-top:6px;font-size:10px;color:var(--text-muted);font-family:var(--font-mono)">Conteudo termina ${state.settings.bufferDays||0} dias antes</div>`:''}
+        <div style="text-align:right;margin-top:6px"><button class="btn-outline btn-sm btn-danger" onclick="removeExam(${idx})" style="font-size:10px">Remover</button></div></div>`;
+    }).join('');
+  }
+  // Questions total
+  const qTotal=state.questions?Object.values(state.questions).reduce((s,v)=>s+(parseInt(v)||0),0):0;
+  document.getElementById('questions-total').textContent=qTotal;
+  // Subject progress
+  const sp=document.getElementById('subject-progress');
+  const completedSet=new Set(state.completedContent);
+  sp.innerHTML=Object.entries(SUBJECTS).map(([code,s])=>{
+    const items=ALL_CONTENT.filter(i=>i.s===code);const d=items.filter(i=>completedSet.has(i.c)).length;
+    const p=items.length>0?Math.round(d/items.length*100):0;
+    return `<div class="subj-row"><span class="subj-name">${s.name}</span>
+      <div class="subj-bar"><div class="subj-bar-fill" style="width:${p}%;background:${s.color}"></div></div>
+      <span class="subj-pct">${p}%</span></div>`;
+  }).join('');
+}
+
+function renderSidebar(){
+  const completedSet=new Set(state.completedContent);
+  document.getElementById('badge-total').textContent=TOTAL;
+  document.getElementById('badge-pending').textContent=TOTAL-completedSet.size;
+  document.getElementById('badge-done').textContent=completedSet.size;
+  const nav=document.getElementById('subject-nav');
+  nav.innerHTML=Object.entries(SUBJECTS).map(([code,s])=>{
+    const count=ALL_CONTENT.filter(i=>i.s===code).length;
+    const active=state.activeSubject===code?' active':'';
+    return `<div class="nav-item${active}" onclick="filterSubject('${code}')"><div class="sdot" style="background:${s.color}"></div>${s.name}<span class="nav-badge">${count}</span></div>`;
+  }).join('');
+}
+
+function renderChips(){
+  const chips=document.getElementById('subject-chips');
+  let html=`<button class="chip${!state.activeSubject?' active':''}" data-filter="all" onclick="filterSubject(null)">Todos</button>`;
+  Object.entries(SUBJECTS).forEach(([code,s])=>{
+    const active=state.activeSubject===code?' active':'';
+    html+=`<button class="chip${active}" style="${state.activeSubject===code?'background:'+s.color+';border-color:transparent;color:#fff':''}" onclick="filterSubject('${code}')">${code}</button>`;
+  });
+  chips.innerHTML=html;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INTERACTIONS
+   ═══════════════════════════════════════════════════════════ */
+function changeMonth(delta){currentMonth+=delta;if(currentMonth>11){currentMonth=0;currentYear++}if(currentMonth<0){currentMonth=11;currentYear--}renderCalendar()}
+function goToday(){const n=new Date();currentYear=n.getFullYear();currentMonth=n.getMonth();renderCalendar()}
+function filterSubject(code){state.activeSubject=state.activeSubject===code?null:code;render()}
+
+function toggleContent(code,e){
+  if(e)e.stopPropagation();
+  const idx=state.completedContent.indexOf(code);
+  const marking=idx<0; // true = marking as done, false = unmarking
+  if(marking)state.completedContent.push(code);else state.completedContent.splice(idx,1);
+  // Auto-check/uncheck ALL videos of this content's module
+  const mod=CODE_TO_MODULE[code];
+  if(mod&&VF[mod]){
+    if(!state.watchedVideos)state.watchedVideos={};
+    const total=modTotal(mod);
+    if(marking){
+      // Mark all videos as watched
+      state.watchedVideos[mod]=Array.from({length:total},(_,i)=>i);
+    }else{
+      // Unmark all videos
+      state.watchedVideos[mod]=[];
+    }
+  }
+  saveState();render();
+  // Gamification hooks
+  if(marking){
+    addXP(15);updateStreak();checkBadges();
+    showReward('content',{code});
+    const week=SCHEDULE.find(w=>w.items.some(i=>i.c===code));
+    if(week&&week.items.every(i=>state.completedContent.includes(i.c))){
+      setTimeout(()=>{addXP(100);showReward('week',{week:week.w});},1500);
+    }
+  }
+  // Re-render day modal if open
+  if(currentDayModalKey && document.getElementById('day-modal').classList.contains('open')){
+    openDayModal(currentDayModalKey);
+  }
+}
+
+function openDayModal(dateKey){
+  currentDayModalKey=dateKey;
+  const modal=document.getElementById('day-modal');
+  const d=parseDate(dateKey);
+  const dow=['Dom','Seg','Ter','Qua','Qui','Sex','Sab'][d.getDay()];
+  document.getElementById('day-modal-title').textContent=`${dow}, ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+  const body=document.getElementById('day-modal-body');
+  const studyItems=(state.studyDays[dateKey]||[]).map(id=>ALL_CONTENT.find(c=>c.c===id)).filter(Boolean);
+  const completedSet=new Set(state.completedContent);
+  const isBlocked=state.blockedDays.includes(dateKey);
+  const exam=state.exams.find(e=>e.date===dateKey);
+  const hol=holidayMap.get(dateKey);
+  let html='';
+  if(hol)html+=`<div style="padding:8px 12px;background:var(--bg-elevated);border-radius:var(--radius-md);margin-bottom:12px;font-size:13px;color:var(--text-muted)">Feriado: ${hol}</div>`;
+  if(exam)html+=`<div style="padding:8px 12px;background:var(--amber-dim);border:1px solid var(--amber-border);border-radius:var(--radius-md);margin-bottom:12px;font-size:13px;color:var(--amber)">Prova: ${exam.name}</div>`;
+  html+=`<div style="display:flex;gap:8px;margin-bottom:16px">
+    <button class="btn-outline btn-sm" onclick="toggleBlock('${dateKey}')">${isBlocked?'Desbloquear':'Bloquear'} Dia</button></div>`;
+  if(studyItems.length>0){
+    html+='<div class="dash-title" style="margin-bottom:8px">Conteudos do Dia</div>';
+    studyItems.forEach(item=>{
+      const isDone=completedSet.has(item.c);
+      const mod=CODE_TO_MODULE[item.c];
+      const vtotal=mod?modTotal(mod):0;const vw=mod?modWatched(mod):0;
+      const vpct=vtotal>0?Math.round(vw/vtotal*100):0;const vdone=vw>=vtotal&&vtotal>0;
+      const accId='dm-'+item.c;
+      html+=`<div style="border:1px solid var(--border-subtle);border-radius:var(--radius-md);margin-bottom:8px;overflow:hidden">
+        <div class="week-item" style="padding:8px 10px;border:none;margin:0">
+        <div class="sdot" style="background:${SUBJECTS[item.s]?.color||'#666'}"></div>
+        <div style="flex:1"><div class="week-item-code">${item.c.replace(/-/g,' ')} ${(state.movedContent||{})[item.c]?`<span class="skip-tag">SEM ${String(state.movedContent[item.c]).padStart(2,'0')}</span>`:''}</div>
+        <div class="week-item-topic${isDone?' completed':''}" style="font-size:12px">${item.t}</div></div>
+        <button class="skip-btn" onclick="openSkipModal('${item.c}')" title="Mover"${isDone?' disabled':''}>&#8644;</button>
+        <button class="check-btn${isDone?' checked':''}" onclick="toggleContent('${item.c}')">${isDone?'&#10003;':''}</button></div>
+        ${vtotal>0?`<div class="vid-acc" style="margin:0;border:none;border-top:1px solid var(--border-subtle);border-radius:0">
+          <div class="vid-acc-hdr" data-acc-id="${accId}" onclick="toggleAcc('${accId}')">
+            <span class="chevron">&#9654;</span>
+            <div class="vid-acc-icon">&#127909;</div>
+            <div class="vid-acc-title">${mod} — ${VF[mod].a.length}A + ${VF[mod].b.length}B</div>
+            <div class="vid-acc-badge${vdone?' done':''}" data-mod="${mod}">${vw}/${vtotal}</div>
+          </div>
+          <div class="vid-acc-body" data-acc-body="${accId}" data-mod="${mod}"></div>
+        </div>`:''}</div>`;
+    });
+  }else{html+='<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px">Nenhum conteudo programado para este dia.</div>'}
+  body.innerHTML=html;modal.classList.add('open');
+}
+
+function toggleVid(mod,idx){
+  if(!state.watchedVideos)state.watchedVideos={};
+  if(!state.watchedVideos[mod])state.watchedVideos[mod]=[];
+  const arr=state.watchedVideos[mod];
+  const i=arr.indexOf(idx);
+  const wasAdded=i<0;
+  if(i>=0)arr.splice(i,1);else arr.push(idx);
+  // Auto-complete content when ALL videos of module are watched
+  const allVidsDone=modWatched(mod)>=modTotal(mod)&&modTotal(mod)>0;
+  const codesForMod=Object.entries(CODE_TO_MODULE).filter(([c,m])=>m===mod).map(([c])=>c);
+  if(allVidsDone){
+    codesForMod.forEach(c=>{if(!state.completedContent.includes(c))state.completedContent.push(c)});
+  }else{
+    // If unchecking a video, unmark content as completed
+    if(!wasAdded){codesForMod.forEach(c=>{const ci=state.completedContent.indexOf(c);if(ci>=0)state.completedContent.splice(ci,1)})}
+  }
+  saveState();renderVideosDashboard();
+  // Gamification hooks
+  if(wasAdded){
+    addXP(5);updateStreak();checkBadges();
+    if(Math.random()<0.2)showReward('video');
+    if(allVidsDone){addXP(50);showReward('content',{module:mod});
+      // Check if full MEDCURSO week is complete
+      codesForMod.forEach(c=>{
+        const week=SCHEDULE.find(w=>w.items.some(it=>it.c===c));
+        if(week&&week.items.every(it=>state.completedContent.includes(it.c))){
+          setTimeout(()=>{addXP(100);showReward('week',{week:week.w});},1500);
+        }
+      });
+    }
+  }
+  // Re-render any open accordions without closing them
+  document.querySelectorAll(`.vid-ck[data-mod="${mod}"][data-idx="${idx}"]`).forEach(el=>{
+    const isNow=arr.includes(idx);
+    el.classList.toggle('checked',isNow);el.textContent=isNow?'✓':'';
+    el.closest('.vid-item')?.classList.toggle('watched',isNow);
+  });
+  // Update badges
+  document.querySelectorAll(`.vid-acc-badge[data-mod="${mod}"]`).forEach(el=>{
+    const t=modTotal(mod);const w=modWatched(mod);
+    el.textContent=`${w}/${t}`;el.classList.toggle('done',w>=t&&t>0);
+  });
+  document.querySelectorAll(`.vid-bar-fill[data-mod="${mod}"]`).forEach(el=>{
+    const t=modTotal(mod);const w=modWatched(mod);const p=t>0?Math.round(w/t*100):0;
+    el.style.width=p+'%';if(w>=t&&t>0)el.style.background='var(--green)';else el.style.background='';
+  });
+  // Update check buttons in schedule/week views
+  codesForMod.forEach(c=>{
+    const done=state.completedContent.includes(c);
+    document.querySelectorAll(`.check-btn`).forEach(btn=>{
+      if(btn.getAttribute('onclick')?.includes(`'${c}'`)){
+        btn.classList.toggle('checked',done);btn.textContent=done?'✓':'';
+      }
+    });
+  });
+}
+
+function buildVidList(mod,uid){
+  const m=VF[mod];if(!m)return'';
+  const watched=state.watchedVideos[mod]||[];
+  let html='';
+  if(m.a.length){
+    html+=`<div class="vid-section-label">Aulas (${m.a.length})</div>`;
+    m.a.forEach((name,i)=>{const idx=i;const w=watched.includes(idx);
+      html+=`<div class="vid-item${w?' watched':''}" onclick="toggleVid('${mod}',${idx})">
+        <div class="vid-ck${w?' checked':''}" data-mod="${mod}" data-idx="${idx}">${w?'✓':''}</div>
+        <div class="vid-item-name">${name}</div></div>`;
+    });
+  }
+  if(m.b.length){
+    html+=`<div class="vid-section-label">Bonus (${m.b.length})</div>`;
+    m.b.forEach((name,i)=>{const idx=m.a.length+i;const w=watched.includes(idx);
+      html+=`<div class="vid-item${w?' watched':''}" onclick="toggleVid('${mod}',${idx})">
+        <div class="vid-ck${w?' checked':''}" data-mod="${mod}" data-idx="${idx}">${w?'✓':''}</div>
+        <div class="vid-item-name">★ ${name}</div></div>`;
+    });
+  }
+  return html;
+}
+
+function toggleAcc(id){
+  const hdr=document.querySelector(`[data-acc-id="${id}"]`);
+  const body=document.querySelector(`[data-acc-body="${id}"]`);
+  if(!hdr||!body)return;
+  const isOpen=hdr.classList.toggle('open');body.classList.toggle('open',isOpen);
+  if(isOpen&&!body.dataset.loaded){body.innerHTML=buildVidList(body.dataset.mod,id);body.dataset.loaded='1';}
+}
+
+function renderVideosDashboard(){
+  if(!state.watchedVideos)state.watchedVideos={};
+  let totalW=0,totalV=0;
+  Object.keys(VF).forEach(k=>{totalV+=modTotal(k);totalW+=modWatched(k)});
+  const pct=totalV>0?Math.round(totalW/totalV*100):0;
+  document.getElementById('vid-watched').textContent=totalW;
+  document.getElementById('vid-remaining').textContent=totalV-totalW;
+  document.getElementById('vid-bar-global').style.width=pct+'%';
+  document.getElementById('vid-pct-label').textContent=pct+'% concluido';
+  const el=document.getElementById('video-modules');
+  el.innerHTML=Object.entries(VF).map(([name,m])=>{
+    const t=modTotal(name);const w=modWatched(name);const p=t>0?Math.round(w/t*100):0;const done=w>=t&&t>0;
+    const uid='dash-'+name.replace(/\s/g,'-');
+    const contentItem=ALL_CONTENT.find(c=>c.c===name);
+    const displayName=contentItem?contentItem.t.substring(0,45):name;
+    return `<div class="vid-module-card">
+      <div class="vid-mod-hdr" data-acc-id="${uid}" onclick="toggleAcc('${uid}')">
+        <span class="chevron">&#9654;</span>
+        <span class="vid-mod-name${done?' vid-complete':''}" title="${name}">${displayName}</span>
+        <span class="vid-acc-badge${done?' done':''}" data-mod="${name}">${w}/${t}</span>
+      </div>
+      <div class="vid-bar" style="margin:0 10px 6px"><div class="vid-bar-fill" data-mod="${name}" style="width:${p}%;${done?'background:var(--green)':''}"></div></div>
+      <div class="vid-mod-body" data-acc-body="${uid}" data-mod="${name}"></div>
+    </div>`;
+  }).join('');
+}
+
+let skipTargetCode=null;
+function openSkipModal(code){
+  skipTargetCode=code;
+  const item=ALL_CONTENT.find(c=>c.c===code);
+  document.getElementById('skip-modal-title').textContent='Mover: '+(item?item.t.substring(0,40):code);
+  const select=document.getElementById('skip-target-week');
+  select.innerHTML=SCHEDULE.map(w=>{
+    const topics=w.items.map(i=>i.t.substring(0,22)).join(' + ');
+    return`<option value="${w.w}">SEM ${String(w.w).padStart(2,'0')} - ${topics}</option>`;
+  }).join('');
+  const origWeek=SCHEDULE.find(w=>w.items.some(i=>i.c===code));
+  const movedTo=(state.movedContent||{})[code];
+  select.value=movedTo||(origWeek?origWeek.w:1);
+  document.getElementById('skip-modal').classList.add('open');
+}
+function confirmSkip(){
+  if(!skipTargetCode)return;
+  const targetWeek=parseInt(document.getElementById('skip-target-week').value);
+  if(!state.movedContent)state.movedContent={};
+  const origWeek=SCHEDULE.find(w=>w.items.some(i=>i.c===skipTargetCode));
+  if(origWeek&&origWeek.w===targetWeek)delete state.movedContent[skipTargetCode];
+  else state.movedContent[skipTargetCode]=targetWeek;
+  saveState();closeModal('skip-modal');autoDistribute();
+  toast('Conteudo movido para SEM '+String(targetWeek).padStart(2,'0'),'success');
+}
+
+function toggleBlock(dateKey){
+  const idx=state.blockedDays.indexOf(dateKey);
+  if(idx>=0)state.blockedDays.splice(idx,1);else state.blockedDays.push(dateKey);
+  saveState();closeModal('day-modal');render();
+  if(idx>=0){toast('Dia desbloqueado','success')}
+  else if(state.weekPlan.length>0){toast('Dia bloqueado. Clique em Planejar para redistribuir.','success')}
+  else{toast('Dia bloqueado','success')}
+}
+
+function openPlanModal(){
+  const exam=state.exams.length?state.exams[0]:{name:'',date:''};
+  document.getElementById('plan-exam-name').value=exam.name||'';
+  document.getElementById('plan-exam-date').value=exam.date||'';
+  document.getElementById('plan-start-date').value=state.settings.startDate||'';
+  const savedDays=state.settings.studyDays||[1,2,3,4,5];
+  document.querySelectorAll('.plan-day-cb').forEach(cb=>{cb.checked=savedDays.includes(parseInt(cb.value))});
+  document.getElementById('plan-buffer').value=state.settings.bufferDays||14;
+  document.getElementById('sound-toggle').checked=state.soundEnabled!==false;
+  document.getElementById('plan-modal').classList.add('open');
+}
+
+function savePlan(){
+  const name=document.getElementById('plan-exam-name').value.trim();
+  const date=document.getElementById('plan-exam-date').value;
+  const startDate=document.getElementById('plan-start-date').value;
+  const studyDayNums=[...document.querySelectorAll('.plan-day-cb:checked')].map(cb=>parseInt(cb.value));
+  if(studyDayNums.length===0){toast('Selecione pelo menos um dia','error');return}
+  const daysPerWeek=studyDayNums.length;
+  const bufferDays=parseInt(document.getElementById('plan-buffer').value)||14;
+  if(!name||!date){toast('Preencha nome e data da prova','error');return}
+  if(!startDate){toast('Preencha a data de inicio dos estudos','error');return}
+  state.exams=[{name,date,color:'#f5a623'}];
+  state.settings.startDate=startDate;
+  state.settings.studyDays=studyDayNums;
+  state.settings.studyDaysPerWeek=daysPerWeek;
+  state.settings.bufferDays=bufferDays;
+  saveState();closeModal('plan-modal');
+  autoDistribute();
+}
+
+function removeExam(idx){state.exams=[];state.weekPlan=[];state.studyDays={};saveState();render();toast('Planejamento removido','success')}
+
+function resetAll(){if(confirm('Tem certeza? Todos os dados serao apagados.')){
+  localStorage.removeItem(STORAGE_KEY);location.reload()}}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='medplan_backup_'+fmtDate(new Date())+'.json';a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Backup exportado!','success');
+}
+
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{try{const data=JSON.parse(ev.target.result);
+    state={...state,...data};saveState();render();toast('Dados importados!','success')
+  }catch(err){toast('Arquivo invalido','error')}};
+  reader.readAsText(file);e.target.value='';
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');if(id==='day-modal')currentDayModalKey=null;}
+
+function toast(msg,type='success'){
+  const c=document.getElementById('toasts');
+  const el=document.createElement('div');el.className='toast '+type;el.textContent=msg;
+  c.appendChild(el);setTimeout(()=>el.remove(),3000);
+}
+
+// View switching
+document.querySelectorAll('.vtab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.vtab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    const view=tab.dataset.view;
+    document.getElementById('calendar-view').classList.toggle('active',view==='calendar');
+    document.getElementById('schedule-view').classList.toggle('active',view==='schedule');
+    document.getElementById('week-view').classList.toggle('active',view==='week');
+    // Show/hide toolbar based on view
+    document.querySelector('.toolbar').style.display=(view==='week')?'none':'';
+    if(view==='week'){state.currentWeekIdx=getCurrentWeekIdx();renderWeekView()}
+  });
+});
+
+// Sidebar filter nav
+document.querySelectorAll('.nav-item[data-filter]').forEach(item=>{
+  item.addEventListener('click',()=>{
+    state.activeFilter=item.dataset.filter;
+    document.querySelectorAll('.nav-item[data-filter]').forEach(i=>i.classList.remove('active'));
+    item.classList.add('active');
+  });
+});
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay=>{
+  overlay.addEventListener('click',e=>{if(e.target===overlay){overlay.classList.remove('open');if(overlay.id==='day-modal')currentDayModalKey=null;}});
+});
+
+// Escape key closes modals
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.open').forEach(m=>{m.classList.remove('open');if(m.id==='day-modal')currentDayModalKey=null;});closeReward();}});
+
+// Close reward on overlay click
+document.getElementById('reward-modal').addEventListener('click',e=>{if(e.target.id==='reward-modal'||e.target.id==='confetti-canvas')closeReward();});
+
+/* ═══════════════════════════════════════════════════════════
+   GAMIFICATION
+   ═══════════════════════════════════════════════════════════ */
+const BADGE_DEFS=[
+  {id:'first_vid',name:'Primeira Aula',icon:'🎬',desc:'Assistiu o primeiro video',check:s=>getTotalWatched(s)>=1},
+  {id:'first_done',name:'Primeiro Tema',icon:'📖',desc:'Completou o primeiro conteudo',check:s=>s.completedContent.length>=1},
+  {id:'streak_3',name:'Triplo Combo',icon:'🔥',desc:'3 dias seguidos',check:s=>s.streak>=3},
+  {id:'streak_7',name:'Semana de Fogo',icon:'🔥',desc:'7 dias seguidos',check:s=>s.streak>=7},
+  {id:'streak_14',name:'Imparavel',icon:'👑',desc:'14 dias seguidos',check:s=>s.streak>=14},
+  {id:'streak_30',name:'Lenda',icon:'💎',desc:'30 dias seguidos',check:s=>s.streak>=30},
+  {id:'vids_10',name:'Maratonista',icon:'📹',desc:'10 videos assistidos',check:s=>getTotalWatched(s)>=10},
+  {id:'vids_50',name:'Dedicado',icon:'💪',desc:'50 videos assistidos',check:s=>getTotalWatched(s)>=50},
+  {id:'vids_100',name:'Centuriao',icon:'⚡',desc:'100 videos assistidos',check:s=>getTotalWatched(s)>=100},
+  {id:'vids_250',name:'Mestre',icon:'🧠',desc:'250 videos assistidos',check:s=>getTotalWatched(s)>=250},
+  {id:'half',name:'Metade',icon:'🏅',desc:'50% do curso completo',check:s=>s.completedContent.length>=46},
+  {id:'week_1',name:'Semana 1',icon:'📚',desc:'Completou a primeira semana',check:s=>isWeekComplete(s,1)},
+  {id:'level_5',name:'Nivel 5',icon:'⭐',desc:'Alcancou nivel 5',check:s=>getLevel(s.xp)>=5},
+  {id:'level_10',name:'Nivel 10',icon:'🌟',desc:'Alcancou nivel 10',check:s=>getLevel(s.xp)>=10},
+  {id:'questions_100',name:'Questionador',icon:'❓',desc:'100 questoes feitas',check:s=>getTotalQuestions(s)>=100},
+];
+
+const MSGS={
+  video:["Mais um video! 📹","Progresso real! 📈","Continue assim! 💪","Conhecimento acumulando! 🧠","Firme e forte! ⚡"],
+  content:["🔥 Tema concluido!!","💪 Consistencia de campeao!!","⚡ Mais um passo rumo a aprovacao!","📈 Progresso incrivel!!","🎯 Foco absoluto!!"],
+  week:["🔥🔥🔥 SEMANA COMPLETA!!","🚀 EVOLUCAO INCRIVEL!!","🏆 NIVEL ABSURDO DE FOCO!!","⚡ PERFORMANCE DE ELITE!! ⚡","👑 VOCE ESTA IMPARAVEL!!"],
+  badge:["🏅 Nova conquista desbloqueada!"],
+  levelup:["⭐ LEVEL UP!! Voce subiu de nivel!"]
+};
+
+function getLevel(xp){return Math.floor(Math.sqrt((xp||0)/50))+1;}
+function xpForLevel(level){return(level-1)*(level-1)*50;}
+function getTotalWatched(s){return Object.values(s.watchedVideos||{}).reduce((sum,arr)=>sum+(arr?arr.length:0),0);}
+function getTotalQuestions(s){return Object.values(s.questions||{}).reduce((sum,v)=>sum+(parseInt(v)||0),0);}
+function isWeekComplete(s,weekNum){const w=SCHEDULE.find(x=>x.w===weekNum);return w&&w.items.every(i=>s.completedContent.includes(i.c));}
+
+function addXP(amount){
+  const oldLevel=getLevel(state.xp);
+  state.xp=(state.xp||0)+amount;
+  const newLevel=getLevel(state.xp);
+  saveState();renderGameDashboard();
+  if(newLevel>oldLevel){setTimeout(()=>showReward('levelup',{level:newLevel}),1000);}
+}
+
+function updateStreak(){
+  const today=fmtDate(new Date());
+  if(state.lastStudyDate===today)return;
+  const yesterday=fmtDate(addDays(new Date(),-1));
+  if(state.lastStudyDate===yesterday){state.streak=(state.streak||0)+1;}
+  else if(state.lastStudyDate!==today){state.streak=1;}
+  state.lastStudyDate=today;
+  if(state.streak>(state.streakRecord||0))state.streakRecord=state.streak;
+  // Streak bonus XP
+  addXP(5*state.streak);
+  saveState();renderGameDashboard();
+}
+
+function checkBadges(){
+  if(!state.badges)state.badges=[];
+  BADGE_DEFS.forEach(b=>{
+    if(!state.badges.includes(b.id)&&b.check(state)){
+      state.badges.push(b.id);
+      saveState();
+      setTimeout(()=>showReward('badge',{badge:b}),800);
+    }
+  });
+  renderGameDashboard();
+}
+
+function renderGameDashboard(){
+  const level=getLevel(state.xp||0);
+  const currentLevelXP=xpForLevel(level);
+  const nextLevelXP=xpForLevel(level+1);
+  const progress=nextLevelXP>currentLevelXP?((state.xp-currentLevelXP)/(nextLevelXP-currentLevelXP))*100:100;
+  const levelEl=document.querySelector('.game-level-num');
+  const xpFill=document.querySelector('.game-xp-fill');
+  const xpText=document.querySelector('.game-xp-text');
+  if(levelEl)levelEl.textContent='Lv.'+level;
+  if(xpFill)xpFill.style.width=progress+'%';
+  if(xpText)xpText.textContent=(state.xp||0)+' XP';
+  const streakEl=document.getElementById('game-streak');
+  const recordEl=document.getElementById('game-streak-record');
+  if(streakEl)streakEl.textContent=state.streak||0;
+  if(recordEl)recordEl.textContent=state.streakRecord||0;
+  const badgesEl=document.getElementById('game-badges');
+  if(badgesEl){
+    badgesEl.innerHTML=BADGE_DEFS.map(b=>{
+      const unlocked=(state.badges||[]).includes(b.id);
+      return `<div class="game-badge${unlocked?'':' locked'}" title="${b.name}">
+        ${b.icon}<div class="game-badge-tip">${b.name}${unlocked?'':' (bloqueado)'}</div></div>`;
+    }).join('');
+  }
+  // Sync sound toggle if present
+  const soundToggle=document.getElementById('sound-toggle');
+  if(soundToggle)soundToggle.checked=state.soundEnabled!==false;
+}
+
+function playSound(type){
+  if(!state.soundEnabled)return;
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const osc=ctx.createOscillator();const gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);
+    if(type==='success'){osc.frequency.value=523;gain.gain.value=0.1;osc.start();osc.frequency.linearRampToValueAtTime(784,ctx.currentTime+0.15);gain.gain.linearRampToValueAtTime(0,ctx.currentTime+0.2);osc.stop(ctx.currentTime+0.2);}
+    else{osc.frequency.value=523;gain.gain.value=0.15;osc.start();osc.frequency.linearRampToValueAtTime(659,ctx.currentTime+0.1);osc.frequency.linearRampToValueAtTime(784,ctx.currentTime+0.2);osc.frequency.linearRampToValueAtTime(1047,ctx.currentTime+0.35);gain.gain.linearRampToValueAtTime(0,ctx.currentTime+0.5);osc.stop(ctx.currentTime+0.5);}
+  }catch(e){}
+}
+
+function fireConfetti(){
+  const canvas=document.getElementById('confetti-canvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+  const particles=[];
+  const colors=['#00c8a8','#f5a623','#e85b7a','#7c6af0','#34c97a','#3eb8f5'];
+  for(let i=0;i<60;i++){
+    particles.push({x:Math.random()*canvas.width,y:-20-Math.random()*200,
+      w:6+Math.random()*6,h:4+Math.random()*4,
+      color:colors[Math.floor(Math.random()*colors.length)],
+      vy:2+Math.random()*3,vx:(Math.random()-0.5)*4,
+      rotation:Math.random()*360,rotSpeed:(Math.random()-0.5)*10,opacity:1});
+  }
+  let frame=0;
+  function animate(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    let alive=false;
+    particles.forEach(p=>{
+      if(p.opacity<=0)return;alive=true;
+      p.y+=p.vy;p.x+=p.vx;p.vy+=0.1;p.rotation+=p.rotSpeed;
+      if(frame>40)p.opacity-=0.015;
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rotation*Math.PI/180);
+      ctx.globalAlpha=p.opacity;ctx.fillStyle=p.color;
+      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();
+    });
+    frame++;
+    if(alive&&frame<200)requestAnimationFrame(animate);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  animate();
+}
+
+function showReward(type,data){
+  data=data||{};
+  const modal=document.getElementById('reward-modal');
+  const emoji=document.getElementById('reward-emoji');
+  const title=document.getElementById('reward-title');
+  const subtitle=document.getElementById('reward-subtitle');
+  const xpEl=document.getElementById('reward-xp');
+  const msgs=MSGS[type]||MSGS.video;
+  const msg=msgs[Math.floor(Math.random()*msgs.length)];
+  let emojiText='✨',titleText=msg,subText='',xpText='';
+  if(type==='video'){emojiText='📹';xpText='+5 XP';playSound('success');}
+  else if(type==='content'){emojiText='🔥';xpText='+15 XP';playSound('achievement');fireConfetti();}
+  else if(type==='week'){emojiText='🏆';titleText=msg;subText='Semana '+(data.week||'')+' completa!';xpText='+100 XP';playSound('achievement');fireConfetti();}
+  else if(type==='badge'){emojiText=data.badge?.icon||'🏅';titleText=msgs[0];subText=(data.badge?.name||'')+' — '+(data.badge?.desc||'');xpText='Conquista!';playSound('achievement');fireConfetti();}
+  else if(type==='levelup'){emojiText='⭐';titleText=msgs[0];subText='Voce agora e nivel '+(data.level||'');xpText='LEVEL UP!';playSound('achievement');fireConfetti();}
+  emoji.textContent=emojiText;title.textContent=titleText;subtitle.textContent=subText;xpEl.textContent=xpText;
+  modal.classList.add('open');
+  if(navigator.vibrate&&(type!=='video'))navigator.vibrate(type==='week'?[100,50,100]:[50]);
+  if(type==='video')setTimeout(closeReward,1500);
+}
+
+function closeReward(){document.getElementById('reward-modal')?.classList.remove('open');}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME
+   ═══════════════════════════════════════════════════════════ */
+function initTheme(){
+  const stored=localStorage.getItem('medplan_theme');
+  const preferred=stored||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  document.documentElement.setAttribute('data-theme',preferred);
+}
+function toggleTheme(){
+  const current=document.documentElement.getAttribute('data-theme');
+  const next=current==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  localStorage.setItem('medplan_theme',next);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════
+   AUTH
+   ═══════════════════════════════════════════════════════════ */
+const USERS={
+  'higor':'8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918',
+  'admin':'8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'
+};
+// Default password for both: "admin" — change via console: hashPass('newpass').then(console.log)
+async function hashPass(p){const e=new TextEncoder().encode(p);const h=await crypto.subtle.digest('SHA-256',e);return[...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+async function doLogin(){
+  const u=document.getElementById('login-user').value.trim().toLowerCase();
+  const p=document.getElementById('login-pass').value;
+  const err=document.getElementById('login-error');
+  if(!u||!p){err.style.display='block';err.textContent='Preencha usuario e senha';return}
+  const hash=await hashPass(p);
+  if(USERS[u]&&USERS[u]===hash){
+    sessionStorage.setItem('medplan_auth',u);
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app-main').style.display='grid';
+    loadState();render();
+  }else{err.style.display='block';err.textContent='Usuario ou senha incorretos'}
+}
+function checkAuth(){
+  const u=sessionStorage.getItem('medplan_auth');
+  if(u&&USERS[u]){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app-main').style.display='grid';
+    return true;
+  }
+  return false;
+}
+function logout(){sessionStorage.removeItem('medplan_auth');location.reload()}
+// Enter key on login
+document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+document.getElementById('login-user').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('login-pass').focus()});
+
+initTheme();
+if(checkAuth()){loadState();render()}
+// Seed: SEM 01-23 completas, ENARE 13/09/2026, inicio 04/01/2026
+(function seedIfEmpty(){
+  if(localStorage.getItem(STORAGE_KEY)&&JSON.parse(localStorage.getItem(STORAGE_KEY)).seeded4)return;
+  state.completedContent=[
+    // SEM 01-11 (imagem 1)
+    'NEF-01-A','CIR-01-A','NEF-01-B','CIR-01-B','NEF-02-A','GIN-01-A',
+    'NEF-03-A','GIN-01-B','PRE-01-A','NEF-03-B','NEF-03-C','OBS-01-A',
+    'PRE-02-A','PED-01-A','PRE-02-B','PED-01-B','REU-01-A','CIR-02-A',
+    'REU-01-B','CIR-02-B','REU-02-A','OBS-02-A',
+    // SEM 12-23 (imagem 2)
+    'REU-02-B','PRE-03-A','REU-02-C','PED-02-A',
+    'HEM-01-A','CIR-03-A','HEM-01-B','CIR-03-B',
+    'HEM-02-A','HEM-02-B','HEM-02-C','PED-02-B',
+    'GAS-01-A','GIN-02-A','GAS-01-B','GAS-02-A',
+    'GAS-02-B','OBS-03-A','GAS-02-C','OBS-03-B',
+    'GAS-03-A','GAS-03-B','HEP-01-A','HEP-02-A'];
+  state.exams=[{name:'ENARE',date:'2026-09-13',color:'#f5a623'}];
+  state.settings={startDate:'2026-01-04',studyDaysPerWeek:5};
+  state.xp=state.completedContent.length*15;
+  state.streak=0;state.badges=[];state.soundEnabled=true;
+  state.questions={};state.weekPlan=[];state.seeded4=true;
+  // Mark all videos as watched for completed content
+  state.watchedVideos={};
+  state.completedContent.forEach(code=>{
+    if(VF[code]){
+      const total=VF[code].a.length+VF[code].b.length;
+      state.watchedVideos[code]=Array.from({length:total},(_,i)=>i);
+    }
+  });
+  saveState();
+})();
+// loadState+render called from checkAuth() above
+</script>
+</body>
+</html>
