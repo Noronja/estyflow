@@ -2036,10 +2036,12 @@ function finishSimulado(auto){
 }
 function simBackToConfig(){renderSimConfig()}
   
-  /* ═════════ GOOGLE DRIVE — SCAN DO ACERVO ═════════ */
+
+/* ═════════ GOOGLE DRIVE — SCAN DO ACERVO ═════════ */
 const DRIVE_DEPTH=3;
+const DRIVE_ROOT='1pVd7V_pfyM4Vw20yfw45jBmNFqtKTHK7'; // ← sua pasta raiz padrão
 function openDriveModal(){
-  $('drive-root').value=localStorage.getItem('drive_root')||'';
+  $('drive-root').value=localStorage.getItem('drive_root')||DRIVE_ROOT;
   const st=$('drive-status');
   if(DB.driveAcervo){
     const hrs=((Date.now()-DB.driveAcervo.at)/36e5).toFixed(1);
@@ -2119,6 +2121,25 @@ function rebuildAcervo(){
   Object.keys(acervo).forEach(k=>{if(ativos.indexOf(k)<0&&(acervo[k].videos.length||acervo[k].pdfs.length))ativos.push(k)});
   renderHome();renderDash();
 }
+function driveAutoRefresh(){
+  if(!CLOUD_ON||!DB.driveAcervo)return;
+  const hrs=(Date.now()-(DB.driveAcervo.at||0))/36e5;
+  if(hrs<24)return; // atualizado há menos de 24h — nada a fazer
+  const root=DB.driveAcervo.root||DRIVE_ROOT;
+  $('drive-btn-label').textContent='Verificando novidades…';
+  scanDrive(root,1,[]).then(items=>{
+    if(!items.length)return;
+    const vids=items.filter(i=>/^video\//.test(i.mime)).map(({mime,...r})=>r);
+    const pdfs=items.filter(i=>!/^video\//.test(i.mime)).map(({mime,...r})=>r);
+    const oldN=(DB.driveAcervo.v||[]).length+(DB.driveAcervo.a||[]).length;
+    const newN=vids.length+pdfs.length;
+    DB.driveAcervo={v:vids,a:pdfs,at:Date.now(),root};saveDB();
+    applyDriveAcervo();
+    $('drive-btn-label').textContent='Drive conectado ✓';
+    if(newN>oldN)toast('☁️ Acervo atualizado: +'+(newN-oldN)+' novos itens do Drive!','success');
+    else toast('☁️ Acervo verificado ('+newN+' itens) — nenhuma novidade','success');
+  }).catch(()=>{$('drive-btn-label').textContent='Drive conectado ✓'});
+}
 
 /* ═════════ INIT ═════════ */
 function refreshAll(){
@@ -2147,8 +2168,15 @@ function initApp(){
   $('player-overlay').addEventListener('click',e=>{if(e.target===$('player-overlay'))closePlayer()});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.open').forEach(o=>o.classList.remove('open'));closePlayer();closeReward()}});
   $('bank-search').addEventListener('keydown',e=>{if(e.key==='Enter')bankApply()});
-  if(CLOUD_ON)setSyncIcon('ok');else setSyncIcon('off');
+    if(DB.driveAcervo&&applyDriveAcervo()){
+    $('drive-btn-label').textContent='Drive conectado ✓';
+    driveAutoRefresh();
+  }else if(CLOUD_ON){
+    $('drive-root').value=DRIVE_ROOT;
+    driveSync(true);
+  }
 }
+
 /* ═════════ RESTAURAR SESSÃO ═════════ */
 if(localStorage.getItem('medplan_logged')==='1'){
   SYNC_USER=localStorage.getItem('medplan_user');
