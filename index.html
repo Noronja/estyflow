@@ -260,7 +260,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .cover-neu{background:linear-gradient(135deg,#b224ef,#7579ff)}.cover-psi{background:linear-gradient(135deg,#fc4a1a,#f7b733)}
 .cover-ort{background:linear-gradient(135deg,#304352,#d7d2cc)}.cover-nef{background:linear-gradient(135deg,#1e3c72,#2a5298)}
 .cover-hep{background:linear-gradient(135deg,#f953c6,#b91d73)}.cover-oft{background:linear-gradient(135deg,#11998e,#38ef7d)}
-.cover-reu{background:linear-gradient(135deg,#c31432,#240b36)}.cover-prov{background:linear-gradient(135deg,#8E2DE2,#4A00E0)}
+.cover-reu{background:linear-gradient(135deg,#c31432,#240b36)}.cover-orl{background:linear-gradient(135deg,#f953c6,#b91d73)}
+.cover-prov{background:linear-gradient(135deg,#8E2DE2,#4A00E0)}
 .cover-default{background:linear-gradient(135deg,#8e9eab,#eef2f3);color:#121214}
 .overlay{position:fixed;inset:0;background:rgba(10,10,12,.95);display:none;align-items:center;justify-content:center;z-index:100;padding:24px;backdrop-filter:blur(8px)}
 .overlay.show{display:flex;animation:fadeIn .2s}
@@ -508,7 +509,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
             <div style="margin-top:16px">
               <div class="prep-meta-label"><span>Meta de hoje (<span id="prep-dow"></span>)</span><span id="prep-meta-txt">0/0 min</span></div>
               <div class="prep-meta-bar"><div class="prep-meta-fill" id="prep-meta-fill" style="width:0%"></div></div>
-              <div style="font-size:11px;color:var(--text-muted)">Ao bater a meta: +20 XP de bônus diário 🎯 · 💧 lembrete de água a cada 30 min · 🧘 pausa sugerida a cada 50 min</div>
+              <div style="font-size:11px;color:var(--text-muted)">Ao bater a meta: +20 XP 🎯 · 💧 água a cada 30 min · 🧘 pausa a cada 50 min</div>
             </div>
           </div>
           <div class="prep-card">
@@ -546,7 +547,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
     <div id="view-acervo" class="view-section">
       <div id="acervo-list-screen" style="padding-top:20px">
         <h1 class="section-title" style="margin:8px 20px 16px">Acervo Completo</h1>
-        <div style="margin:0 20px 16px"><button class="filter-pill" onclick="openFavorites()"><i class="ph ph-star" style="color:#FFC107"></i> Favoritos</button></div>
+        <div style="margin:0 20px 16px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="filter-pill" onclick="openFavorites()"><i class="ph ph-star" style="color:#FFC107"></i> Favoritos</button>
+          <button class="filter-pill" onclick="openDriveModal()"><i class="ph ph-cloud" style="color:var(--teal)"></i> <span id="drive-btn-label">Sincronizar Drive</span></button>
+        </div>
         <div class="cards-grid" id="all-modules-container" style="padding:0 20px 40px"></div>
       </div>
       <div id="module-detail-view" style="display:none">
@@ -554,7 +558,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
         <h1 class="module-header-title" id="module-title"></h1>
         <div class="content-list-title"><i class="ph ph-play-circle" style="font-size:16px;vertical-align:middle"></i> Videoaulas</div>
         <div class="content-list" id="videos-container"></div>
-        <div class="content-list-title"><i class="ph ph-file-pdf" style="font-size:16px;vertical-align:middle"></i> Materiais em PDF</div>
+        <div class="content-list-title"><i class="ph ph-file-pdf" style="font-size:16px;vertical-align:middle"></i> Materiais</div>
         <div class="content-list" id="apostilas-container"></div>
       </div>
     </div>
@@ -796,6 +800,28 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
   </div>
 </div>
 
+<!-- DRIVE SYNC MODAL -->
+<div class="modal-overlay" id="drive-modal">
+  <div class="modal">
+    <div class="modal-title"><span>☁️ Sincronizar Acervo do Drive</span><button class="modal-close" onclick="closeModal('drive-modal')"><i class="ph ph-x"></i></button></div>
+    <p style="font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:14px">
+      Cole o <b>ID ou link da pasta raiz</b> do seu acervo. O app escaneia até 3 níveis de subpastas
+      (Especialidade → Tópico → Aula) automaticamente.<br>
+      <b>Requisitos:</b> Google Drive API ativada no projeto Firebase + pasta compartilhada como "Qualquer pessoa com o link" + chave de API sem restrição.
+    </p>
+    <div class="form-group">
+      <label class="form-label">Pasta raiz do acervo</label>
+      <input id="drive-root" placeholder="1AbC...xYz ou o link completo da pasta">
+    </div>
+    <div id="drive-status" style="font-size:13px;margin-bottom:8px"></div>
+    <div class="form-actions">
+      <button class="btn-outline" onclick="closeModal('drive-modal')">Fechar</button>
+      <button class="btn-outline btn-danger" onclick="driveDisconnect()">Desconectar</button>
+      <button class="btn-primary btn-sm" onclick="driveSync(false)"><i class="ph ph-cloud-arrow-down"></i> Escanear agora</button>
+    </div>
+  </div>
+</div>
+
 <!-- PLAYER OVERLAY -->
 <div class="overlay" id="player-overlay">
   <div class="player-box">
@@ -905,7 +931,7 @@ var QUIZ_DECKS=[
 {q:'Achado espirométrico de DPOC:',o:['VEF1/CVF < 0,7 pós-BD','VEF1 aumentado','Limitação à difusão normal','CVF isolada reduzida'],a:0,e:'DPOC = obstrução persistente: VEF1/CVF < 0,7 após broncodilatador.'}]}
 ];
 
-/* ═════════ ACERVO (integração) ═════════ */
+/* ═════════ ACERVO (fallback + integração Drive) ═════════ */
 if(!videosData.length)window.videosData=[
 {id:'ex-car-1',d:'Cardiologia',t:'Insuficiência Cardíaca — Fisiopatologia',y:'dA4eeBcbXSI',drive:''},
 {id:'ex-pne-1',d:'Pneumologia',t:'DPOC — Do início',y:'dA4eeBcbXSI',drive:''},
@@ -914,36 +940,43 @@ if(!apostilasData.length)window.apostilasData=[
 {id:'ex-car-p1',d:'Cardiologia',t:'Resumo — Insuficiência Cardíaca',url:''},
 {id:'ex-pre-p1',d:'Preventiva',t:'SUS — Resumo completo',url:''}];
 
-var FOLDER_ALIAS={"Clínica Médica":"Ginecologia e Obstetrícia","Covid":"Infectologia","Convulsão_febril":"Pediatria","Hepatoesplenomegalias_infecciosas":"Infectologia"};
+var FOLDER_ALIAS={
+"Clínica Médica":"Ginecologia e Obstetrícia",
+"Covid":"Infectologia",
+"Convulsão_febril":"Pediatria",
+"Hepatoesplenomegalias_infecciosas":"Infectologia",
+"Endocardite_bacteriana_-_endocardite_infecciosa":"Cardiologia"
+};
 function mapFolder(f){
   if(FOLDER_ALIAS[f])return FOLDER_ALIAS[f];
-  var s=String(f||"").toLowerCase().replace(/_+/g," ");
-  if(/(ortop|politrauma|trauma)/.test(s))return"Ortopedia";
-  if(/(gineco|obstet|parto|puerp)/.test(s))return"Ginecologia e Obstetrícia";
-  if(/(pediatr|neonat|lactente|aleitamento)/.test(s))return"Pediatria";
-  if(s.indexOf("hepat")>-1)return"Hepatologia";
-  if(/(gastro|esôfag|esofag|intestinal|colon)/.test(s))return"Gastro";
-  if(/(diabet|osteopor)/.test(s))return"Endocrinologia";
-  if(/(renal|nefr)/.test(s))return"Nefrologia";
-  if(/(infect|mening|covid|dengue)/.test(s))return"Infectologia";
-  if(/(cardio|endocardi)/.test(s))return"Cardiologia";
-  if(s.indexOf("hemat")>-1)return"Hematologia";
-  if(s.indexOf("derm")>-1)return"Dermatologia";
-  if(/(neuro|cefaleia)/.test(s))return"Neurologia";
-  if(s.indexOf("oftalmo")>-1)return"Oftalmologia";
+  var s=String(f||"").toLowerCase().replace(/_+/g," ").trim();
+  if(/(vias aéreas|vias aereas|otorrino)/.test(s))return"Otorrino";
+  if(/(ortop|politrauma|trauma|partes moles|coluna|quadril|ombro|osteomielite|compressivas|conceitos básicos|conceitos basicos)/.test(s))return"Ortopedia";
+  if(/(gineco|obstet|parto|puerper|gestaç|amenorreia|climatér|sexual|genital|abortamento|aloimuniz|amniót|cervicit|mama|hpp|pós-datismo|pos-datismo|planej)/.test(s))return"Ginecologia e Obstetrícia";
+  if(/(pediatr|infância|infancia|neonat|lactente|aleitamento|coqueluche|kawasaki|bronquiolite|exantem|imuniza|desnutri|anafilax|alergia alimentar|crescimento|obesidade infantil|adolesc|vitamín|vitamin|congênit|congenit|constipaç|dnpm|convulsão febril|convulsao febril|smsl|brue|puberdade|icterícia neonatal|ictericia neonatal|sepse neonatal)/.test(s))return"Pediatria";
+  if(/(hepat|icterícia|ictericia)/.test(s))return"Hepatologia";
+  if(/(gastro|esôfag|esofag|cólon|colon|intestin|pancre|péptic|peptic|helicobacter|dispep|disfagia|hemorragia digestiva|polipose|colorretal)/.test(s))return"Gastro";
+  if(/(saúde coletiva|saude coletiva|preventiv|epidemi|\bsus\b|atenção primária|atencao primaria|políticas de saúde|politicas de saude|financiamento|estatístic|estatistic|família e comunidade|familia e comunidade|saúde do idoso|saude do idoso|processo saúde|processo saude|história do sus|historia do sus|descentraliza|medicina de família|medicina de familia)/.test(s))return"Preventiva";
+  if(/(renal|nefr|\bitu\b|trato urinário|trato urinario|túbulo|tubulo|acidobásico|acido basico|hidroeletrol)/.test(s))return"Nefrologia";
+  if(/(diabet|ósseo|osseo|osteopor|tireoide|suprarrenal|metabolismo)/.test(s))return"Endócrino";
+  if(/(cardio|endocardi|hipertensão arterial|hipertensao arterial)/.test(s))return"Cardiologia";
+  if(/(infect|covid|chagas|leishm|esquistos)/.test(s))return"Infectologia";
+  if(/(hemat|leucem|linfom|anemi)/.test(s))return"Hematologia";
+  if(s.indexOf("derm")>-1||s.indexOf("hansen")>-1)return"Dermatologia";
+  if(/(neuro|cefaleia|cefaleias|coma|consciência|consciencia|cerebral|epilep|demênc|demenc|otoneuro|anatomia.*semiologia neurol)/.test(s))return"Neurologia";
+  if(/(cirur|abdome agudo|cabeça e pescoço|cabeca e pescoco)/.test(s))return"Cirurgia";
+  if(/(pneumo|asma\b|dpoc)/.test(s))return"Pneumologia";
   if(s.indexOf("psiqui")>-1)return"Psiquiatria";
-  if(s.indexOf("reumat")>-1)return"Reumatologia";
-  if(/(\bsus\b|preventiv|epidemi)/.test(s))return"Preventiva";
-  if(/(pneumo|pneumon|asma|dpoc)/.test(s))return"Pneumologia";
-  if(/(cirur|hérnia|hernia)/.test(s))return"Cirurgia";
+  if(s.indexOf("reumat")>-1||s.indexOf("artrit")>-1)return"Reumatologia";
+  if(s.indexOf("oftalmo")>-1)return"Oftalmologia";
   return f;
 }
 var pretty=s=>String(s||"").replace(/_+/g," ").replace(/\s+/g," ").trim();
 function integrar(arr){var seen={},out=[];(arr||[]).forEach(it=>{if(!it||!it.id||seen[it.id])return;seen[it.id]=1;out.push(Object.assign({},it,{d:mapFolder(it.d),t:pretty(it.t)}))});return out}
 var videos=integrar(window.videosData),apostilas=integrar(window.apostilasData);
-var MODULES=["Cardiologia","Cirurgia","Dermatologia","Endocrinologia","Gastro","Ginecologia e Obstetrícia","Hematologia","Hepatologia","Infectologia","Nefrologia","Neurologia","Oftalmologia","Ortopedia","Pediatria","Pneumologia","Preventiva","Psiquiatria","Reumatologia"];
-var COVER={cardiologia:"cover-car",cirurgia:"cover-cir",dermatologia:"cover-der",endocrinologia:"cover-end",gastro:"cover-gas",ginecologia:"cover-gin",hematologia:"cover-hem",hepatologia:"cover-hep",infectologia:"cover-inf",nefrologia:"cover-nef",neurologia:"cover-neu",oftalmologia:"cover-oft",ortopedia:"cover-ort",pediatria:"cover-ped",pneumologia:"cover-pne",preventiva:"cover-prv",psiquiatria:"cover-psi",reumatologia:"cover-reu"};
-var SHORT={"Cardiologia":"Cardio","Cirurgia":"Cirurgia","Dermatologia":"Dermato","Endocrinologia":"Endócrino","Gastro":"Gastro","Ginecologia e Obstetrícia":"Gineco/GO","Hematologia":"Hemato","Hepatologia":"Hepato","Infectologia":"Infecto","Nefrologia":"Nefro","Neurologia":"Neuro","Oftalmologia":"Oftalmo","Ortopedia":"Ortopedia","Pediatria":"Pediatria","Pneumologia":"Pneumo","Preventiva":"Preventiva","Psiquiatria":"Psiqui","Reumatologia":"Reumo"};
+var MODULES=["Cardiologia","Cirurgia","Dermatologia","Endocrinologia","Endócrino","Gastro","Ginecologia e Obstetrícia","Hematologia","Hepatologia","Infectologia","Nefrologia","Neurologia","Otorrino","Oftalmologia","Ortopedia","Pediatria","Pneumologia","Preventiva","Psiquiatria","Reumatologia"];
+var COVER={cardiologia:"cover-car",cirurgia:"cover-cir",dermatologia:"cover-der",endocrinologia:"cover-end",endócrino:"cover-end",gastro:"cover-gas",ginecologia:"cover-gin",hematologia:"cover-hem",hepatologia:"cover-hep",infectologia:"cover-inf",nefrologia:"cover-nef",neurologia:"cover-neu",oftalmologia:"cover-oft",ortopedia:"cover-ort",otorrino:"cover-orl",pediatria:"cover-ped",pneumologia:"cover-pne",preventiva:"cover-prv",psiquiatria:"cover-psi",reumatologia:"cover-reu"};
+var SHORT={"Cardiologia":"Cardio","Cirurgia":"Cirurgia","Dermatologia":"Dermato","Endocrinologia":"Endócrino","Endócrino":"Endócrino","Gastro":"Gastro","Ginecologia e Obstetrícia":"Gineco/GO","Hematologia":"Hemato","Hepatologia":"Hepato","Infectologia":"Infecto","Nefrologia":"Nefro","Neurologia":"Neuro","Oftalmologia":"Oftalmo","Ortopedia":"Ortopedia","Otorrino":"ORL","Pediatria":"Pediatria","Pneumologia":"Pneumo","Preventiva":"Preventiva","Psiquiatria":"Psiqui","Reumatologia":"Reumo"};
 var acervo={};
 function modOf(m){if(!acervo[m])acervo[m]={videos:[],pdfs:[]};return acervo[m]}
 videos.forEach(v=>modOf(v.d).videos.push(v));
@@ -1091,7 +1124,7 @@ async function logout(){
 const $=id=>document.getElementById(id);
 const esc=s=>String(s||"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
-function toast(msg,type){const t=document.createElement('div');t.className='toast '+(type||'');t.innerHTML=msg;$('toasts').appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300)},2800)}
+function toast(msg,type){const t=document.createElement('div');t.className='toast '+(type||'');t.innerHTML=msg;$('toasts').appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300)},3200)}
 function shuffleArr(a){return a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1])}
 function qHash(q){return(q.q||"").toLowerCase().replace(/\s+/g," ").trim().slice(0,140)}
 function bankAll(){var out=[];getAllDecks().forEach(d=>{d.q.forEach(q=>out.push(Object.assign({},q,{deckId:d.id,deckTitle:d.title})))});return out}
@@ -1693,13 +1726,13 @@ function moduleCard(m){
   '<div class="card-cover '+(COVER[key]||'cover-default')+'">'+(SHORT[m]||m)+'</div>'+
   '<div class="card-info"><h3>'+m+'</h3><div class="card-metrics">'+
   '<div><span class="metric-label"><i class="ph ph-play-circle"></i>Aulas</span><span class="metric-value">'+a.videos.length+'</span></div>'+
-  '<div><span class="metric-label"><i class="ph ph-file-pdf"></i>PDFs</span><span class="metric-value">'+a.pdfs.length+'</span></div>'+
+  '<div><span class="metric-label"><i class="ph ph-file-pdf"></i>Materiais</span><span class="metric-value">'+a.pdfs.length+'</span></div>'+
   '<div><span class="metric-label"><i class="ph ph-check-circle"></i>Feito</span><span class="metric-value">'+p+'%</span></div></div>'+
   '<div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:'+p+'%"></div></div></div></div>';
 }
 function renderHome(){
   const b=$('demo-banner');
-  if(!videos.length&&!apostilas.length){b.style.display='block';b.innerHTML='Nenhum dado do acervo carregado — usando conteúdo de exemplo. Coloque <b>dados-videos.js</b> / <b>dados-apostilas.js</b> na pasta para usar seu acervo real.'}
+  if(!videos.length&&!apostilas.length){b.style.display='block';b.innerHTML='Nenhum dado do acervo carregado. Use o botão <b>☁️ Sincronizar Drive</b> no Acervo (ou coloque dados-videos.js na pasta).'}
   else b.style.display='none';
   const last=store.last;
   $('resume-card').className='resume-card';
@@ -1722,7 +1755,7 @@ function renderHome(){
 let MOD=null;
 function renderAcervo(){
   $('acervo-list-screen').style.display='block';$('module-detail-view').style.display='none';
-  $('all-modules-container').innerHTML=ativos.map(moduleCard).join('')||'<p style="color:var(--text-muted)">Nada encontrado.</p>';
+  $('all-modules-container').innerHTML=ativos.map(moduleCard).join('')||'<p style="color:var(--text-muted);padding:0 20px">Nada encontrado. Use ☁️ Sincronizar Drive.</p>';
 }
 function backAcervo(){renderAcervo()}
 function openModule(m){
@@ -1742,7 +1775,7 @@ function openModule(m){
     '<div class="content-info"><i class="ph ph-file-pdf content-icon icon-pdf"></i><span class="content-title">'+esc(a.t)+'</span></div>'+
     '<i class="'+(FAV.has(a.id)?'ph-fill ph-star':'ph ph-star')+' fav-btn'+(FAV.has(a.id)?' fav-on':'')+'" onclick="event.stopPropagation();toggleFav(\''+a.id+'\',this)"></i>'+
     '<div class="check-icon">✓</div></div>';
-  }).join('')||'<p style="color:var(--text-muted);font-size:13px">Nenhum PDF.</p>';
+  }).join('')||'<p style="color:var(--text-muted);font-size:13px">Nenhum material.</p>';
 }
 function toggleFav(id,el){if(FAV.has(id))FAV.delete(id);else FAV.add(id);store.fav=FAV;el.className=(FAV.has(id)?'ph-fill ph-star':'ph ph-star')+' fav-btn'+(FAV.has(id)?' fav-on':'')}
 function openFavorites(){
@@ -1755,9 +1788,12 @@ function openPlayer(id,t,d){
   const item=videos.find(v=>v.id===id);if(!item)return;
   CUR_ITEM=item;
   $('player-title').textContent=t;$('player-meta').textContent=d;
-  $('player-frame').src='https://www.youtube.com/embed/'+(item.y||'')+'?autoplay=1';
+  if(item.y){$('player-frame').src='https://www.youtube.com/embed/'+item.y+'?autoplay=1'}
+  else{$('player-frame').src='https://drive.google.com/file/d/'+(item.id||'')+'/preview'}
   const dl=$('drive-link');
-  if(item.drive){dl.style.display='inline-flex';dl.href=item.drive}else dl.style.display='none';
+  if(item.drive){dl.style.display='inline-flex';dl.href=item.drive}
+  else if(item.id&&!item.y){dl.style.display='inline-flex';dl.href='https://drive.google.com/file/d/'+item.id+'/view'}
+  else{dl.style.display='none'}
   updateMarkBtn();
   $('player-overlay').classList.add('show');
   store.last={id,t,d};registerStudy();
@@ -1766,9 +1802,12 @@ function openPdf(id){
   const a=apostilas.find(x=>x.id===id);if(!a)return;
   CUR_ITEM=a;
   $('player-title').textContent=a.t;$('player-meta').textContent=a.d;
-  $('player-frame').src=a.url||'about:blank';
-  $('drive-link').style.display=a.url?'inline-flex':'none';
-  $('drive-link').href=a.url||'#';
+  const pv='https://drive.google.com/file/d/'+(a.id||'')+'/preview';
+  $('player-frame').src=a.url||pv;
+  const dl=$('drive-link');
+  if(a.url){dl.style.display='inline-flex';dl.href=a.url}
+  else if(a.id){dl.style.display='inline-flex';dl.href='https://drive.google.com/file/d/'+a.id+'/view'}
+  else{dl.style.display='none'}
   updateMarkBtn();
   $('player-overlay').classList.add('show');
   registerStudy();
@@ -2035,11 +2074,20 @@ function finishSimulado(auto){
   registerStudy();checkBadges();SIM=null;
 }
 function simBackToConfig(){renderSimConfig()}
-  
 
-/* ═════════ GOOGLE DRIVE — SCAN DO ACERVO ═════════ */
+/* ═════════ GOOGLE DRIVE — SCAN DO ACERVO (blindado) ═════════ */
 const DRIVE_DEPTH=3;
-const DRIVE_ROOT='1pVd7V_pfyM4Vw20yfw45jBmNFqtKTHK7'; // ← sua pasta raiz padrão
+const DRIVE_ROOT='1pVd7V_pfyM4Vw20yfw45jBmNFqtKTHK7'; // ← sua pasta raiz
+
+function driveErroAmigavel(msg){
+  msg=(msg||'').toLowerCase();
+  if(msg.includes('has not been used')||msg.includes('disabled'))return 'Google Drive API NÃO ATIVADA. Console Cloud → Biblioteca → ative a Drive API (aguarde 2 min).';
+  if(msg.includes('api key')||msg.includes('invalid'))return 'Chave de API inválida. Confira a firebaseConfig no código.';
+  if(msg.includes('blocked')||msg.includes('restrict'))return 'Chave com restrição. Credenciais → sua chave → "Não restringir chave".';
+  if(msg.includes('not found')||msg.includes('404'))return 'Pasta não encontrada/pública. Compartilhe como "Qualquer pessoa com o link".';
+  if(msg.includes('failed to fetch'))return 'Sem internet ou bloqueio de rede/adblock.';
+  return msg;
+}
 function openDriveModal(){
   $('drive-root').value=localStorage.getItem('drive_root')||DRIVE_ROOT;
   const st=$('drive-status');
@@ -2055,8 +2103,13 @@ async function driveList(fid){
     +'&key='+firebaseConfig.apiKey+'&fields=nextPageToken,files(id,name,mimeType)&pageSize=200';
   do{
     const r=await fetch(base+(tok?'&pageToken='+tok:''));
-    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error((e.error&&e.error.message)||('HTTP '+r.status))}
-    const j=await r.json();out=out.concat(j.files||[]);tok=j.nextPageToken;
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){
+      const m=(j.error&&j.error.message)||('HTTP '+r.status);
+      console.error('[Drive] Erro na API:',m);
+      throw new Error(m);
+    }
+    out=out.concat(j.files||[]);tok=j.nextPageToken;
   }while(tok);
   return out;
 }
@@ -2075,27 +2128,32 @@ async function scanDrive(fid,depth,path){
   }
   return out;
 }
-async function driveSync(force){
-  let root=($('drive-root').value||'').trim();
+async function driveSync(silent){
+  let root=($('drive-root')?$('drive-root').value:'').trim()||DRIVE_ROOT;
   const m=root.match(/folders\/([A-Za-z0-9_-]+)/);if(m)root=m[1];
-  if(!root){toast('Cole o ID ou link da pasta raiz.','error');return}
   localStorage.setItem('drive_root',root);
   const st=$('drive-status');
-  st.innerHTML='🔄 <b>Escanando pasta raiz…</b> isso pode levar alguns segundos.';
+  if(st)st.innerHTML='🔄 <b>Escanando…</b>';
+  toast('🔄 Escaneando o Drive…');
+  console.log('[Drive] Iniciando scan da pasta:',root);
   try{
     const items=await scanDrive(root,1,[]);
+    console.log('[Drive] Itens encontrados:',items.length);
     if(!items.length)throw new Error('Pasta vazia ou sem permissão de leitura pública.');
     const vids=items.filter(i=>/^video\//.test(i.mime)).map(({mime,...r})=>r);
     const pdfs=items.filter(i=>!/^video\//.test(i.mime)).map(({mime,...r})=>r);
     DB.driveAcervo={v:vids,a:pdfs,at:Date.now(),root};saveDB();
     applyDriveAcervo();
-    st.innerHTML='<span style="color:var(--green)">✅ <b>'+vids.length+' vídeos</b> e <b>'+pdfs.length+' materiais</b> sincronizados e salvos na nuvem!</span>';
-    $('drive-btn-label').textContent='Drive conectado ✓';
-    toast('Acervo do Drive sincronizado! ☁️','success');
-    setTimeout(()=>{closeModal('drive-modal');go('view-acervo')},1200);
+    if(st)st.innerHTML='<span style="color:var(--green)">✅ <b>'+vids.length+' vídeos</b> e <b>'+pdfs.length+' materiais</b> sincronizados!</span>';
+    const lb=$('drive-btn-label');if(lb)lb.textContent='Drive conectado ✓';
+    toast('✅ Acervo do Drive: '+vids.length+' vídeos + '+pdfs.length+' materiais!','success');
+    setTimeout(()=>{closeModal('drive-modal');go('view-acervo')},1500);
   }catch(e){
-    st.innerHTML='<span style="color:var(--rose)">❌ '+esc(e.message)+'</span>'+
-    '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.7">Checklist:<br>1. <b>Google Drive API ativada</b> no projeto estudoflow-409d4 (Console → Biblioteca)<br>2. Pasta compartilhada como <b>"Qualquer pessoa com o link"</b><br>3. Chave de API em <b>"Não restringir"</b> (Credenciais)</div>';
+    console.error('[Drive] FALHA:',e.message);
+    const amg=driveErroAmigavel(e.message);
+    if(st)st.innerHTML='<span style="color:var(--rose)">❌ '+esc(amg)+'</span>';
+    toast('❌ Drive: '+esc(amg),'error');
+    openModal('drive-modal');
   }
 }
 function driveDisconnect(){
@@ -2103,8 +2161,8 @@ function driveDisconnect(){
   delete DB.driveAcervo;saveDB();
   videos=integrar(window.videosData||[]);apostilas=integrar(window.apostilasData||[]);
   rebuildAcervo();
-  $('drive-btn-label').textContent='Sincronizar Drive';
-  closeModal('drive-modal');toast('Drive desconectado. Acervo estático restaurado.');
+  const lb=$('drive-btn-label');if(lb)lb.textContent='Sincronizar Drive';
+  closeModal('drive-modal');toast('Drive desconectado.');
 }
 function applyDriveAcervo(){
   if(!DB.driveAcervo)return false;
@@ -2120,13 +2178,14 @@ function rebuildAcervo(){
   ativos=MODULES.filter(mm=>acervo[mm]&&(acervo[mm].videos.length||acervo[mm].pdfs.length));
   Object.keys(acervo).forEach(k=>{if(ativos.indexOf(k)<0&&(acervo[k].videos.length||acervo[k].pdfs.length))ativos.push(k)});
   renderHome();renderDash();
+  if(document.querySelector('#view-acervo.active'))renderAcervo();
 }
 function driveAutoRefresh(){
   if(!CLOUD_ON||!DB.driveAcervo)return;
   const hrs=(Date.now()-(DB.driveAcervo.at||0))/36e5;
-  if(hrs<24)return; // atualizado há menos de 24h — nada a fazer
+  if(hrs<24)return;
   const root=DB.driveAcervo.root||DRIVE_ROOT;
-  $('drive-btn-label').textContent='Verificando novidades…';
+  console.log('[Drive] Auto-refresh (>24h)...');
   scanDrive(root,1,[]).then(items=>{
     if(!items.length)return;
     const vids=items.filter(i=>/^video\//.test(i.mime)).map(({mime,...r})=>r);
@@ -2135,10 +2194,9 @@ function driveAutoRefresh(){
     const newN=vids.length+pdfs.length;
     DB.driveAcervo={v:vids,a:pdfs,at:Date.now(),root};saveDB();
     applyDriveAcervo();
-    $('drive-btn-label').textContent='Drive conectado ✓';
     if(newN>oldN)toast('☁️ Acervo atualizado: +'+(newN-oldN)+' novos itens do Drive!','success');
     else toast('☁️ Acervo verificado ('+newN+' itens) — nenhuma novidade','success');
-  }).catch(()=>{$('drive-btn-label').textContent='Drive conectado ✓'});
+  }).catch(e=>console.warn('[Drive] Auto-refresh falhou:',e.message));
 }
 
 /* ═════════ INIT ═════════ */
@@ -2168,15 +2226,15 @@ function initApp(){
   $('player-overlay').addEventListener('click',e=>{if(e.target===$('player-overlay'))closePlayer()});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.open').forEach(o=>o.classList.remove('open'));closePlayer();closeReward()}});
   $('bank-search').addEventListener('keydown',e=>{if(e.key==='Enter')bankApply()});
-    if(DB.driveAcervo&&applyDriveAcervo()){
-    $('drive-btn-label').textContent='Drive conectado ✓';
+  if(CLOUD_ON)setSyncIcon('ok');else setSyncIcon('off');
+  /* DRIVE: usa cache, ou auto-scan no 1º acesso */
+  if(DB.driveAcervo&&applyDriveAcervo()){
+    const lb=$('drive-btn-label');if(lb)lb.textContent='Drive conectado ✓';
     driveAutoRefresh();
   }else if(CLOUD_ON){
-    $('drive-root').value=DRIVE_ROOT;
-    driveSync(true);
+    setTimeout(()=>driveSync(true),800);
   }
 }
-
 /* ═════════ RESTAURAR SESSÃO ═════════ */
 if(localStorage.getItem('medplan_logged')==='1'){
   SYNC_USER=localStorage.getItem('medplan_user');
