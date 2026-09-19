@@ -2078,7 +2078,7 @@ function simBackToConfig(){renderSimConfig()}
 /* ═════════ GOOGLE DRIVE — SCAN DO ACERVO ═════════ */
 const DRIVE_DEPTH=6;
 const DRIVE_ROOT='1pVd7V_pfyM4Vw20yfw45jBmNFqtKTHK7';
-let DRV_STATS={folders:0,scOk:0,scFail:0,skipped:[]};  // ← ESTA LINHA (fora de qualquer função)
+let DRV_STATS={folders:0,scOk:0,scFail:0,skipped:[]};
 
 function driveErroAmigavel(msg){
   msg=(msg||'').toLowerCase();
@@ -2089,18 +2089,23 @@ function driveErroAmigavel(msg){
   if(msg.includes('failed to fetch'))return 'Sem internet ou bloqueio de rede/adblock.';
   return msg;
 }
+
 function openDriveModal(){
   $('drive-root').value=localStorage.getItem('drive_root')||DRIVE_ROOT;
   const st=$('drive-status');
   if(DB.driveAcervo){
     const hrs=((Date.now()-DB.driveAcervo.at)/36e5).toFixed(1);
     st.innerHTML='<span style="color:var(--green)">✅ Conectado — '+(DB.driveAcervo.v||[]).length+' vídeos · '+(DB.driveAcervo.a||[]).length+' materiais · atualizado há '+hrs+'h</span>';
-  }else st.textContent='Não conectado ainda.';
+  }else{
+    st.textContent='Não conectado ainda. O acervo estático (dados-videos.js) está em uso.';
+  }
   openModal('drive-modal');
 }
+
 async function driveList(fid){
   let out=[],tok=null;
-  const base='https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent("'"+fid+"' in parents and trashed = false")
+  const base='https://www.googleapis.com/drive/v3/files'
+    +'?q='+encodeURIComponent("'"+fid+"' in parents and trashed = false")
     +'&key='+firebaseConfig.apiKey
     +'&fields=nextPageToken,files(id,name,mimeType,shortcutDetails(targetId,targetMimeType))'
     +'&pageSize=200';
@@ -2112,16 +2117,19 @@ async function driveList(fid){
       console.error('[Drive] Erro na API:',m);
       throw new Error(m);
     }
-    out=out.concat(j.files||[]);tok=j.nextPageToken;
+    out=out.concat(j.files||[]);
+    tok=j.nextPageToken;
   }while(tok);
   return out;
 }
+
 async function scanDrive(fid,depth,path){
   console.log('[Drive] Pasta:',path.join('/')||'(raiz)');
   DRV_STATS.folders++;
   let items;
-  try{items=await driveList(fid)}
-  catch(e){
+  try{
+    items=await driveList(fid);
+  }catch(e){
     DRV_STATS.skipped.push(path.join('/')||'(raiz)');
     console.warn('[Drive] SEM ACESSO:',path.join('/'),'→',e.message);
     return [];
@@ -2130,51 +2138,70 @@ async function scanDrive(fid,depth,path){
   for(const f of items){
     if(f.mimeType==='application/vnd.google-apps.shortcut'&&f.shortcutDetails){
       const tg=f.shortcutDetails;
-      if(tg.targetMimeType==='application/vnd.google-apps.folder'&&depth<DRIVE_DEPTH)pastas.push({id:tg.targetId,nome:f.name});
-      else DRV_STATS.scFail++;
+      if(tg.targetMimeType==='application/vnd.google-apps.folder'&&depth<DRIVE_DEPTH){
+        pastas.push({id:tg.targetId,nome:f.name});
+        DRV_STATS.scOk++;
+      }else{
+        DRV_STATS.scFail++;
+      }
       continue;
     }
     if(f.mimeType==='application/vnd.google-apps.folder'){
-      if(depth<DRIVE_DEPTH)pastas.push({id:f.id,nome:f.name});
-    }else{
-      const mod=path[0]||'Acervo';
-      const sub=path.slice(1).join(' — ');
-      let t=pretty(String(f.name||'').replace(/\.[^.]+$/,''));
-      if(sub)t=sub+' — '+t;
-      arquivos.push({id:f.id,d:mapFolder(mod),t,mime:f.mimeType});
+      if(depth<DRIVE_DEPTH){
+        pastas.push({id:f.id,nome:f.name});
+      }
+      continue;
     }
+    const mod=path[0]||'Acervo';
+    const sub=path.slice(1).join(' — ');
+    let t=pretty(String(f.name||'').replace(/\.[^.]+$/,''));
+    if(sub)t=sub+' — '+t;
+    arquivos.push({id:f.id,d:mapFolder(mod),t,mime:f.mimeType});
   }
-  // 🚀 Escaneia todas as subpastas EM PARALELO
   const resultados=await Promise.all(
-    pastas.map(p=>scanDrive(p.id,depth+1,path.concat(p.nome)).catch(()=>{DRV_STATS.skipped.push('atalho/pasta: '+p.nome);return []}))
+    pastas.map(p=>scanDrive(p.id,depth+1,path.concat(p.nome)).catch(e=>{
+      DRV_STATS.skipped.push((path.concat(p.nome)).join('/'));
+      console.warn('[Drive] Falha em subpasta:',p.nome,'→',e.message);
+      return [];
+    }))
   );
   return arquivos.concat(...resultados);
 }
+
 async function driveSync(silent){
   let root=($('drive-root')?$('drive-root').value:'').trim()||DRIVE_ROOT;
-  const m=root.match(/folders\/([A-Za-z0-9_-]+)/);if(m)root=m[1];
+  const m=root.match(/folders\/([A-Za-z0-9_-]+)/);
+  if(m)root=m[1];
   localStorage.setItem('drive_root',root);
   const st=$('drive-status');
-    if(st)st.innerHTML='🔄 <b>Escanando…</b> <span id="drv-prog">0 pastas</span> verificadas';
+  if(st)st.innerHTML='🔄 <b>Escanando…</b> <span id="drv-prog">0 pastas</span> verificadas';
   toast('🔄 Escaneando o Drive…');
-  DRV_STATS={folders:0,scOk:0,scFail:0,skipped:[]};  // sem "let" na frente  const progInt=setInterval(()=>{
+  console.log('[Drive] Iniciando scan da pasta:',root);
+  DRV_STATS={folders:0,scOk:0,scFail:0,skipped:[]};
+  const progInt=setInterval(()=>{
     const p=document.getElementById('drv-prog');
     if(p)p.textContent=DRV_STATS.folders+' pastas';
   },500);
-  console.log('[Drive] Iniciando scan da pasta:',root);
   try{
     const items=await scanDrive(root,1,[]);
+    clearInterval(progInt);
     console.log('[Drive] Total de arquivos:',items.length);
+    console.log('[Drive] Pastas visitadas:',DRV_STATS.folders,'| Atalhos seguidos:',DRV_STATS.scOk,'| Atalhos falhos:',DRV_STATS.scFail);
+    if(DRV_STATS.skipped.length)console.warn('[Drive] Sem acesso:',DRV_STATS.skipped);
     if(!items.length)throw new Error('Pasta vazia ou sem permissão de leitura pública.');
-    const vids=items.filter(i=>/^video\//.test(i.mime)).map(({mime,...r})=>r);
-    const pdfs=items.filter(i=>!/^video\//.test(i.mime)).map(({mime,...r})=>r);
-    DB.driveAcervo={v:vids,a:pdfs,at:Date.now(),root};saveDB();
+    const vids=items.filter(i=>/^video\//.test(i.mime)).map(x=>({id:x.id,d:x.d,t:x.t}));
+    const pdfs=items.filter(i=>!/^video\//.test(i.mime)).map(x=>({id:x.id,d:x.d,t:x.t}));
+    DB.driveAcervo={v:vids,a:pdfs,at:Date.now(),root};
+    saveDB();
     applyDriveAcervo();
     if(st)st.innerHTML='<span style="color:var(--green)">✅ <b>'+vids.length+' vídeos</b> e <b>'+pdfs.length+' materiais</b> sincronizados!</span>';
-    const lb=$('drive-btn-label');if(lb)lb.textContent='Drive conectado ✓';
+    const lb=$('drive-btn-label');
+    if(lb)lb.textContent='Drive conectado ✓';
     toast('✅ Acervo do Drive: '+vids.length+' vídeos + '+pdfs.length+' materiais!','success');
+    if(DRV_STATS.scFail>0)toast('⚠️ '+DRV_STATS.scFail+' pasta(s) inacessível(is) — detalhes no Console (F12)','error');
     setTimeout(()=>{closeModal('drive-modal');go('view-acervo')},1500);
   }catch(e){
+    clearInterval(progInt);
     console.error('[Drive] FALHA:',e.message);
     const amg=driveErroAmigavel(e.message);
     if(st)st.innerHTML='<span style="color:var(--rose)">❌ '+esc(amg)+'</span>';
@@ -2182,14 +2209,20 @@ async function driveSync(silent){
     openModal('drive-modal');
   }
 }
+
 function driveDisconnect(){
   if(!confirm('Desconectar o Drive? O app volta a usar o acervo estático (dados-videos.js).'))return;
-  delete DB.driveAcervo;saveDB();
-  videos=integrar(window.videosData||[]);apostilas=integrar(window.apostilasData||[]);
+  delete DB.driveAcervo;
+  saveDB();
+  videos=integrar(window.videosData||[]);
+  apostilas=integrar(window.apostilasData||[]);
   rebuildAcervo();
-  const lb=$('drive-btn-label');if(lb)lb.textContent='Sincronizar Drive';
-  closeModal('drive-modal');toast('Drive desconectado.');
+  const lb=$('drive-btn-label');
+  if(lb)lb.textContent='Sincronizar Drive';
+  closeModal('drive-modal');
+  toast('Drive desconectado.');
 }
+
 function applyDriveAcervo(){
   if(!DB.driveAcervo)return false;
   videos=integrar(DB.driveAcervo.v||[]);
@@ -2197,28 +2230,35 @@ function applyDriveAcervo(){
   rebuildAcervo();
   return true;
 }
+
 function rebuildAcervo(){
   acervo={};
   videos.forEach(v=>modOf(v.d).videos.push(v));
   apostilas.forEach(a=>modOf(a.d).pdfs.push(a));
   ativos=MODULES.filter(mm=>acervo[mm]&&(acervo[mm].videos.length||acervo[mm].pdfs.length));
-  Object.keys(acervo).forEach(k=>{if(ativos.indexOf(k)<0&&(acervo[k].videos.length||acervo[k].pdfs.length))ativos.push(k)});
-  renderHome();renderDash();
+  Object.keys(acervo).forEach(k=>{
+    if(ativos.indexOf(k)<0&&(acervo[k].videos.length||acervo[k].pdfs.length))ativos.push(k);
+  });
+  renderHome();
+  renderDash();
   if(document.querySelector('#view-acervo.active'))renderAcervo();
 }
+
 function driveAutoRefresh(){
   if(!CLOUD_ON||!DB.driveAcervo)return;
   const hrs=(Date.now()-(DB.driveAcervo.at||0))/36e5;
   if(hrs<24)return;
   const root=DB.driveAcervo.root||DRIVE_ROOT;
   console.log('[Drive] Auto-refresh (>24h)...');
+  DRV_STATS={folders:0,scOk:0,scFail:0,skipped:[]};
   scanDrive(root,1,[]).then(items=>{
     if(!items.length)return;
-    const vids=items.filter(i=>/^video\//.test(i.mime)).map(({mime,...r})=>r);
-    const pdfs=items.filter(i=>!/^video\//.test(i.mime)).map(({mime,...r})=>r);
+    const vids=items.filter(i=>/^video\//.test(i.mime)).map(x=>({id:x.id,d:x.d,t:x.t}));
+    const pdfs=items.filter(i=>!/^video\//.test(i.mime)).map(x=>({id:x.id,d:x.d,t:x.t}));
     const oldN=(DB.driveAcervo.v||[]).length+(DB.driveAcervo.a||[]).length;
     const newN=vids.length+pdfs.length;
-    DB.driveAcervo={v:vids,a:pdfs,at:Date.now(),root};saveDB();
+    DB.driveAcervo={v:vids,a:pdfs,at:Date.now(),root};
+    saveDB();
     applyDriveAcervo();
     if(newN>oldN)toast('☁️ Acervo atualizado: +'+(newN-oldN)+' novos itens do Drive!','success');
     else toast('☁️ Acervo verificado ('+newN+' itens) — nenhuma novidade','success');
