@@ -2035,6 +2035,90 @@ function finishSimulado(auto){
   registerStudy();checkBadges();SIM=null;
 }
 function simBackToConfig(){renderSimConfig()}
+  
+  /* ═════════ GOOGLE DRIVE — SCAN DO ACERVO ═════════ */
+const DRIVE_DEPTH=3;
+function openDriveModal(){
+  $('drive-root').value=localStorage.getItem('drive_root')||'';
+  const st=$('drive-status');
+  if(DB.driveAcervo){
+    const hrs=((Date.now()-DB.driveAcervo.at)/36e5).toFixed(1);
+    st.innerHTML='<span style="color:var(--green)">✅ Conectado — '+(DB.driveAcervo.v||[]).length+' vídeos · '+(DB.driveAcervo.a||[]).length+' materiais · atualizado há '+hrs+'h</span>';
+  }else st.textContent='Não conectado ainda. O acervo estático (dados-videos.js) está em uso.';
+  openModal('drive-modal');
+}
+async function driveList(fid){
+  let out=[],tok=null;
+  const base='https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent("'"+fid+"' in parents and trashed = false")
+    +'&key='+firebaseConfig.apiKey+'&fields=nextPageToken,files(id,name,mimeType)&pageSize=200';
+  do{
+    const r=await fetch(base+(tok?'&pageToken='+tok:''));
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error((e.error&&e.error.message)||('HTTP '+r.status))}
+    const j=await r.json();out=out.concat(j.files||[]);tok=j.nextPageToken;
+  }while(tok);
+  return out;
+}
+async function scanDrive(fid,depth,path){
+  const items=await driveList(fid);let out=[];
+  for(const f of items){
+    if(f.mimeType==='application/vnd.google-apps.folder'){
+      if(depth<DRIVE_DEPTH)out=out.concat(await scanDrive(f.id,depth+1,path.concat(f.name)));
+    }else{
+      const mod=path[0]||'Acervo';
+      const sub=path.slice(1).join(' — ');
+      let t=pretty(String(f.name||'').replace(/\.[^.]+$/,''));
+      if(sub)t=sub+' — '+t;
+      out.push({id:f.id,d:mapFolder(mod),t,mime:f.mimeType});
+    }
+  }
+  return out;
+}
+async function driveSync(force){
+  let root=($('drive-root').value||'').trim();
+  const m=root.match(/folders\/([A-Za-z0-9_-]+)/);if(m)root=m[1];
+  if(!root){toast('Cole o ID ou link da pasta raiz.','error');return}
+  localStorage.setItem('drive_root',root);
+  const st=$('drive-status');
+  st.innerHTML='🔄 <b>Escanando pasta raiz…</b> isso pode levar alguns segundos.';
+  try{
+    const items=await scanDrive(root,1,[]);
+    if(!items.length)throw new Error('Pasta vazia ou sem permissão de leitura pública.');
+    const vids=items.filter(i=>/^video\//.test(i.mime)).map(({mime,...r})=>r);
+    const pdfs=items.filter(i=>!/^video\//.test(i.mime)).map(({mime,...r})=>r);
+    DB.driveAcervo={v:vids,a:pdfs,at:Date.now(),root};saveDB();
+    applyDriveAcervo();
+    st.innerHTML='<span style="color:var(--green)">✅ <b>'+vids.length+' vídeos</b> e <b>'+pdfs.length+' materiais</b> sincronizados e salvos na nuvem!</span>';
+    $('drive-btn-label').textContent='Drive conectado ✓';
+    toast('Acervo do Drive sincronizado! ☁️','success');
+    setTimeout(()=>{closeModal('drive-modal');go('view-acervo')},1200);
+  }catch(e){
+    st.innerHTML='<span style="color:var(--rose)">❌ '+esc(e.message)+'</span>'+
+    '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.7">Checklist:<br>1. <b>Google Drive API ativada</b> no projeto estudoflow-409d4 (Console → Biblioteca)<br>2. Pasta compartilhada como <b>"Qualquer pessoa com o link"</b><br>3. Chave de API em <b>"Não restringir"</b> (Credenciais)</div>';
+  }
+}
+function driveDisconnect(){
+  if(!confirm('Desconectar o Drive? O app volta a usar o acervo estático (dados-videos.js).'))return;
+  delete DB.driveAcervo;saveDB();
+  videos=integrar(window.videosData||[]);apostilas=integrar(window.apostilasData||[]);
+  rebuildAcervo();
+  $('drive-btn-label').textContent='Sincronizar Drive';
+  closeModal('drive-modal');toast('Drive desconectado. Acervo estático restaurado.');
+}
+function applyDriveAcervo(){
+  if(!DB.driveAcervo)return false;
+  videos=integrar(DB.driveAcervo.v||[]);
+  apostilas=integrar(DB.driveAcervo.a||[]);
+  rebuildAcervo();
+  return true;
+}
+function rebuildAcervo(){
+  acervo={};
+  videos.forEach(v=>modOf(v.d).videos.push(v));
+  apostilas.forEach(a=>modOf(a.d).pdfs.push(a));
+  ativos=MODULES.filter(mm=>acervo[mm]&&(acervo[mm].videos.length||acervo[mm].pdfs.length));
+  Object.keys(acervo).forEach(k=>{if(ativos.indexOf(k)<0&&(acervo[k].videos.length||acervo[k].pdfs.length))ativos.push(k)});
+  renderHome();renderDash();
+}
 
 /* ═════════ INIT ═════════ */
 function refreshAll(){
