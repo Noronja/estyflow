@@ -2076,7 +2076,7 @@ function finishSimulado(auto){
 function simBackToConfig(){renderSimConfig()}
 
 /* ═════════ GOOGLE DRIVE — SCAN DO ACERVO (blindado) ═════════ */
-const DRIVE_DEPTH=3;
+const DRIVE_DEPTH=6;
 const DRIVE_ROOT='1pVd7V_pfyM4Vw20yfw45jBmNFqtKTHK7'; // ← sua pasta raiz
 
 function driveErroAmigavel(msg){
@@ -2100,8 +2100,7 @@ function openDriveModal(){
 async function driveList(fid){
   let out=[],tok=null;
   const base='https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent("'"+fid+"' in parents and trashed = false")
-    +'&key='+firebaseConfig.apiKey+'&fields=nextPageToken,files(id,name,mimeType)&pageSize=200';
-  do{
+    +'&key='+firebaseConfig.apiKey+'&fields=nextPageToken,files(id,name,mimeType,shortcutDetails(targetId,targetMimeType))&pageSize=200';  do{
     const r=await fetch(base+(tok?'&pageToken='+tok:''));
     const j=await r.json().catch(()=>({}));
     if(!r.ok){
@@ -2114,8 +2113,16 @@ async function driveList(fid){
   return out;
 }
 async function scanDrive(fid,depth,path){
+  console.log('[Drive] Pasta:',path.join('/')||'(raiz)');
   const items=await driveList(fid);let out=[];
   for(const f of items){
+    // Atalho → segue o destino real
+    if(f.mimeType==='application/vnd.google-apps.shortcut'&&f.shortcutDetails){
+      if(f.shortcutDetails.targetMimeType==='application/vnd.google-apps.folder'&&depth<DRIVE_DEPTH){
+        out=out.concat(await scanDrive(f.shortcutDetails.targetId,depth+1,path.concat(f.name)));
+      }
+      continue;
+    }
     if(f.mimeType==='application/vnd.google-apps.folder'){
       if(depth<DRIVE_DEPTH)out=out.concat(await scanDrive(f.id,depth+1,path.concat(f.name)));
     }else{
