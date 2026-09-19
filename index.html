@@ -2078,6 +2078,7 @@ function simBackToConfig(){renderSimConfig()}
 /* ═════════ GOOGLE DRIVE — SCAN DO ACERVO ═════════ */
 const DRIVE_DEPTH=6;
 const DRIVE_ROOT='1pVd7V_pfyM4Vw20yfw45jBmNFqtKTHK7';
+let DRV_STATS={folders:0,scOk:0,scFail:0,skipped:[]};  // ← ESTA LINHA (fora de qualquer função)
 
 function driveErroAmigavel(msg){
   msg=(msg||'').toLowerCase();
@@ -2156,8 +2157,7 @@ async function driveSync(silent){
   const st=$('drive-status');
     if(st)st.innerHTML='🔄 <b>Escanando…</b> <span id="drv-prog">0 pastas</span> verificadas';
   toast('🔄 Escaneando o Drive…');
-  DRV_STATS={folders:0,scOk:0,scFail:0,skipped:[]};
-  const progInt=setInterval(()=>{
+  DRV_STATS={folders:0,scOk:0,scFail:0,skipped:[]};  // sem "let" na frente  const progInt=setInterval(()=>{
     const p=document.getElementById('drv-prog');
     if(p)p.textContent=DRV_STATS.folders+' pastas';
   },500);
