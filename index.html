@@ -319,6 +319,34 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .sim-history-item{display:flex;justify-content:space-between;align-items:center;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:8px;padding:12px 16px;font-size:13px;flex-wrap:wrap;gap:8px}
 .demo-banner{background:#3a2e10;border:1px solid var(--amber);color:var(--amber);padding:12px 16px;border-radius:8px;font-size:13px;font-weight:600;margin:0 20px 20px;display:none;line-height:1.6}
 
+  /* ═══ PREPARATÓRIO ═══ */
+.prep-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;padding:0 20px 40px}
+@media(max-width:900px){.prep-grid{grid-template-columns:1fr}}
+.prep-card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:12px;padding:20px;margin-bottom:16px}
+.prep-card h3{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.routine-row{display:flex;align-items:center;gap:8px;margin:5px 0}
+.routine-row span:first-child{width:38px;font-size:11px;font-weight:700;font-family:var(--font-mono);color:var(--text-muted)}
+.routine-row input[type=number]{width:70px;text-align:center;font-family:var(--font-mono);font-size:12px}
+.prep-timer{font-family:var(--font-serif);font-size:52px;font-weight:800;text-align:center;color:var(--teal);letter-spacing:2px;line-height:1.1;font-variant-numeric:tabular-nums}
+.prep-timer.running{color:var(--green)}
+.prep-timer-btns{display:flex;gap:10px;justify-content:center;margin-top:12px}
+.prep-meta-bar{height:10px;background:var(--bg-active);border-radius:99px;overflow:hidden;margin:8px 0}
+.prep-meta-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--green));transition:width .5s}
+.prep-meta-label{display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);font-family:var(--font-mono)}
+.check-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .12s;font-size:13px}
+.check-item:hover{background:var(--bg-elevated)}
+.check-item .check-btn{width:20px;height:20px;font-size:10px}
+.check-item.on span{text-decoration:line-through;color:var(--text-muted)}
+.prep-hist{display:flex;align-items:flex-end;gap:6px;height:90px;margin-top:10px}
+.prep-hist-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.prep-hist-bar{width:100%;max-width:34px;background:linear-gradient(180deg,var(--teal),rgba(0,200,168,.25));border-radius:4px 4px 0 0;min-height:2px;transition:height .4s}
+.prep-hist-lbl{font-size:9px;font-family:var(--font-mono);color:var(--text-muted)}
+.prep-timeline{border-left:2px solid var(--border-muted);margin-left:8px;padding-left:18px}
+.prep-tl-item{position:relative;padding:8px 0 8px 4px;font-size:13px;color:var(--text-secondary)}
+.prep-tl-item::before{content:'';position:absolute;left:-25px;top:14px;width:10px;height:10px;border-radius:50%;background:var(--teal);border:2px solid var(--bg-surface)}
+.prep-tl-item.urgent::before{background:var(--rose)}
+.prep-tl-item b{color:var(--text-primary)}
+  
 /* ═══ RESPONSIVE ═══ */
 @media(max-width:1150px){
 .app{grid-template-columns:1fr var(--dash-w);grid-template-areas:"hd hd""main dash"}
@@ -1678,7 +1706,159 @@ function finishSimulado(auto){
   registerStudy();checkBadges();SIM=null;
 }
 function simBackToConfig(){renderSimConfig()}
+  
+/* ═════════ PREPARATÓRIO (graduação em conjunto) ═════════ */
+DB.prep=Object.assign({routine:{0:360,1:120,2:120,3:120,4:120,5:120,6:300},hours:{},checklist:{},bonus:{}},DB.prep);
+DB.prep.timer=Object.assign({on:false,start:null,acc:0},DB.prep.timer);
 
+const CHECKLIST_PADRAO=[
+'Documento de identidade original COM foto',
+'Comprovante de inscrição impresso',
+'Caneta esferográfica preta (corpo transparente)',
+'Conferir local, data e horário no edital',
+'Traçar a rota / testar o transporte até o local',
+'Conferir se o local pede vacinação / foto 3x4',
+'Lanche leve e água (se permitido)',
+'Roupa confortável em camadas (frio/calor)',
+'Alarme programado — chegar 1h antes',
+'Dormir bem na véspera (não virar a noite)'];
+if(!DB.prep.checklistInit){CHECKLIST_PADRAO.forEach((t,i)=>DB.prep.checklist['p'+i]={t,done:false});DB.prep.checklistInit=true;saveDB(false)}
+
+const DOWS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+let PTIMER={int:null};
+
+function prepToday(){return fmt(new Date())}
+function prepMinutesToday(){return Math.round((DB.prep.hours[prepToday()]||0)+(DB.prep.timer.acc||0))}
+function prepMetaToday(){const dow=new Date().getDay();return DB.prep.routine[dow]||0}
+
+function prepTimerToggle(){
+  if(DB.prep.timer.on){
+    // pausar
+    const elapsed=(Date.now()-DB.prep.timer.start)/1000;
+    DB.prep.timer.acc+=elapsed;
+    DB.prep.timer.on=false;DB.prep.timer.start=null;saveDB();
+    clearInterval(PTIMER.int);
+  }else{
+    DB.prep.timer.on=true;DB.prep.timer.start=Date.now();saveDB();
+    PTIMER.int=setInterval(prepTimerTick,1000);
+  }
+  prepRenderTimer();
+}
+function prepTimerStop(){
+  if(DB.prep.timer.on){
+    DB.prep.timer.acc+=(Date.now()-DB.prep.timer.start)/1000;
+    DB.prep.timer.on=false;DB.prep.timer.start=null;
+  }
+  const mins=Math.round(DB.prep.timer.acc/60);
+  clearInterval(PTIMER.int);
+  if(mins>=1){
+    DB.prep.hours[prepToday()]=(DB.prep.hours[prepToday()]||0)+mins;
+    addXP(Math.max(1,Math.round(mins/5)),mins+' min de estudo');
+    registerStudy();checkBadges();
+    // bônus meta
+    if(!DB.prep.bonus[prepToday()]&&prepMinutesToday()>=prepMetaToday()&&prepMetaToday()>0){
+      DB.prep.bonus[prepToday()]=true;addXP(20,'meta diária batida 🎯');
+      showReward('🎯','Meta batida!','Você cumpriu a meta de hoje: '+prepMetaToday()+' min','+20 XP');
+    }
+    toast('Sessão salva: '+mins+' min registrados ✅','success');
+  }else if(mins===0){toast('Sessão muito curta (menos de 1 min) — não registrada.','error');return}
+  DB.prep.timer.acc=0;saveDB();
+  prepRenderTimer();prepRender();
+}
+function prepTimerTick(){
+  const t=prepElapsed();
+  const h=String(Math.floor(t/3600)).padStart(2,'0'),m=String(Math.floor(t%3600/60)).padStart(2,'0'),s=String(Math.floor(t%60)).padStart(2,'0');
+  $('prep-timer').textContent=h+':'+m+':'+s;
+}
+function prepElapsed(){
+  return (DB.prep.timer.acc||0)+(DB.prep.timer.on?(Date.now()-DB.prep.timer.start)/1000:0);
+}
+function prepRenderTimer(){
+  const btn=$('prep-timer-btn');if(!btn)return;
+  if(DB.prep.timer.on){btn.innerHTML='<i class="ph ph-pause"></i> Pausar';$('prep-timer').classList.add('running');if(!PTIMER.int)PTIMER.int=setInterval(prepTimerTick,1000)}
+  else{btn.innerHTML='<i class="ph ph-play"></i> Iniciar';$('prep-timer').classList.remove('running')}
+  prepTimerTick();
+  // meta de hoje
+  const dow=new Date().getDay();
+  $('prep-dow').textContent=DOWS[dow];
+  const meta=prepMetaToday(),min=prepMinutesToday();
+  $('prep-meta-txt').textContent=min+'/'+meta+' min';
+  $('prep-meta-fill').style.width=(meta?Math.min(100,min/meta*100):0)+'%';
+}
+
+function prepRenderRoutine(){
+  $('prep-routine').innerHTML=DOWS.map((d,i)=>
+    '<div class="routine-row"><span>'+d+'</span>'+
+    '<input type="number" id="rt-'+i+'" value="'+(DB.prep.routine[i]||0)+'" min="0" step="30">'+
+    '<span style="font-size:11px;color:var(--text-muted)">min</span>'+
+    (i>=1&&i<=5?'<span style="font-size:10px;color:var(--text-disabled)">faculdade</span>':'')+'</div>').join('');
+}
+function prepSaveRoutine(){
+  DOWS.forEach((_,i)=>DB.prep.routine[i]=+$('rt-'+i).value||0);
+  saveDB();toast('Rotina salva! Meta diária ajustada. ✅','success');prepRenderTimer();
+}
+
+function prepRenderHist(){
+  let bars='',total=0,week=0;
+  for(let i=6;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const k=fmt(d);const min=DB.prep.hours[k]||0;
+    total+=min;week+=min;
+    const h=Math.max(2,Math.round(min/60*22));
+    bars+='<div class="prep-hist-col"><div class="prep-hist-bar" style="height:'+h+'px" title="'+k+': '+min+' min"></div><span class="prep-hist-lbl">'+DOWS[d.getDay()]+'</span></div>';
+  }
+  $('prep-hist').innerHTML=bars;
+  $('prep-total').textContent=(total/60).toFixed(1).replace('.',',')+'h';
+  $('prep-avg').textContent=(week/7/60).toFixed(1).replace('.',',')+'h';
+}
+
+function prepRenderChecklist(){
+  const keys=Object.keys(DB.prep.checklist);
+  const doneN=keys.filter(k=>DB.prep.checklist[k].done).length;
+  $('prep-checklist').innerHTML=
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-family:var(--font-mono)">'+doneN+'/'+keys.length+' prontos</div>'+
+    keys.map(k=>{const it=DB.prep.checklist[k];
+      return '<div class="check-item'+(it.done?' on':'')+'" onclick="prepToggleItem(\''+k+'\')">'+
+      '<span class="check-btn'+(it.done?' checked':'')+'">✓</span><span>'+esc(it.t)+'</span></div>'}).join('');
+}
+function prepToggleItem(k){DB.prep.checklist[k].done=!DB.prep.checklist[k].done;saveDB();
+  if(DB.prep.checklist[k].done){const n=Object.values(DB.prep.checklist).filter(i=>i.done).length;addXP(2,'checklist');if(n===Object.keys(DB.prep.checklist).length)showReward('✅','Tudo pronto!','Checklist de preparativos completo.','')}
+  prepRenderChecklist()}
+function prepAddItem(){
+  const v=$('prep-new-item').value.trim();if(!v)return;
+  DB.prep.checklist['c'+Date.now()]={t:v,done:false};saveDB();
+  $('prep-new-item').value='';prepRenderChecklist();
+}
+
+function prepRenderFinalLine(){
+  const host=$('prep-finalline');
+  if(!DB.plan||!DB.plan.exam){host.innerHTML='<p style="font-size:13px;color:var(--text-muted)">Configure a data da prova (⚡ Planejar) para montar o plano de reta final.</p>';return}
+  const today=new Date();today.setHours(0,0,0,0);
+  const ex=new Date(DB.plan.exam+'T00:00');
+  const dd=Math.ceil((ex-today)/864e5);
+  let html='<div style="display:flex;gap:20px;margin-bottom:14px;flex-wrap:wrap">'+
+    '<div><p style="margin:0;font-size:11px;color:var(--text-muted)">Faltam</p><p style="margin:0;font-size:28px;font-weight:800;color:'+(dd<=30?'var(--rose)':dd<=90?'var(--amber)':'var(--teal)')+'">'+Math.max(0,dd)+' dias</p></div>'+
+    '<div><p style="margin:0;font-size:11px;color:var(--text-muted)">Prova</p><p style="margin:0;font-size:16px;font-weight:700">'+esc(DB.plan.name)+'</p><p style="margin:0;font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">'+DB.plan.exam+'</p></div></div>';
+  const tl=[];
+  if(dd>90)tl.push('<b>Agora → 90 dias:</b> ritmo constante do cronograma + 1 simulado por mês');
+  if(dd<=90&&dd>30)tl.push('<b>90 → 30 dias:</b> acelerar revisões de erradas (2× por semana) + 1 simulado quinzenal');
+  if(dd<=30&&dd>14)tl.push('<b>30 → 14 dias:</b> terminar o cronograma · simulado semanal · refazer TODAS as erradas');
+  if(dd<=14&&dd>2)tl.push('<b>14 → 2 dias:</b> só revisão: erradas, resumos e simulados a cada 2 dias');
+  if(dd<=2&&dd>=1)tl.push('<b>Véspera:</b> revisão leve (2-3h max) · conferir checklist · dormir 8h');
+  if(dd===0)tl.push('<b>HOJE É O DIA:</b> café bom, chegada 1h antes, calma. Você preparou pra isso. 💪');
+  if(dd<0)tl.push('Prova realizada. Boa sorte no resultado! 🍀');
+  html+='<div class="prep-timeline">'+tl.map((t,i)=>'<div class="prep-tl-item'+(dd<=14?' urgent':'')+'">'+t+'</div>').join('')+'</div>';
+  html+='<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">'+
+    '<button class="btn-primary btn-sm" onclick="bankWrongApply()"><i class="ph ph-x-circle"></i> Revisar erradas</button>'+
+    '<button class="btn-outline" onclick="go(\'view-simulados\')"><i class="ph ph-timer"></i> Fazer simulado</button>'+
+    '<button class="btn-outline" onclick="go(\'view-semana\')"><i class="ph ph-target"></i> Meta da semana</button></div>';
+  host.innerHTML=html;
+}
+
+function renderPrep(){
+  prepRenderRoutine();prepRenderHist();prepRenderChecklist();prepRenderFinalLine();prepRenderTimer();
+}
+  
 /* ═════════ INIT ═════════ */
 function refreshAll(){
   buildPlan();
