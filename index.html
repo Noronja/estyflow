@@ -1,5 +1,466 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
+
+<!-- MODAL PLANEJAR -->
+<div class="modal-overlay" id="plan-modal">
+  <div class="modal">
+    <div class="modal-title"><span>Configurar Planejamento</span><button class="modal-close" onclick="closeModal('plan-modal')"><i class="ph ph-x"></i></button></div>
+    <div class="form-group"><label class="form-label">Nome da Prova</label><input id="plan-exam-name" placeholder="Ex: USP, UNIFESP..."></div>
+    <div class="form-group"><label class="form-label">Data da Prova</label><input type="date" id="plan-exam-date"></div>
+    <div class="form-group"><label class="form-label">Início dos Estudos</label><input type="date" id="plan-start-date"></div>
+    <div class="form-group"><label class="form-label">Dias de estudo</label>
+      <div style="display:flex;gap:4px;flex-wrap:wrap" id="plan-days"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Dias antes da prova para terminar</label>
+      <select id="plan-buffer"><option value="0">0 dias</option><option value="7">7 dias</option>
+        <option value="14" selected>14 dias (recomendado)</option><option value="21">21 dias</option><option value="30">30 dias</option></select></div>
+    <div class="form-actions">
+      <button class="btn-outline btn-danger" onclick="resetAll()">Resetar Tudo</button>
+      <button class="btn-outline" onclick="closeModal('plan-modal')">Cancelar</button>
+      <button class="btn-primary btn-sm" onclick="savePlan()">Salvar e Planejar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MOVER (SKIP) -->
+<div class="modal-overlay" id="skip-modal">
+  <div class="modal">
+    <div class="modal-title"><span>Mover Conteúdo</span><button class="modal-close" onclick="closeModal('skip-modal')"><i class="ph ph-x"></i></button></div>
+    <div class="form-group"><label class="form-label">Mover para qual semana?</label>
+      <select id="skip-target-week" style="width:100%"></select></div>
+    <div class="form-actions">
+      <button class="btn-outline" onclick="closeModal('skip-modal')">Cancelar</button>
+      <button class="btn-primary btn-sm" onclick="confirmSkip()">Mover e Replanejar</button>
+    </div>
+  </div>
+</div>
+
+ <script>
+/* ═══════════ 1. DADOS ═══════════ */
+const SUBJECTS={
+NEF:{name:'Nefrologia',color:'#3B82F6'},CIR:{name:'Cirurgia',color:'#EF4444'},
+GIN:{name:'Ginecologia',color:'#EC4899'},OBS:{name:'Obstetricia',color:'#F472B6'},
+PRE:{name:'Preventiva',color:'#10B981'},PED:{name:'Pediatria',color:'#F59E0B'},
+REU:{name:'Reumatologia',color:'#8B5CF6'},HEM:{name:'Hematologia',color:'#DC2626'},
+GAS:{name:'Gastro',color:'#D97706'},HEP:{name:'Hepatologia',color:'#92400E'},
+CAR:{name:'Cardiologia',color:'#EF4444'},END:{name:'Endocrinologia',color:'#14B8A6'},
+PNE:{name:'Pneumologia',color:'#6366F1'},INF:{name:'Infectologia',color:'#059669'},
+NEU:{name:'Neurologia',color:'#7C3AED'},PSQ:{name:'Psiquiatria',color:'#A78BFA'},
+ORT:{name:'Ortopedia',color:'#78716C'},DER:{name:'Dermatologia',color:'#F97316'},
+OFT:{name:'Oftalmologia',color:'#0EA5E9'}};
+
+const SCHEDULE=[
+{w:1,items:[{c:'NEF-01-A',s:'NEF',t:'Glomerulopatias I (Nefritica, Alteracoes assintomaticas, GNRP)'},{c:'CIR-01-A',s:'CIR',t:'Trauma I - Primeiro atendimento, cabeca e torax'}]},
+{w:2,items:[{c:'NEF-01-B',s:'NEF',t:'Glomerulopatias II (Nefrotica, Glomerulopatias nas desordens)'},{c:'CIR-01-B',s:'CIR',t:'Trauma II - Abdome e TCE'}]},
+{w:3,items:[{c:'NEF-02-A',s:'NEF',t:'Doencas Tubulosintersticiais e Vasculares Renais'},{c:'GIN-01-A',s:'GIN',t:'Ciclo Menstrual e Anticoncepcao'}]},
+{w:4,items:[{c:'NEF-03-A',s:'NEF',t:'Disturbios Hidroeletroliticos'},{c:'GIN-01-B',s:'GIN',t:'Amenorreia e Ovario Policistico'}]},
+{w:5,items:[{c:'PRE-01-A',s:'PRE',t:'Medidas de Saude Coletiva'},{c:'NEF-03-B',s:'NEF',t:'Disturbios Acido-Basico'}]},
+{w:6,items:[{c:'NEF-03-C',s:'NEF',t:'Insuficiencia Renal'},{c:'OBS-01-A',s:'OBS',t:'Diagnostico de Gravidez, Modificacoes do Organismo e Pre-natal'}]},
+{w:7,items:[{c:'PRE-02-A',s:'PRE',t:'Estudos Epidemiologicos'},{c:'PED-01-A',s:'PED',t:'Neonatologia I'}]},
+{w:8,items:[{c:'PRE-02-B',s:'PRE',t:'Epidemiologia Clinica'},{c:'PED-01-B',s:'PED',t:'Neonatologia II'}]},
+{w:9,items:[{c:'REU-01-A',s:'REU',t:'Introducao a Reumatologia e Artrites (Reumatoide, Espondiloartropatias)'},{c:'CIR-02-A',s:'CIR',t:'Nefrolitiase, Cancer de Prostata e HPB'}]},
+{w:10,items:[{c:'REU-01-B',s:'REU',t:'Gota e Febre Reumatica'},{c:'CIR-02-B',s:'CIR',t:'REMIT e Queimaduras'}]},
+{w:11,items:[{c:'REU-02-A',s:'REU',t:'Colagenoses I (Polimiosite, Dermatomiosite, DMTC, Esclerodermia)'},{c:'OBS-02-A',s:'OBS',t:'Assistencia clinica ao Parto e Parto Prematuro'}]},
+{w:12,items:[{c:'REU-02-B',s:'REU',t:'Colagenoses II (LES e Sjogren)'},{c:'PRE-03-A',s:'PRE',t:'Vigilancia da Saude e Processo Epidemico'}]},
+{w:13,items:[{c:'REU-02-C',s:'REU',t:'Vasculites'},{c:'PED-02-A',s:'PED',t:'Aleitamento Materno'}]},
+{w:14,items:[{c:'HEM-01-A',s:'HEM',t:'Anemias I - Ferropriva, Doencas Cronicas e Megaloblastica'},{c:'CIR-03-A',s:'CIR',t:'Hernias da Parede Abdominal'}]},
+{w:15,items:[{c:'HEM-01-B',s:'HEM',t:'Anemias II - Hemoliticas, Falciformes e Hemoglobinopatias'},{c:'CIR-03-B',s:'CIR',t:'Preparo Pre-operatorio, Risco cirurgico e Complicacoes'}]},
+{w:16,items:[{c:'HEM-02-A',s:'HEM',t:'Leucemias Agudas e Cronicas'},{c:'HEM-02-B',s:'HEM',t:'Linfomas e Mieloma Multiplo'}]},
+{w:17,items:[{c:'HEM-02-C',s:'HEM',t:'Disturbios da Hemostasia'},{c:'PED-02-B',s:'PED',t:'Crescimento, Desenvolvimento e Puberdade'}]},
+{w:18,items:[{c:'GAS-01-A',s:'GAS',t:'Doencas do Esofago'},{c:'GIN-02-A',s:'GIN',t:'Sangramento Uterino Anormal, Endometriose e Infertilidade'}]},
+{w:19,items:[{c:'GAS-01-B',s:'GAS',t:'Doencas do Estomago e Hemorragia Digestiva Alta'},{c:'GAS-02-A',s:'GAS',t:'Sindrome de Ma-absorcao e Doenca Intestinal Inflamatoria'}]},
+{w:20,items:[{c:'GAS-02-B',s:'GAS',t:'Doenca Vascular dos Intestinos e Obstrucao Intestinal'},{c:'OBS-03-A',s:'OBS',t:'Sangramentos na Gravidez - Parte 1'}]},
+{w:21,items:[{c:'GAS-02-C',s:'GAS',t:'Diverticulose, Polipose, Cancer de Colon e Apendicite Aguda'},{c:'OBS-03-B',s:'OBS',t:'Sangramentos na Gravidez - Parte 2 e Doenca Hemolitica Perinatal'}]},
+{w:22,items:[{c:'GAS-03-A',s:'GAS',t:'Pancreatite Aguda e Cronica e Cancer de Pancreas'},{c:'GAS-03-B',s:'GAS',t:'Doencas das Vias Biliares'}]},
+{w:23,items:[{c:'HEP-01-A',s:'HEP',t:'Introducao a Hepatologia e Hepatites Virais'},{c:'HEP-02-A',s:'HEP',t:'Cirrose e suas Causas'}]},
+{w:24,items:[{c:'HEP-02-B',s:'HEP',t:'Cirrose e Complicacoes, Hipertensao Porta, Ascite e Encefalopatia'},{c:'GIN-03-A',s:'GIN',t:'Climaterio, Distopias e Incontinencia urinaria'}]},
+{w:25,items:[{c:'CAR-01-A',s:'CAR',t:'Arritmias I (Taquiarritmias)'},{c:'PED-03-A',s:'PED',t:'Disturbios do Crescimento, Desnutricao e Baixa estatura'}]},
+{w:26,items:[{c:'CAR-01-B',s:'CAR',t:'Arritmias II (Bradiarritmias) e PCR'},{c:'PED-03-B',s:'PED',t:'Imunizacao'}]},
+{w:27,items:[{c:'CAR-02-A',s:'CAR',t:'Insuficiencia Cardiaca'},{c:'GIN-04-A',s:'GIN',t:'Doencas das Mamas e Ovarios'}]},
+{w:28,items:[{c:'CAR-02-B',s:'CAR',t:'Hipertensao Arterial Sistemica, Crise Hipertensiva'},{c:'CAR-02-C',s:'CAR',t:'Valvopatias'}]},
+{w:29,items:[{c:'CAR-03-A',s:'CAR',t:'Doenca Arterial Coronariana: IAM e Angina'},{c:'PED-04-A',s:'PED',t:'Diarreia Aguda e Desidratacao na Infancia'}]},
+{w:30,items:[{c:'END-01-A',s:'END',t:'Tireoide I (Hipertireoidismo)'},{c:'GIN-05-A',s:'GIN',t:'Lesoes Precursoras, Cancer de Colo Uterino e Endometrio'}]},
+{w:31,items:[{c:'PRE-04-A',s:'PRE',t:'SUS - Evolucao historica, Diretrizes, Propostas e Financiamento'},{c:'END-01-B',s:'END',t:'Tireoide II (Tireoidites e Cancer)'}]},
+{w:32,items:[{c:'END-02-A',s:'END',t:'Doencas da Suprarrenal'},{c:'PED-04-B',s:'PED',t:'Infeccoes Respiratorias Agudas - Parte 1'}]},
+{w:33,items:[{c:'END-03-A',s:'END',t:'Diabetes Mellitus, Dislipidemia e Obesidade'},{c:'PED-04-C',s:'PED',t:'Infeccoes Respiratorias Agudas - Parte 2'}]},
+{w:34,items:[{c:'PNE-01-A',s:'PNE',t:'Asma e DPOC'},{c:'OBS-04-A',s:'OBS',t:'Disturbios Hipertensivos da Gestacao, Diabetes e Gemelaridade'}]},
+{w:35,items:[{c:'PNE-01-B',s:'PNE',t:'Cancer de Pulmao e TEP'},{c:'PED-05-A',s:'PED',t:'Nefrologia Pediatrica'}]},
+{w:36,items:[{c:'PNE-02-A',s:'PNE',t:'Tuberculose'},{c:'PNE-02-B',s:'PNE',t:'Pneumonia e Complicacoes'}]},
+{w:37,items:[{c:'INF-01-A',s:'INF',t:'AIDS'},{c:'OBS-05-A',s:'OBS',t:'Sofrimento Fetal, Vitalidade Fetal, Forcipes e Puerperio'}]},
+{w:38,items:[{c:'INF-02-A',s:'INF',t:'Endocardite Infecciosa e Meningite'},{c:'INF-02-B',s:'INF',t:'Parasitoses Intestinais'}]},
+{w:39,items:[{c:'INF-03-A',s:'INF',t:'Sindromes Febris'},{c:'GIN-06-A',s:'GIN',t:'Vulvovaginites, IST e Cervicites'}]},
+{w:40,items:[{c:'NEU-01-A',s:'NEU',t:'Neurologia I (Sindromes Neurologicas e AVE)'},{c:'PED-05-B',s:'PED',t:'Doencas Exantematicas na Infancia'}]},
+{w:41,items:[{c:'NEU-01-B',s:'NEU',t:'Neurologia II (Polineuropatias, Demencia e Parkinson)'},{c:'NEU-01-C',s:'NEU',t:'Neurologia III (Cefaleia e Epilepsia)'}]},
+{w:42,items:[{c:'CIR-04-A',s:'CIR',t:'Especialidades Cirurgicas - Parte 1'},{c:'CIR-04-B',s:'CIR',t:'Especialidades Cirurgicas - Parte 2'}]},
+{w:43,items:[{c:'PSQ-01-A',s:'PSQ',t:'Psiquiatria - Parte 1'},{c:'PSQ-01-B',s:'PSQ',t:'Psiquiatria - Parte 2'}]},
+{w:44,items:[{c:'ORT-01-A',s:'ORT',t:'Ortopedia - Parte 1'},{c:'ORT-01-B',s:'ORT',t:'Ortopedia - Parte 2'}]},
+{w:45,items:[{c:'DER-01-A',s:'DER',t:'Dermatologia - Parte 1'},{c:'DER-01-B',s:'DER',t:'Dermatologia - Parte 2'}]},
+{w:46,items:[{c:'OFT-01-A',s:'OFT',t:'Oftalmologia - Parte 1'},{c:'OFT-01-B',s:'OFT',t:'Oftalmologia - Parte 2'}]}];
+
+const HOLIDAYS={'2024-01-01':'Confraternizacao','2024-02-12':'Carnaval','2024-02-13':'Carnaval','2024-03-29':'Sexta-feira Santa','2024-04-21':'Tiradentes','2024-05-01':'Dia do Trabalho','2024-05-30':'Corpus Christi','2024-09-07':'Independencia','2024-10-12':'N.S. Aparecida','2024-11-02':'Finados','2024-11-15':'Procl. Republica','2024-11-20':'Consciencia Negra','2024-12-25':'Natal','2025-01-01':'Confraternizacao','2025-03-03':'Carnaval','2025-03-04':'Carnaval','2025-04-18':'Sexta-feira Santa','2025-04-20':'Pascoa','2025-04-21':'Tiradentes','2025-05-01':'Dia do Trabalho','2025-06-19':'Corpus Christi','2025-09-07':'Independencia','2025-10-12':'N.S. Aparecida','2025-11-02':'Finados','2025-11-15':'Procl. Republica','2025-11-20':'Consciencia Negra','2025-12-25':'Natal','2026-01-01':'Confraternizacao','2026-02-16':'Carnaval','2026-02-17':'Carnaval','2026-04-03':'Sexta-feira Santa','2026-04-05':'Pascoa','2026-04-21':'Tiradentes','2026-05-01':'Dia do Trabalho','2026-06-04':'Corpus Christi','2026-09-07':'Independencia','2026-10-12':'N.S. Aparecida','2026-11-02':'Finados','2026-11-15':'Procl. Republica','2026-11-20':'Consciencia Negra','2026-12-25':'Natal'};
+
+/* ═══════════ 2. STATE ═══════════ */
+const state={user:null,completed:[],exam:null,startDate:null,studyDays:[1,2,3,4,5],
+  buffer:14,filter:'all',subject:null,monthOffset:0,questions:0,skipped:{},weekQ:{},pendingSkip:null};
+const TOTAL=SCHEDULE.reduce((a,w)=>a+w.items.length,0);
+const DAYNAMES=['Dom','Seg','Ter','Qua','Qui','Sex','Sab'];
+const MONTHS=['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+/* ═══════════ 3. PERSISTENCIA ═══════════ */
+function saveState(){
+  const clean={completed:state.completed,exam:state.exam,startDate:state.startDate,
+    studyDays:state.studyDays,buffer:state.buffer,questions:state.questions,
+    skipped:state.skipped,weekQ:state.weekQ};
+  localStorage.setItem('medplanx_'+state.user,JSON.stringify(clean));fbSave();
+}
+function loadState(){
+  try{const s=JSON.parse(localStorage.getItem('medplanx_'+state.user)||'{}');
+    Object.assign(state,s);}catch(e){}
+}
+function resetAll(){
+  if(!confirm('Apagar TODO o progresso e planejamento?'))return;
+  state.completed=[];state.exam=null;state.startDate=null;state.skipped={};state.weekQ={};state.questions=0;
+  saveState();refreshAll();closeModal('plan-modal');toast('Planejamento resetado','success');
+}
+
+/* ═══════════ 4. HELPERS DE DATA ═══════════ */
+const dkey=d=>d.toISOString().slice(0,10);
+const parseD=s=>new Date(s+'T00:00:00');
+function weekStart(w){ // segunda-feira da semana w
+  if(!state.startDate)return null;
+  const d=parseD(state.startDate);const off=(d.getDay()+6)%7;
+  d.setDate(d.getDate()-off+(w-1)*7);return d;
+}
+function effWeek(item){return state.skipped[item.c]||item.week;}
+function itemDates(item){ // datas do item dentro da sua semana (distribui pelos studyDays)
+  const start=weekStart(effWeek(item));if(!start)return [];
+  const days=[...state.studyDays].sort();if(!days.length)days.push(1);
+  const idxInWeek=SCHEDULE.find(w=>w.w===item.week).items.findIndex(i=>i.c===item.c);
+  const out=[];for(let k=idxInWeek;k<days.length;k+=SCHEDULE.find(w=>w.w===item.week).items.length){
+    const d=new Date(start);d.setDate(d.getDate()+(days[k]+6)%7);out.push(d);}
+  return out.length?out:[(()=>{const d=new Date(start);d.setDate(d.getDate()+(days[0]+6)%7);return d;})()];
+}
+function itemsByDate(){ // mapa 'YYYY-MM-DD' -> [itens]
+  const map={};SCHEDULE.flatMap(w=>w.items).forEach(it=>itemDates(it).forEach(d=>{
+    const k=dkey(d);(map[k]=map[k]||[]).push(it);}));return map;
+}
+function currentWeek(){
+  if(!state.startDate)return 1;
+  const diff=Math.floor((new Date()-parseD(state.startDate))/(7*864e5))+1;
+  return Math.min(Math.max(diff,1),46);
+}
+function daysToExam(){return state.exam?Math.ceil((parseD(state.exam.date)-new Date())/864e5):null;}
+function urgencyClass(){
+  const d=daysToExam();if(d===null)return'';if(d>90)return'urgency-relaxed';
+  if(d>30)return'urgency-normal';if(d>10)return'urgency-urgent';return'urgency-critical';}
+function urgencyLabel(){const d=daysToExam();if(d===null)return'';
+  if(d>90)return'Tranquilo';if(d>30)return'No ritmo';if(d>10)return'Urgente';return'Critico';}
+
+/* ═══════════ 5. ACOES ═══════════ */
+function toggleItem(id){
+  const i=state.completed.indexOf(id);
+  if(i>=0)state.completed.splice(i,1);
+  else{state.completed.push(id);toast('+10 XP · '+id,'xp');}
+  saveState();refreshAll();
+}
+function openSkipModal(id){
+  state.pendingSkip=id;
+  const sel=document.getElementById('skip-target-week');
+  const cur=effWeek(SCHEDULE.flatMap(w=>w.items).find(i=>i.c===id));
+  sel.innerHTML='';for(let w=cur+1;w<=46;w++){const o=document.createElement('option');o.value=w;o.textContent='Semana '+w;sel.appendChild(o);}
+  openModal('skip-modal');
+}
+function confirmSkip(){
+  if(state.pendingSkip){state.skipped[state.pendingSkip]=+document.getElementById('skip-target-week').value;
+    saveState();refreshAll();toast('Conteudo movido e replanejado','success');}
+  closeModal('skip-modal');
+}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+/* ═══════════ 6. MODAL PLANEJAR ═══════════ */
+function buildPlanDays(){
+  const box=document.getElementById('plan-days');box.innerHTML='';
+  [1,2,3,4,5,6,0].forEach(d=>{
+    const l=document.createElement('label');
+    l.style.cssText='display:flex;align-items:center;gap:4px;padding:6px 10px;border-radius:6px;border:1px solid var(--border-muted);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-mono)';
+    l.innerHTML=`<input type="checkbox" class="plan-day-cb" value="${d}" ${state.studyDays.includes(d)?'checked':''}> ${DAYNAMES[d]}`;
+    box.appendChild(l);});
+}
+function openPlanModal(){
+  document.getElementById('plan-exam-name').value=state.exam?.name||'';
+  document.getElementById('plan-exam-date').value=state.exam?.date||'';
+  document.getElementById('plan-start-date').value=state.startDate||'';
+  document.getElementById('plan-buffer').value=state.buffer;
+  buildPlanDays();openModal('plan-modal');
+}
+function savePlan(){
+  const name=document.getElementById('plan-exam-name').value.trim();
+  const date=document.getElementById('plan-exam-date').value;
+  const start=document.getElementById('plan-start-date').value;
+  if(!name||!date||!start){toast('Preencha nome, data da prova e inicio','error');return;}
+  const days=[...document.querySelectorAll('.plan-day-cb:checked')].map(c=>+c.value);
+  if(!days.length){toast('Escolha pelo menos 1 dia de estudo','error');return;}
+  state.exam={name,date};state.startDate=start;state.studyDays=days;
+  state.buffer=+document.getElementById('plan-buffer').value;
+  saveState();refreshAll();closeModal('plan-modal');
+  toast('Plano salvo: 92 aulas em 46 semanas','success');
+}
+
+/* ═══════════ 7. RENDER: CRONOGRAMA ═══════════ */
+function visibleItems(items){
+  return items.filter(it=>(!state.subject||it.s===state.subject));
+}
+function renderSchedule(){
+  const el=document.getElementById('schedule-view');if(!el)return;
+  const cw=currentWeek();let html='';
+  if(!state.startDate){
+    html=`<div class="week-target"><i class="ph ph-rocket-launch" style="font-size:28px;color:var(--teal)"></i>
+      <div><b>Nenhum plano ativo</b><div style="font-size:12px;color:var(--text-muted)">Clique em "Planejar" no topo para distribuir as 92 aulas no calendario</div></div>
+      <button class="btn-primary btn-sm" style="margin-left:auto" onclick="openPlanModal()">Planejar agora</button></div>`;
+  }else{
+    const d=daysToExam();
+    html=`<div class="week-target"><div><b style="color:var(--teal)">${state.exam?.name||'Prova'}</b>
+      <div class="week-dates">${d!==null?d+' dias restantes · ':''}inicio ${new Date(state.startDate+'T00:00:00').toLocaleDateString('pt-BR')} · semana atual: ${cw}</div></div>
+      <span class="week-num">${state.completed.length}/${TOTAL} concluidas</span></div>`;
+  }
+  SCHEDULE.forEach(w=>{
+    const items=visibleItems(w.items);
+    if(!items.length)return;
+    const all=SCHEDULE.find(x=>x.w===w.w).items;
+    const done=all.filter(i=>state.completed.includes(i.c)).length;
+    const s=weekStart(w.w);const e=new Date(s);e.setDate(e.getDate()+6);
+    const dates=s?`${s.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})} - ${e.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}`:'';
+    const isCur=s&&cw===w.w;
+    html+=`<div class="week-card" ${isCur?'style="border-color:var(--teal-border)"':''}>
+      <div class="week-hdr" onclick="toggleWeekBody(this)"><span class="week-num">S${w.w}</span>
+      <span class="week-dates">${dates}${isCur?' · ATUAL':''}</span>
+      <span class="week-progress" style="${done===all.length?'color:var(--green)':''}">${done}/${all.length}${done===all.length?' OK':''}</span>
+      <i class="ph ph-caret-down" style="font-size:12px;color:var(--text-muted)"></i></div>
+      <div class="week-body" style="display:${isCur||!state.startDate?'block':'none'}">`;
+    items.forEach(it=>{
+      const isDone=state.completed.includes(it.c);
+      const mv=state.skipped[it.c];
+      html+=`<div class="week-item"><span class="sdot" style="background:${SUBJECTS[it.s].color}"></span>
+        <span class="week-item-code">${it.c}</span>
+        <span class="week-item-topic ${isDone?'completed':''}">${it.t}</span>
+        ${mv?`<span class="week-progress" style="color:var(--amber)">movida S${mv}</span>`:''}
+        <button class="skip-btn" title="Mover" onclick="openSkipModal('${it.c}')"><i class="ph ph-arrow-bend-down-right"></i></button>
+        <button class="check-btn ${isDone?'checked':''}" onclick="toggleItem('${it.c}')"><i class="ph ph-check"></i></button></div>`;});
+    html+='</div></div>';});
+  el.innerHTML=html;
+}
+function toggleWeekBody(hdr){const b=hdr.nextElementSibling;b.style.display=b.style.display==='none'?'block':'none';}
+
+/* ═══════════ 8. RENDER: SEMANA ATUAL ═══════════ */
+function renderWeek(){
+  const el=document.getElementById('week-view');if(!el)return;
+  const cw=currentWeek();const w=SCHEDULE.find(x=>x.w===cw);
+  if(!w||!state.startDate){el.innerHTML='<div class="week-target">Planeje seu estudo primeiro (botao Planejar no topo).</div>';return;}
+  const s=weekStart(cw);const e=new Date(s);e.setDate(e.getDate()+6);
+  const items=visibleItems(w.items);
+  const done=w.items.filter(i=>state.completed.includes(i.c)).length;
+  const q=state.weekQ[cw]||0;
+  let html=`<div class="week-target"><div><b style="font-size:18px;color:var(--teal)">Semana ${cw}</b>
+    <div class="week-dates">${s.toLocaleDateString('pt-BR')} a ${e.toLocaleDateString('pt-BR')}</div></div>
+    <div><div class="exam-stat-val">${done}/${w.items.length}</div><div class="exam-stat-label">concluido</div></div></div>`;
+  html+='<div class="week-card">';
+  items.forEach(it=>{
+    const isDone=state.completed.includes(it.c);
+    html+=`<div class="week-item"><span class="sdot" style="background:${SUBJECTS[it.s].color}"></span>
+      <span class="week-item-code">${it.c}</span>
+      <span class="week-item-topic ${isDone?'completed':''}">${it.t}</span>
+      <button class="check-btn ${isDone?'checked':''}" onclick="toggleItem('${it.c}')"><i class="ph ph-check"></i></button></div>`;});
+  html+=`</div><div class="week-card"><div class="week-hdr" style="cursor:default"><span class="week-num">Q</span>
+    <span class="week-item-topic">Questoes feitas nesta semana</span>
+    <input class="week-q-input" type="number" min="0" value="${q}" onchange="state.weekQ[${cw}]=+this.value;state.questions=Object.values(state.weekQ).reduce((a,b)=>a+b,0);saveState();refreshAll()"></div></div>`;
+  el.innerHTML=html;
+}
+
+/* ═══════════ 9. RENDER: CALENDARIO ═══════════ */
+function renderCalendar(){
+  const grid=document.getElementById('cal-grid');if(!grid)return;
+  const base=new Date();base.setDate(1);base.setMonth(base.getMonth()+state.monthOffset);
+  const y=base.getFullYear(),m=base.getMonth();
+  document.getElementById('month-label').textContent=MONTHS[m]+' '+y;
+  const map=itemsByDate();
+  const examKey=state.exam?state.exam.date:null;
+  const firstDow=(new Date(y,m,1).getDay()+6)%7;
+  const dim=new Date(y,m+1,0).getDate();
+  let html='';
+  for(let i=0;i<firstDow;i++)html+='<div class="day other"></div>';
+  for(let d=1;d<=dim;d++){
+    const dt=new Date(y,m,d);const k=dkey(dt);
+    const today=k===dkey(new Date());
+    const items=(map[k]||[]).filter(it=>!state.subject||it.s===state.subject);
+    const allDone=items.length&&items.every(it=>state.completed.includes(it.c));
+    let cls='day';if(today)cls+=' today';if(k===examKey)cls+=' exam';if(HOLIDAYS[k])cls+=' holiday';
+    html+=`<div class="${cls}" onclick="${items.length?'go(\'view-cronograma\')':''}"><div class="day-bar"></div>
+      <div class="dnum">${d}</div>`;
+    if(HOLIDAYS[k])html+=`<div class="day-label">${HOLIDAYS[k]}</div>`;
+    if(k===examKey)html+=`<div class="day-label">PROVA</div>`;
+    html+='<div class="day-chips">';
+    items.slice(0,3).forEach(it=>{const dn=state.completed.includes(it.c);
+      html+=`<span class="day-chip ${dn?'done':''}" style="background:${SUBJECTS[it.s].color}" title="${it.t}">${it.c}</span>`;});
+    html+='</div>';
+    if(items.length>3)html+=`<div class="day-label">+${items.length-3}</div>`;
+    if(allDone)html+='<div class="day-check"><i class="ph ph-check"></i></div>';
+    html+='</div>';}
+  grid.innerHTML=html;
+}
+function changeMonth(d){state.monthOffset+=d;renderCalendar();}
+function goToday(){state.monthOffset=0;renderCalendar();go('view-calendario');}
+
+/* ═══════════ 10. FILTROS / SIDEBAR ═══════════ */
+function filteredAll(){
+  return SCHEDULE.flatMap(w=>w.items).filter(it=>
+    (state.filter!=='pending'||!state.completed.includes(it.c))&&
+    (state.filter!=='completed'||state.completed.includes(it.c))&&
+    (!state.subject||it.s===state.subject));
+}
+function setFilter(f,el){
+  state.filter=f;
+  document.querySelectorAll('[data-filter]').forEach(n=>n.classList.toggle('active',n===el));
+  renderSchedule();renderBadges();
+}
+function clearSubject(el){state.subject=null;renderSubjectNav();renderSubjectChips();renderSchedule();renderCalendar();renderWeek();}
+function renderSubjectNav(){
+  const el=document.getElementById('subject-nav');if(!el)return;el.innerHTML='';
+  Object.entries(SUBJECTS).forEach(([code,s])=>{
+    const all=SCHEDULE.flatMap(w=>w.items).filter(i=>i.s===code);
+    if(!all.length)return;
+    const done=all.filter(i=>state.completed.includes(i.c)).length;
+    const n=document.createElement('div');
+    n.className='nav-item'+(state.subject===code?' active':'');
+    n.innerHTML=`<span class="sdot" style="background:${s.color}"></span>${s.name}<span class="nav-badge">${done}/${all.length}</span>`;
+    n.onclick=()=>{state.subject=state.subject===code?null:code;renderSubjectNav();renderSubjectChips();renderSchedule();renderCalendar();renderWeek();};
+    el.appendChild(n);});
+}
+function renderSubjectChips(){
+  const el=document.getElementById('subject-chips');if(!el)return;el.innerHTML='';
+  Object.entries(SUBJECTS).forEach(([code,s])=>{
+    const c=document.createElement('button');
+    c.className='chip'+(state.subject===code?' active':'');
+    c.textContent=code;
+    c.onclick=()=>{state.subject=state.subject===code?null:code;renderSubjectNav();renderSubjectChips();renderSchedule();renderCalendar();renderWeek();};
+    el.appendChild(c);});
+}
+function renderBadges(){
+  const t=document.getElementById('badge-total'),p=document.getElementById('badge-pending'),d=document.getElementById('badge-done');
+  if(t)t.textContent=TOTAL;if(d)d.textContent=state.completed.length;if(p)p.textContent=TOTAL-state.completed.length;
+}
+
+/* ═══════════ 11. RENDER: DASHBOARD (#dash-stats) ═══════════ */
+function renderDashStats(){
+  const el=document.getElementById('dash-stats');if(!el)return;
+  const pct=Math.round(state.completed.length/TOTAL*100);
+  const C=2*Math.PI*57;
+  const d=daysToExam();
+  const rows=Object.entries(SUBJECTS).map(([code,s])=>{
+    const all=SCHEDULE.flatMap(w=>w.items).filter(i=>i.s===code);
+    if(!all.length)return'';
+    const done=all.filter(i=>state.completed.includes(i.c)).length;
+    return`<div class="subj-row"><span class="subj-name">${s.name}</span>
+      <div class="subj-bar"><div class="subj-bar-fill" style="width:${Math.round(done/all.length*100)}%;background:${s.color}"></div></div>
+      <span class="subj-pct">${done}/${all.length}</span></div>`;}).join('');
+  el.innerHTML=`
+  <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center;justify-content:center">
+    <div class="progress-ring"><svg viewBox="0 0 130 130" style="transform:rotate(-90deg)">
+      <circle class="ring-bg" cx="65" cy="65" r="57"/>
+      <circle class="ring-fg" cx="65" cy="65" r="57" stroke-dasharray="${C.toFixed(0)}" stroke-dashoffset="${(C*(1-pct/100)).toFixed(0)}"/></svg>
+      <div class="ring-text"><div class="ring-pct">${pct}%</div><div class="ring-sub">concluido</div></div></div>
+    <div>
+      ${state.exam?`<div class="exam-card" style="min-width:220px"><div class="exam-card-header"><span class="exam-name">${state.exam.name}</span>
+        <span class="exam-urgency ${urgencyClass()}">${urgencyLabel()}</span></div>
+        <div class="exam-stat-val">${d} dias</div><div class="exam-stat-label">${new Date(state.exam.date+'T00:00:00').toLocaleDateString('pt-BR')}</div></div>`:''}
+      <div style="display:flex;gap:16px;font-family:var(--font-mono);font-size:13px">
+        <div><b style="color:var(--green)">${state.completed.length}</b> <span style="color:var(--text-muted)">feitas</span></div>
+        <div><b style="color:var(--amber)">${TOTAL-state.completed.length}</b> <span style="color:var(--text-muted)">restantes</span></div>
+        <div><b style="color:var(--violet)">${Object.values(state.weekQ).reduce((a,b)=>a+b,0)}</b> <span style="color:var(--text-muted)">questoes</span></div></div>
+    </div></div>
+  <div style="margin-top:18px"><div class="dash-title">Progresso por Materia</div>${rows}</div>`;
+}
+
+/* ═══════════ 12. NAVEGACAO / GERAL ═══════════ */
+function go(id){
+  document.querySelectorAll('.view-section').forEach(v=>v.classList.toggle('active',v.id===id));
+  document.querySelectorAll('.nav-item[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===id));
+  document.querySelector('.sidebar')?.classList.remove('open');
+  if(id==='view-calendario')renderCalendar();
+  if(id==='view-cronograma')renderSchedule();
+  if(id==='view-semana')renderWeek();
+  if(id==='view-inicio')renderDashStats();
+  window.scrollTo(0,0);
+}
+function toggleTheme(){
+  const h=document.documentElement;
+  h.dataset.theme=h.dataset.theme==='dark'?'light':'dark';
+  localStorage.setItem('medplanx_theme',h.dataset.theme);
+}
+function toast(msg,type='success'){
+  const c=document.getElementById('toasts')||document.body;
+  const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;
+  c.appendChild(t);setTimeout(()=>t.remove(),3200);
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify({completed:state.completed,exam:state.exam,startDate:state.startDate,studyDays:state.studyDays,buffer:state.buffer,skipped:state.skipped,weekQ:state.weekQ,questions:state.questions},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='medplanx_backup.json';a.click();
+}
+function importData(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{const j=JSON.parse(r.result);Object.assign(state,j);
+    saveState();refreshAll();toast('Backup importado','success');}catch(err){toast('Arquivo invalido','error');}};
+  r.readAsText(f);
+}
+
+/* ═══════════ 13. FIREBASE (adapte ao seu config) ═══════════ */
+let fbRef=null;
+function fbInit(){
+  try{
+    if(typeof firebase==='undefined'||!firebase.apps.length)return;
+    fbRef=firebase.database().ref('medplanx/'+encodeURIComponent(state.user));
+    fbRef.on('value',snap=>{const cloud=snap.val();if(!cloud)return;
+      if(JSON.stringify(cloud.completed||[])!==JSON.stringify(state.completed)){
+        state.completed=cloud.completed||[];state.skipped=cloud.skipped||{};refreshAll();}});
+    fbLoad();
+  }catch(e){console.warn('fb off',e);}
+}
+function fbLoad(){if(!fbRef)return;fbRef.once('value').then(s=>{const c=s.val();if(!c)return;
+  Object.assign(state,{completed:c.completed||[],exam:c.exam||null,startDate:c.startDate||null,
+    studyDays:c.studyDays||[1,2,3,4,5],skipped:c.skipped||{},weekQ:c.weekQ||{}});refreshAll();});}
+function fbSave(){if(!fbRef)return;
+  fbRef.set({completed:state.completed,exam:state.exam,startDate:state.startDate,
+    studyDays:state.studyDays,buffer:state.buffer,skipped:state.skipped,weekQ:state.weekQ,updated:Date.now()});}
+
+/* ═══════════ 14. LOGIN (se seu app ja tem, apenas chame medplanLogin(user) dentro dele) ═══════════ */
+function doLogin(){
+  const u=document.getElementById('login-user').value.trim();
+  const p=document.getElementById('login-pass').value.trim();
+  if(!u){document.getElementById('login-error').style.display='block';return;}
+  medplanLogin(u);
+}
+function medplanLogin(user){
+  state.user=user;loadState();
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-main').style.display='grid';
+  document.documentElement.dataset.theme=localStorage.getItem('medplanx_theme')||'dark';
+  fbInit();refreshAll();toast('Bem-vindo, '+user+'!','success');
+}
+function logout(){location.reload();}
+
+/* ═══════════ 15. REFRESH + INIT ═══════════ */
+function refreshAll(){
+  renderBadges();renderSubjectNav();renderSubjectChips();
+  renderSchedule();renderWeek();renderCalendar();renderDashStats();
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.modal-overlay').forEach(m=>
+    m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+});
+</script> 
+  
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
