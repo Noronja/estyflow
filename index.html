@@ -76,7 +76,7 @@ function refreshAll(){renderHome();renderCalendar();renderSchedule();renderWeek(
  const n=DRIVE.videos.length+DRIVE.apostilas.length;if(n)$('drive-btn-label').textContent='Drive ('+n+')'}
 
 /* ═══ LOGIN / FIREBASE ═══ */
-const firebaseConfig={apiKey:"",authDomain:"",databaseURL:"",projectId:""}; // ← sua config aqui (vazio = offline)
+const firebaseConfig={apiKey:"AIzaSyA6aoGd1Yxj0Yn9JjzAABwQGOTkj7xEAVQ",authDomain:"estudoflow-409d4.firebaseapp.com",databaseURL:"https://estudoflow-409d4-default-rtdb.firebaseio.com",projectId:"estudoflow-409d4"}; // ← sua config aqui (vazio = offline)
 let FBDB=null,CLOUD_ON=false;
 const hsh=s=>{let x=5381;for(const c of s)x=(x*33+c.charCodeAt(0))>>>0;return x.toString(36)};
 function setDot(st){$('cloud-dot').style.background=st==='ok'?'var(--green)':st==='off'?'var(--text-disabled)':'var(--amber)'}
