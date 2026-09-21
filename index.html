@@ -663,8 +663,9 @@ function refreshAll(){renderHome();renderCalendar();renderSchedule();renderWeek(
 function refreshLight(){renderDash();renderCalendar();renderSchedule();renderWeek();renderHome();updateBadges()}
 
 /* ═══ LOGIN / FIREBASE ═══ */
-const firebaseConfig={apiKey:"AIzaSyA6aoGd1Yxj0Yn9JjzAABwQGOTkj7xEAVQ",authDomain:"estudoflow-409d4.firebaseapp.com",databaseURL:"https://estudoflow-409d4-default-rtdb.firebaseio.com",projectId:"estudoflow-409d4"}; // ← sua config aqui (vazio = offline)
+const firebaseConfig={apiKey:"AIzaSyA6aoGd1Yxj0Yn9JjzAABwQGOTkj7xEAVQ",authDomain:"estudoflow-409d4.firebaseapp.com",databaseURL:"https://estudoflow-409d4-default-rtdb.firebaseio.com",projectId:"estudoflow-409d4",storageBucket:"estudoflow-409d4.firebasestorage.app",messagingSenderId:"693665289108",appId:"1:693665289108:web:bc9b93f6018690a405b581"};
 let FBDB=null,CLOUD_ON=false;
+const safeUser=s=>String(s||'').toLowerCase().replace(/[^a-z0-9_-]/g,'')||'user'; // Firebase não aceita . # $ [ ] no caminho
 const hsh=s=>{let x=5381;for(const c of s)x=(x*33+c.charCodeAt(0))>>>0;return x.toString(36)};
 function setDot(st){$('cloud-dot').style.background=st==='ok'?'var(--green)':st==='off'?'var(--text-disabled)':'var(--amber)'}
 function doLogin(){const u=$('login-user').value.trim(),p=$('login-pass').value;
@@ -675,20 +676,23 @@ function doLogin(){const u=$('login-user').value.trim(),p=$('login-pass').value;
  SYNC_USER=u;localStorage.setItem('medplan_logged','1');localStorage.setItem('medplan_user',u);
  $('login-error').style.display='none';startApp()}
 function logout(){if(confirm('Sair? Os dados continuam salvos neste dispositivo.')){localStorage.removeItem('medplan_logged');location.reload()}}
-function payload(){return{db:DB,done:[...DONE],fav:[...FAV],quiz:QUIZS,last:lsGet('acv_last',null),days:lsGet('acv_days',[]),sims:SIMS,decks:DECKS,wrong:[...WRONG]}}
+function payload(){return{db:DB,done:[...DONE],fav:[...FAV],quiz:QUIZS,last:lsGet('acv_last',null),days:lsGet('acv_days',[]),
+ sims:SIMS,decks:DECKS,wrong:[...WRONG],
+ resumos:(typeof RESUMOS!=='undefined')?RESUMOS:{},fc:(typeof FCS!=='undefined')?FCS:[],fcsrs:(typeof FCSRS!=='undefined')?FCSRS:{}}}
 function pushCloud(){if(!CLOUD_ON||!SYNC_USER)return;setDot('sync');
- FBDB.ref('users/'+SYNC_USER+'/state').set(payload()).then(()=>setDot('ok')).catch(()=>setDot('off'))}
+ FBDB.ref('users/'+safeUser(SYNC_USER)+'/state').set(payload()).then(()=>setDot('ok')).catch(()=>setDot('off'))}
 function applyCloud(cl){lsSet(LS,Object.assign(JSON.parse(JSON.stringify(DEFDB)),cl.db||{}));
  lsSet('acv_done',cl.done||[]);lsSet('acv_fav',cl.fav||[]);lsSet('acv_quiz',cl.quiz||{});lsSet('acv_last',cl.last||null);
- lsSet('acv_days',cl.days||[]);lsSet('acv_sims',cl.sims||[]);lsSet('acv_decks',cl.decks||[]);lsSet('acv_wrong',cl.wrong||[])}
+ lsSet('acv_days',cl.days||[]);lsSet('acv_sims',cl.sims||[]);lsSet('acv_decks',cl.decks||[]);lsSet('acv_wrong',cl.wrong||[]);
+ lsSet('acv_resumos',cl.resumos||{});lsSet('acv_fc',cl.fc||[]);lsSet('acv_fc_srs',cl.fcsrs||{})}
 function startApp(){
  $('login-screen').style.display='none';$('app-main').style.display='grid';
  catalog();refreshAll();setDot(CLOUD_ON?'ok':'off');
- if(CLOUD_ON&&SYNC_USER){FBDB.ref('users/'+SYNC_USER+'/state').once('value').then(s=>{const cl=s.val();if(!cl)return;
+ if(CLOUD_ON&&SYNC_USER){FBDB.ref('users/'+safeUser(SYNC_USER)+'/state').once('value').then(s=>{const cl=s.val();if(!cl)return;
   const cloudXp=cl.db&&cl.db.xp,changed=cloudXp!==DB.xp||(cl.done||[]).length!==DONE.size;
   if(changed&&confirm('Dados encontrados na nuvem para "'+SYNC_USER+'".\nOK = restaurar da nuvem · Cancelar = manter local e sobrescrever nuvem')){
    applyCloud(cl);location.reload()}else if(changed)pushCloud()}).catch(()=>setDot('off'))}}
-
+  
 /* ═══ XP / BADGES / CONFETTI ═══ */
 const level=()=>Math.floor(DB.xp/100)+1;
 const BADGES=[
