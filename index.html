@@ -12,9 +12,7 @@
 <script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
-<!-- Google Drive API, Identity Services e YouTube IFrame API -->
-<script async defer src="https://apis.google.com/js/api.js"></script>
-<script async defer src="https://accounts.google.com/gsi/client"></script>
+<!-- API de Áudio do YouTube para o Lobby -->
 <script async defer src="https://www.youtube.com/iframe_api"></script>
 
 <style>
@@ -61,6 +59,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 [data-theme="light"] .theme-toggle__thumb{transform:translateX(18px)}
 .theme-toggle__thumb::after{content:"🌙"}
 [data-theme="light"] .theme-toggle__thumb::after{content:"☀️"}
+
 .app{display:grid;grid-template-columns:var(--sidebar-w) 1fr var(--dash-w);grid-template-rows:var(--header-h) 1fr;grid-template-areas:"hd hd hd""sb main dash";height:100vh;height:100dvh}
 .header{grid-area:hd;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:var(--bg-base);border-bottom:1px solid var(--border-subtle);z-index:20}
 .brand{display:flex;align-items:center;gap:10px}
@@ -90,6 +89,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .view-section{display:none;animation:fadeIn .25s ease}
 .view-section.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
 .toolbar{display:flex;align-items:center;gap:10px;padding:10px 20px;background:var(--bg-base);border-bottom:1px solid var(--border-subtle);position:sticky;top:0;z-index:10;flex-wrap:wrap}
 .month-nav{display:flex;align-items:center;gap:8px;margin-left:auto}
 .month-label{font-size:15px;font-weight:600;min-width:150px;text-align:center}
@@ -118,6 +118,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .day-label{font-size:8px;font-family:var(--font-mono);font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .day.exam .day-label{color:var(--amber)}.day.holiday .day-label{color:var(--text-muted)}
 .day-check{position:absolute;bottom:4px;right:4px;width:14px;height:14px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--text-inverse)}
+
 .pad{padding:16px 20px}
 .week-card{margin-bottom:14px;border:1px solid var(--border-subtle);border-radius:var(--radius-lg);overflow:hidden;background:var(--bg-surface)}
 .week-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg-surface);cursor:pointer}
@@ -164,6 +165,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .subj-bar{flex:1;height:6px;background:var(--bg-elevated);border-radius:var(--radius-full);overflow:hidden}
 .subj-bar-fill{height:100%;border-radius:var(--radius-full);transition:width .4s}
 .subj-pct{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);min-width:32px;text-align:right}
+
 .game-level{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .game-level-num{font-family:var(--font-mono);font-size:15px;font-weight:800;color:var(--amber);min-width:44px}
 .game-xp-bar{flex:1;height:8px;background:var(--bg-active);border-radius:var(--radius-full);overflow:hidden}
@@ -175,6 +177,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .game-badge.locked{opacity:.22;filter:grayscale(1)}
 .game-badge-tip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg-overlay);color:var(--text-primary);font-size:10px;padding:4px 8px;border-radius:var(--radius-sm);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:5}
 .game-badge:hover .game-badge-tip{opacity:1}
+
 .reward-overlay{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(8px)}
 .reward-overlay.open{display:flex}
 .reward-box{text-align:center;padding:32px 40px;background:var(--bg-surface);border:1px solid var(--border-muted);border-radius:20px;box-shadow:0 0 60px rgba(0,200,168,.15);max-width:380px;width:90%;animation:rewardIn .4s cubic-bezier(.34,1.56,.64,1)}
@@ -185,6 +188,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .reward-subtitle{font-size:13px;color:var(--text-secondary);margin-bottom:12px}
 .reward-xp{font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--teal);background:var(--teal-dim);padding:6px 16px;border-radius:var(--radius-full);display:inline-block}
 #confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:61}
+
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:30;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .modal-overlay.open{display:flex}
 .modal{background:var(--bg-surface);border:1px solid var(--border-muted);border-radius:var(--radius-xl);width:92%;max-width:520px;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg);padding:24px}
@@ -196,18 +200,21 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .form-group input,.form-group select{width:100%}
 .form-row{display:flex;gap:10px}.form-row>*{flex:1}
 .form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+
 .toast-container{position:fixed;top:var(--header-h);right:16px;z-index:50;display:flex;flex-direction:column;gap:8px}
 .toast{padding:10px 16px;background:var(--bg-elevated);border:1px solid var(--border-muted);border-radius:var(--radius-lg);font-size:13px;box-shadow:var(--shadow-md);animation:slideIn .3s ease;display:flex;align-items:center;gap:8px;max-width:320px}
 .toast.success{border-color:var(--green-border);color:var(--green)}
 .toast.error{border-color:var(--rose-border);color:var(--rose)}
 .toast.xp{border-color:var(--teal-border);color:var(--teal)}
 @keyframes slideIn{from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:translateX(0)}}
+
 .chips{display:flex;gap:4px;flex-wrap:wrap}
 .chip{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--radius-full);font-size:11px;font-weight:600;border:1px solid var(--border-muted);color:var(--text-secondary);font-family:var(--font-mono);cursor:pointer}
 .chip:hover{border-color:var(--border-default);color:var(--text-primary)}
 .chip.active{color:var(--text-inverse);border-color:transparent;background:var(--teal)}
 .section-title{font-size:22px;font-weight:700;margin:0 0 20px;color:var(--text-primary)}
 .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;padding:0 20px 40px}
+
 .module-card{display:flex;flex-direction:column;gap:14px;cursor:pointer;transition:transform .2s}
 .module-card:hover{transform:translateY(-4px)}
 .card-cover{height:110px;border-radius:12px;padding:18px;display:flex;align-items:flex-start;font-size:21px;font-weight:800;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.25);text-transform:uppercase;letter-spacing:1px}
@@ -217,6 +224,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .metric-value{font-size:15px;font-weight:700;display:block}
 .progress-bar{height:5px;background:var(--bg-active);border-radius:4px;overflow:hidden}
 .progress-fill{height:100%;background:var(--teal);transition:width .3s}
+
 .back-btn{display:inline-flex;align-items:center;gap:8px;color:var(--text-muted);cursor:pointer;font-size:14px;font-weight:500;margin-bottom:20px;width:fit-content}
 .back-btn:hover{color:var(--text-primary)}
 .module-header-title{font-size:28px;font-weight:800;margin:0 20px 10px}
@@ -233,8 +241,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .fav-btn{color:var(--text-muted);font-size:20px;flex-shrink:0;transition:transform .15s}
 .fav-btn:hover{transform:scale(1.2)}
 .fav-btn.fav-on{color:#FFC107}
+
 .filter-pill{background:var(--bg-surface);border:1px solid var(--border-muted);color:var(--text-secondary);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
 .filter-pill.on{border-color:var(--teal);color:var(--teal)}
+
 .cover-cir{background:linear-gradient(135deg,#00E1D9,#38C779)}.cover-gin{background:linear-gradient(135deg,#DF54DF,#9032E6)}
 .cover-obs{background:linear-gradient(135deg,#FF6B6B,#FF8E53)}.cover-gas{background:linear-gradient(135deg,#4facfe,#00f2fe)}
 .cover-hem{background:linear-gradient(135deg,#f83600,#f9d423)}.cover-end{background:linear-gradient(135deg,#ff7e5f,#feb47b)}
@@ -247,7 +257,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .cover-reu{background:linear-gradient(135deg,#c31432,#240b36)}.cover-orl{background:linear-gradient(135deg,#f953c6,#b91d73)}
 .cover-prov{background:linear-gradient(135deg,#8E2DE2,#4A00E0)}
 .cover-drive{background:linear-gradient(135deg,#4285F4,#34A853)}
+.cover-leg{background:linear-gradient(135deg,#475569,#0f172a)}
+.cover-cas{background:linear-gradient(135deg,#0ea5e9,#6366f1)}
 .cover-default{background:linear-gradient(135deg,#8e9eab,#eef2f3);color:#121214}
+
 .overlay{position:fixed;inset:0;background:rgba(10,10,12,.95);display:none;align-items:center;justify-content:center;z-index:100;padding:24px;backdrop-filter:blur(8px)}
 .overlay.show{display:flex;animation:fadeIn .2s}
 .player-box{background:var(--bg-surface);width:100%;max-width:1100px;height:85vh;border:1px solid var(--border-muted);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
@@ -256,6 +269,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .player-frame-container{flex:1;position:relative;width:100%;background:#000}
 .player-frame-container iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .player-foot{padding:14px 20px;display:flex;justify-content:space-between;align-items:center;background:var(--bg-surface);gap:12px;flex-wrap:wrap}
+
 .resume-card{margin:0 20px 24px;background:linear-gradient(135deg,var(--bg-surface),var(--bg-elevated));border:1px solid var(--border-subtle);border-left:4px solid var(--teal);border-radius:12px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
 .quiz-deck-card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:12px;padding:20px;cursor:pointer;transition:transform .2s,border-color .2s;display:flex;flex-direction:column;gap:12px}
 .quiz-deck-card:hover{transform:translateY(-4px);border-color:var(--border-default)}
@@ -283,6 +297,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .quiz-result-score{font-size:46px;font-weight:800;color:var(--teal);font-family:var(--font-serif)}
 .quiz-review-item{display:flex;gap:10px;align-items:flex-start;font-size:13px;padding:10px 14px;border-radius:8px;background:var(--bg-elevated);border:1px solid var(--border-subtle);text-align:left}
 .quiz-review-item.ok i{color:var(--green)}.quiz-review-item.fail i{color:var(--rose)}
+
 .imp-box{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:12px;padding:22px;max-width:860px;display:flex;flex-direction:column;gap:14px;margin:0 20px 40px}
 .imp-textarea{width:100%;min-height:130px;resize:vertical;font-size:13px}
 .sim-config-card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:12px;padding:22px;max-width:720px;display:flex;flex-direction:column;gap:16px;margin:0 20px 30px}
@@ -298,6 +313,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .sim-nav-cell.ans{background:var(--teal-dim);color:var(--teal)}
 .sim-nav-cell.cur{outline:2px solid var(--teal);color:var(--text-primary)}
 .sim-history-item{display:flex;justify-content:space-between;align-items:center;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:8px;padding:12px 16px;font-size:13px;flex-wrap:wrap;gap:8px}
+
 .demo-banner{background:#3a2e10;border:1px solid var(--amber);color:var(--amber);padding:12px 16px;border-radius:8px;font-size:13px;font-weight:600;margin:0 20px 20px;display:none;line-height:1.6}
 .prep-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;padding:0 20px 40px}
 @media(max-width:900px){.prep-grid{grid-template-columns:1fr}}
@@ -407,7 +423,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
   .lobby-header-title { position: relative; top: 0; left: 0; margin-bottom: 20px; text-align: center; }
 }
 
-/* ═══ ESTILOS EXTRAS E NATIVOS ═══ */
+/* ═══ COMPONENTES ADICIONAIS ═══ */
 .fc-meta{font-family:var(--font-mono);font-size:10px;color:var(--text-muted)}
 .srs-btns{display:flex;gap:8px;margin-top:12px}
 .fc-btn{flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;border:1px solid var(--border-muted);background:var(--bg-elevated);color:inherit}
@@ -483,7 +499,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 
 <!-- ═══ APP PRINCIPAL ═══ -->
 <div class="app" id="app-main" style="display:none">
-  <!-- Backdrop da Sidebar para Mobile -->
   <div id="mobile-sidebar-backdrop" class="modal-overlay" style="z-index:24" onclick="toggleSidebar()"></div>
 
   <header class="header">
@@ -536,7 +551,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 
   <main class="main">
     <div id="view-inicio" class="view-section active" style="padding-top:20px">
-      <!-- Barra de Busca Integrada -->
       <div id="search-wrap">
         <input id="global-search" placeholder="🔎 Buscar aula, PDF, resumo..." autocomplete="off">
         <div class="search-results" id="search-results" style="display:none"></div>
@@ -650,7 +664,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
         <div class="content-list" id="apostilas-container"></div>
         <div class="content-list-title">📝 Resumos · casos</div>
         <div class="content-list" id="resumos-container" style="grid-template-columns:1fr"></div>
-        <div style="padding:0 20px 40px"><button class="btn-outline" onclick="openResumoModal()"><i class="ph ph-plus"></i> Adicionar resumo / caso clínico</button></div>
+        <div style="padding:0 20px 20px"><button class="btn-outline" onclick="openResumoModal()"><i class="ph ph-plus"></i> Adicionar resumo / caso clínico</button></div>
+        
+        <!-- Nova seção de Treino integrada ao Acervo -->
+        <div class="content-list-title"><i class="ph ph-exam" style="font-size:16px;vertical-align:middle"></i> Prática</div>
+        <div class="content-list" id="questoes-container" style="grid-template-columns:1fr; padding-bottom: 40px;"></div>
       </div>
     </div>
 
@@ -752,12 +770,12 @@ const MODULES=[
  {id:'drive',n:'☁️ Acervo do Drive'}
 ];
 const MOD=id=>MODULES.find(m=>m.id===id);
-let DRIVE=lsGet('cuscuz_med_drive',{videos:[],apostilas:[]});
-function catalog(){
+let DRIVE=lsGet('cuscuz_med_drive',{videos:[],apostilas:[]}),USING_DEMO=true;
+function catalog(){const eV=window.videosData||[],eA=window.apostilasData||[];
  MODULES.forEach(m=>{m.videos=[];m.apostilas=[]});
- DRIVE.videos.forEach(v=>{const m=MOD(v.m)||MOD('drive'); m.videos.push(v)});
- DRIVE.apostilas.forEach(a=>{const m=MOD(a.m)||MOD('drive'); m.apostilas.push(a)});
-}
+ [...eV,...DRIVE.videos].forEach(v=>{const m=MOD(v.m)||MOD('drive');if(m&&v.t&&(v.y||v.u))m.videos.push(v)});
+ [...eA,...DRIVE.apostilas].forEach(a=>{const m=MOD(a.m)||MOD('drive');if(m&&a.t&&a.u)m.apostilas.push(a)});
+ USING_DEMO=!(eV.length||eA.length||DRIVE.videos.length||DRIVE.apostilas.length)}
 const itemsOf=m=>[...m.videos.map(v=>({type:'v',...v})),...m.apostilas.map(a=>({type:'a',...a}))];
 const itemKey=it=>it.m+':'+(it.type==='v'?'yt:'+(it.y||it.u):'pdf:'+it.u);
 
@@ -787,7 +805,8 @@ let isMusicPlaying = false;
 window.onYouTubeIframeAPIReady = function() {
   ytPlayer = new YT.Player('yt-player-container', {
     height: '0', width: '0',
-    playerVars: { listType: 'playlist', list: 'PLHyOaRryP0rbpL4XkhpCPizrDHmNN-pbw', autoplay: 0, controls: 0, loop: 1 }
+    videoId: 'CfZe9qy8YAs', // Savoir Adore - Dreamers (PES 2013)
+    playerVars: { autoplay: 0, controls: 0, loop: 1, playlist: 'CfZe9qy8YAs' }
   });
 };
 function toggleLobbyMusic() {
@@ -1067,7 +1086,78 @@ function renderPrep(){
  $('prep-checklist').innerHTML=(DB.prep.checklist||[]).map((c,i)=>'<div class="check-item'+(c.on?' on':'')+'" onclick="prepToggleItem('+i+')"><span class="check-btn'+(c.on?' checked':'')+'"><i class="ph ph-check-bold"></i></span><span style="flex:1">'+esc(c.t)+'</span><i class="ph ph-x" style="color:var(--text-muted)" onclick="event.stopPropagation();prepDelItem('+i+')"></i></div>').join('')
  ||'<div style="font-size:12px;color:var(--text-muted)">Nada aqui ainda.</div>'}
 
-/* ═══ ACERVO (com thumbnails) ═══ */
+/* ═══ ACERVO E DRIVE DIRECT FETCH ═══ */
+const HARDCODED_DRIVE_CONFIG = {
+  apiKey: 'AIzaSyA6aoGd1Yxj0Yn9JjzAABwQGOTkj7xEAVQ',
+  folderId: '1pVd7V_pfyM4Vw20yfw45jBmNFqtKTHK7'
+};
+
+function openDriveModal(){
+ const cfg = lsGet('cuscuz_drive_config', HARDCODED_DRIVE_CONFIG);
+ openModal('<div class="modal-title"><i class="ph ph-cloud"></i> Sincronizar Drive<button class="modal-close"><i class="ph ph-x"></i></button></div>'
+ +'<div style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">Lendo diretamente da sua pasta pública configurada. <b>Não requer login.</b></div>'
+ +'<div class="form-group"><label class="form-label">API Key</label><input id="drive-api-key" value="'+esc(cfg.apiKey)+'"></div>'
+ +'<div class="form-group"><label class="form-label">ID da Pasta no Drive</label><input id="drive-folder-id" value="'+esc(cfg.folderId)+'"></div>'
+ +'<div class="form-actions"><button class="btn-outline" onclick="clearDrive()">Limpar Dados Locais</button><button class="btn-primary" onclick="syncDriveDirect()"><i class="ph ph-arrows-clockwise"></i> Buscar na Nuvem</button></div>');
+}
+function guessModule(filename) {
+ const name = filename.toLowerCase();
+ for(let m of MODULES) {
+  if(m.id !== 'drive' && m.id !== 'casos' && m.id !== 'prov') {
+   if(name.includes(m.n.toLowerCase().substring(0, 4))) return m.id;
+  }
+ }
+ return 'drive';
+}
+
+async function syncDriveDirect() {
+ const apiKey = $('drive-api-key').value.trim();
+ const folderId = $('drive-folder-id').value.trim();
+
+ if(!apiKey || !folderId) { toast('A API Key e o ID da pasta são obrigatórios','error'); return; }
+ 
+ lsSet('cuscuz_drive_config', { apiKey, folderId });
+ toast('Buscando arquivos na pasta pública...', 'success');
+
+ try {
+  const query = encodeURIComponent(`'${folderId}' in parents and trashed=false`);
+  const url = `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,mimeType,webViewLink)&pageSize=1000&key=${apiKey}`;
+
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || 'Erro HTTP ' + response.status);
+  }
+
+  const data = await response.json();
+  const files = data.files;
+
+  if (!files || files.length === 0) { 
+      toast('A pasta está vazia ou não é pública', 'error'); 
+      return; 
+  }
+  
+  const newVideos = [], newPdfs = [];
+  files.forEach(f => {
+   const modId = guessModule(f.name);
+   const cleanName = f.name.replace(/\.[^/.]+$/, "");
+   if(f.mimeType.includes('video')) newVideos.push({ m: modId, t: cleanName, u: f.webViewLink });
+   else if(f.mimeType.includes('pdf')) newPdfs.push({ m: modId, t: cleanName, u: f.webViewLink });
+  });
+
+  DRIVE = { videos: newVideos, apostilas: newPdfs };
+  lsSet('cuscuz_med_drive', DRIVE);
+  catalog(); refreshAll(); closeModals();
+  toast(`${newVideos.length} vídeos e ${newPdfs.length} PDFs sincronizados!`, 'success');
+  
+ } catch (err) { 
+     toast('Erro ao buscar. Verifique a API Key e se a pasta é pública.', 'error'); 
+     console.error("Drive API Error:", err); 
+ }
+}
+function clearDrive(){DRIVE={videos:[],apostilas:[]};lsSet('cuscuz_med_drive',DRIVE);catalog();closeModals();refreshAll();toast('Conteúdo do Drive removido')}
+
 function moduleCard(m){const its=itemsOf(m),dn=its.filter(i=>DONE.has(itemKey(i))).length;
  return '<div class="module-card" onclick="openModule(\''+m.id+'\')">'
  +'<div class="card-cover cover-'+m.id+'">'+esc(m.n)+'</div>'
@@ -1091,6 +1181,28 @@ function renderAcervo(){
   const rs=RESUMOS[CUR_MOD.id]||[],rc=$('resumos-container');
   if(rc)rc.innerHTML=rs.length?rs.map((r,i)=>'<div class="resumo-item"><b>'+esc(r.t)+'</b><span class="fc-meta">'+r.d+'</span><div class="resumo-wrap">'+esc(r.c)+'</div><div style="margin-top:8px"><button class="btn-outline btn-sm" onclick="delResumo('+i+')">Excluir</button></div></div>').join('')
    :'<div style="color:var(--text-muted);font-size:13px">Nada aqui ainda — cole o output do NotebookLM'+(CUR_MOD.id==='casos'?' ou registre o caso (anamnese, diagnóstico, conduta)':'')+'.</div>';
+  
+  // Renderização da Seção "Prática" dentro da Matéria
+  const qContainer=$('questoes-container');
+  if(qContainer){
+    const subjQs = bankAll().filter(q => q.s === CUR_MOD.id);
+    if(subjQs.length > 0) {
+      const sc = QUIZS[CUR_MOD.id];
+      const scoreStr = sc && sc.t ? `<span class="quiz-deck-score" style="margin-left:8px;vertical-align:middle">melhor: ${Math.round(100*sc.s/sc.t)}%</span>` : '';
+      qContainer.innerHTML = `<div class="resume-card" style="margin:0;width:100%;background:linear-gradient(135deg, var(--bg-surface), var(--teal-dim));border-color:var(--teal)">
+          <div style="display:flex;flex-direction:column;gap:6px">
+              <div class="dash-title" style="color:var(--teal);margin:0">Vamos treinar?</div>
+              <b>Questões de ${esc(CUR_MOD.n)}</b>
+              <div style="font-size:12px;color:var(--text-muted)">${subjQs.length} questões disponíveis no banco ${scoreStr}</div>
+          </div>
+          <button class="btn-primary" onclick="go('view-treino'); setTimeout(()=>startQuiz('${CUR_MOD.id}'),100)"><i class="ph ph-play"></i> Iniciar Quiz</button>
+      </div>`;
+    } else {
+      qContainer.innerHTML = `<div class="content-item" style="opacity:0.6" onclick="go('view-treino'); setTimeout(openImport, 100)">
+          <div class="content-info"><i class="ph ph-upload-simple" style="font-size:24px;color:var(--text-muted)"></i> <span class="content-title">Nenhuma questão cadastrada para esta matéria. Clique aqui para importar.</span></div>
+      </div>`;
+    }
+  }
   return}
  list.style.display='block';det.style.display='none';
  $('all-modules-container').innerHTML=MODULES.filter(m=>(!SUBJ||m.id===SUBJ)&&(m.id!=='drive'||itemsOf(m).length>0)).map(moduleCard).join('')
@@ -1134,73 +1246,6 @@ function openFavorites(){
   +'<span class="content-title">'+esc(it.t)+'</span></div><span style="font-size:11px;color:var(--text-muted)">'+esc(m.n)+'</span></div>'}}));
  openModal('<div class="modal-title">⭐ Favoritos<button class="modal-close"><i class="ph ph-x"></i></button></div>'
  +(body||'<div style="color:var(--text-muted);font-size:13px">Nenhum favorito ainda.</div>'))}
-
-/* ═══ INTEGRAÇÃO NATIVA GOOGLE DRIVE API ═══ */
-function openDriveModal(){
- const cfg = lsGet('cuscuz_drive_config', {clientId:'', apiKey:'', folderId:''});
- openModal('<div class="modal-title"><i class="ph ph-cloud"></i> Sincronizar API Drive<button class="modal-close"><i class="ph ph-x"></i></button></div>'
- +'<div style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">Conecte-se com sua API do Google para ler pastas diretamente (somente leitura). Os arquivos serão categorizados automaticamente pelo nome.</div>'
- +'<div class="form-group"><label class="form-label">OAuth Client ID</label><input id="drive-client-id" placeholder="Ex: 123...apps.googleusercontent.com" value="'+esc(cfg.clientId)+'"></div>'
- +'<div class="form-group"><label class="form-label">API Key</label><input id="drive-api-key" placeholder="Sua chave de API" value="'+esc(cfg.apiKey)+'"></div>'
- +'<div class="form-group"><label class="form-label">ID da Pasta no Drive</label><input id="drive-folder-id" placeholder="Ex: 1BxiMVs0X_x..." value="'+esc(cfg.folderId)+'"></div>'
- +'<div class="form-actions"><button class="btn-outline" onclick="clearDrive()">Limpar / Desconectar</button><button class="btn-primary" onclick="syncDriveDirect()"><i class="ph ph-arrows-clockwise"></i> Buscar na Nuvem</button></div>');
-}
-function guessModule(filename) {
- const name = filename.toLowerCase();
- for(let m of MODULES) {
-  if(m.id !== 'drive' && m.id !== 'casos' && m.id !== 'prov') {
-   if(name.includes(m.n.toLowerCase().substring(0, 4))) return m.id;
-  }
- }
- return 'drive';
-}
-let tokenClient;
-async function syncDriveDirect() {
- const clientId = $('drive-client-id').value.trim();
- const apiKey = $('drive-api-key').value.trim();
- const folderId = $('drive-folder-id').value.trim();
-
- if(!clientId || !apiKey || !folderId) { toast('Preencha os três campos obrigatórios','error'); return; }
- lsSet('cuscuz_drive_config', {clientId, apiKey, folderId});
-
- try {
-  await gapi.client.init({ apiKey: apiKey, discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] });
-  tokenClient = google.accounts.oauth2.initTokenClient({
-   client_id: clientId, scope: 'https://www.googleapis.com/auth/drive.readonly',
-   callback: async (resp) => {
-    if (resp.error !== undefined) throw resp;
-    toast('Autenticado. Buscando arquivos...','success');
-    await fetchDriveFiles(folderId);
-   },
-  });
-  if (gapi.client.getToken() === null) tokenClient.requestAccessToken({prompt: 'consent'});
-  else tokenClient.requestAccessToken({prompt: ''});
- } catch (err) { toast('Erro ao inicializar Google API','error'); console.error(err); }
-}
-async function fetchDriveFiles(folderId) {
- try {
-  const response = await gapi.client.drive.files.list({
-   q: `'${folderId}' in parents and trashed=false`,
-   fields: 'files(id, name, mimeType, webViewLink)', pageSize: 1000
-  });
-  const files = response.result.files;
-  if (!files || files.length === 0) { toast('A pasta está vazia ou inacessível','error'); return; }
-  
-  const newVideos = [], newPdfs = [];
-  files.forEach(f => {
-   const modId = guessModule(f.name);
-   const cleanName = f.name.replace(/\.[^/.]+$/, "");
-   if(f.mimeType.includes('video')) newVideos.push({ m: modId, t: cleanName, u: f.webViewLink });
-   else if(f.mimeType.includes('pdf')) newPdfs.push({ m: modId, t: cleanName, u: f.webViewLink });
-  });
-
-  DRIVE = { videos: newVideos, apostilas: newPdfs };
-  lsSet('cuscuz_med_drive', DRIVE);
-  catalog(); refreshAll(); closeModals();
-  toast(`${newVideos.length} vídeos e ${newPdfs.length} PDFs sincronizados!`, 'success');
- } catch (err) { toast('Erro ao buscar. Verifique o ID da pasta.','error'); console.error(err); }
-}
-function clearDrive(){DRIVE={videos:[],apostilas:[]};lsSet('cuscuz_med_drive',DRIVE);catalog();closeModals();refreshAll();toast('Conteúdo do Drive removido')}
 
 /* ═══ TREINO: QUESTÕES (+ modo erradas) ═══ */
 const bankAll=()=>DECKS.flatMap(d=>d.qs.map(q=>({...q,s:d.subj})));
@@ -1507,3 +1552,9 @@ window.addEventListener('load',()=>{if(window.pdfjsLib)pdfjsLib.GlobalWorkerOpti
 </script>
 </body>
 </html>
+```eof
+
+### ⚠️ Importante
+No Acervo, clica em "Sincronizar Drive", confirma se suas chaves estão lá (as que deixei fixadas) e clica em "Buscar na Nuvem". Deve trazer tudo agora.
+
+Pronto para adicionarmos os atalhos de teclado nas questões no próximo passo?
