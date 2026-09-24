@@ -11,6 +11,12 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<!-- Google Drive API, Identity Services e YouTube IFrame API -->
+<script async defer src="https://apis.google.com/js/api.js"></script>
+<script async defer src="https://accounts.google.com/gsi/client"></script>
+<script async defer src="https://www.youtube.com/iframe_api"></script>
+
 <style>
 :root{
 --bg-void:#0b0d11;--bg-base:#11141a;--bg-surface:#181c25;--bg-elevated:#1f2532;
@@ -47,7 +53,6 @@ body{font-family:var(--font-ui);font-size:14px;color:var(--text-primary);backgro
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border-muted);border-radius:99px}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 input,select,textarea{font-family:inherit;color:var(--text-primary);background:var(--bg-elevated);border:1px solid var(--border-muted);border-radius:var(--radius-md);padding:8px 12px;font-size:13px}
-input:focus,select,textarea:focus{outline:none;border-color:var(--teal)}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .theme-toggle{position:relative;display:inline-flex;align-items:center;padding:11px 4px;cursor:pointer}
 .theme-toggle__track{position:relative;width:40px;height:22px;border-radius:11px;background:#424242;transition:background .3s}
@@ -241,6 +246,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .cover-hep{background:linear-gradient(135deg,#f953c6,#b91d73)}.cover-oft{background:linear-gradient(135deg,#11998e,#38ef7d)}
 .cover-reu{background:linear-gradient(135deg,#c31432,#240b36)}.cover-orl{background:linear-gradient(135deg,#f953c6,#b91d73)}
 .cover-prov{background:linear-gradient(135deg,#8E2DE2,#4A00E0)}
+.cover-drive{background:linear-gradient(135deg,#4285F4,#34A853)}
 .cover-default{background:linear-gradient(135deg,#8e9eab,#eef2f3);color:#121214}
 .overlay{position:fixed;inset:0;background:rgba(10,10,12,.95);display:none;align-items:center;justify-content:center;z-index:100;padding:24px;backdrop-filter:blur(8px)}
 .overlay.show{display:flex;animation:fadeIn .2s}
@@ -334,9 +340,97 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 #menu-btn{display:none}
 @media(max-width:480px){.cards-grid{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ═══ ESTILOS DO LOBBY PES 2013 ═══ */
+#lobby-screen {
+  position: fixed; inset: 0; z-index: 95;
+  background: #050a15;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.lobby-bg-glow {
+  position: absolute; width: 150vw; height: 150vh;
+  background: radial-gradient(circle at 50% 50%, rgba(0,200,168,0.1) 0%, transparent 60%);
+  animation: pulseLobbyBg 8s ease-in-out infinite alternate;
+  z-index: 1; pointer-events: none;
+}
+@keyframes pulseLobbyBg {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.1); opacity: 1; }
+}
+.lobby-header-title {
+  position: absolute; top: 30px; left: 40px;
+  font-size: 28px; font-weight: 800; color: #fff;
+  letter-spacing: 2px; font-family: var(--font-mono);
+  text-transform: uppercase; z-index: 5;
+  text-shadow: 0 0 15px rgba(255,255,255,0.2);
+}
+.lobby-header-title span { color: var(--teal); }
+.pes-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 140px);
+  gap: 16px; max-width: 900px; width: 90%; z-index: 5; margin-bottom: 40px;
+}
+.pes-tile {
+  background: rgba(255,255,255,0.03); border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 8px; padding: 24px; display: flex; flex-direction: column;
+  justify-content: flex-end; gap: 12px; cursor: pointer; transition: all 0.25s cubic-bezier(0.2,0.8,0.2,1);
+  backdrop-filter: blur(8px); color: #fff; text-transform: uppercase;
+  font-weight: 800; font-family: var(--font-mono); font-size: 14px; position: relative; overflow: hidden;
+}
+.pes-tile i { font-size: 32px; color: rgba(255,255,255,0.7); transition: color 0.2s; margin-bottom: auto; }
+.pes-tile:hover {
+  border-color: var(--teal); transform: scale(1.03); box-shadow: 0 0 30px var(--teal-glow);
+  background: linear-gradient(135deg, rgba(0,200,168,0.2), rgba(0,200,168,0.05));
+}
+.pes-tile:hover i { color: var(--teal); }
+.tile-large { grid-column: span 2; grid-row: span 2; font-size: 22px; padding: 32px; }
+.tile-large i { font-size: 54px; }
+.tile-wide { grid-column: span 2; }
+.pes-ticker-wrap {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,0.85); border-top: 1px solid var(--teal);
+  padding: 10px 0; overflow: hidden; display: flex; align-items: center; z-index: 5;
+}
+.pes-ticker {
+  white-space: nowrap; animation: ticker 30s linear infinite;
+  font-family: var(--font-mono); font-size: 12px; color: var(--teal); text-transform: uppercase;
+  letter-spacing: 1px;
+}
+@keyframes ticker {
+  0% { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+@media (max-width: 768px) {
+  .pes-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+  .tile-large, .tile-wide { grid-column: span 1; grid-row: span 1; font-size: 16px; padding: 20px; }
+  .tile-large i { font-size: 32px; }
+  .lobby-header-title { position: relative; top: 0; left: 0; margin-bottom: 20px; text-align: center; }
+}
+
+/* ═══ ESTILOS EXTRAS E NATIVOS ═══ */
+.fc-meta{font-family:var(--font-mono);font-size:10px;color:var(--text-muted)}
+.srs-btns{display:flex;gap:8px;margin-top:12px}
+.fc-btn{flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;border:1px solid var(--border-muted);background:var(--bg-elevated);color:inherit}
+.fc-btn:hover{border-color:var(--border-default)}
+.hab-ico{position:absolute;bottom:4px;left:4px;font-size:10px}
+.resumo-item{background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6}
+.resumo-item b{display:block;margin-bottom:4px}
+.resumo-wrap{white-space:pre-wrap}
+#search-wrap{position:relative;z-index:15;margin:0 20px 14px}
+#global-search{width:100%;padding:11px 14px;max-width:860px}
+.search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;max-width:860px;max-height:55vh;overflow-y:auto;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:40}
+.sr-grupo{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-disabled);padding:10px 14px 4px}
+.sr-item{display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:13px;cursor:pointer;color:var(--text-secondary)}
+.sr-item:hover{background:var(--bg-elevated);color:var(--text-primary)}
+.sr-item i{color:var(--teal)}
+.sr-mod{margin-left:auto;font-size:10px;font-family:var(--font-mono);color:var(--text-muted);flex-shrink:0}
+.vid-thumb{width:66px;height:38px;object-fit:cover;border-radius:6px;flex-shrink:0;background:var(--bg-active)}
 </style>
 </head>
 <body>
+
+<!-- YouTube Audio Player (invisível) -->
+<div id="yt-player-container" style="display:none"></div>
 
 <!-- ═══ LOGIN ═══ -->
 <div id="login-screen" style="position:fixed;inset:0;z-index:100;background:var(--bg-void);display:flex;align-items:center;justify-content:center">
@@ -359,14 +453,47 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
   </div>
 </div>
 
+<!-- ═══ LOBBY PES 2013 ═══ -->
+<div id="lobby-screen" style="display:none">
+  <div class="lobby-bg-glow"></div>
+  <div class="lobby-header-title">Cuscuz<span>-MED</span></div>
+  
+  <div id="lobby-music-btn" onclick="toggleLobbyMusic()" style="position:absolute; top:30px; right:40px; z-index:10; cursor:pointer; color:var(--teal); font-size:26px; padding:10px; background:rgba(0,0,0,0.5); border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid rgba(0,200,168,0.3)">
+    <i class="ph ph-speaker-high" id="music-icon"></i>
+  </div>
+
+  <div class="pes-grid">
+    <div class="pes-tile tile-large" onclick="enterApp('view-inicio')">
+      <i class="ph ph-play-circle"></i> <span>Modo Carreira<br><small style="font-size:12px;color:var(--text-muted);text-transform:none;font-family:var(--font-ui)">Continuar estudos e painel</small></span>
+    </div>
+    <div class="pes-tile tile-wide" onclick="enterApp('view-treino')">
+      <i class="ph ph-exam"></i> <span>Treino Livre<br><small style="font-size:11px;color:var(--text-muted);text-transform:none;font-family:var(--font-ui)">Questões e Flashcards</small></span>
+    </div>
+    <div class="pes-tile" onclick="enterApp('view-preparatorio')">
+      <i class="ph ph-graduation-cap"></i> <span>Rumo ao Estrelato</span>
+    </div>
+    <div class="pes-tile" onclick="enterApp('view-simulados')">
+      <i class="ph ph-timer"></i> <span>Copa (Simulados)</span>
+    </div>
+  </div>
+  <div class="pes-ticker-wrap">
+    <div class="pes-ticker">INFO: Bem-vindo ao Cuscuz-MED. A janela de transferências de conhecimento está aberta. Revise seus flashcards diariamente para não acumular. Não esqueça de bater suas metas diárias. Mantenha a hidratação em dia.</div>
+  </div>
+</div>
+
+<!-- ═══ APP PRINCIPAL ═══ -->
 <div class="app" id="app-main" style="display:none">
+  <!-- Backdrop da Sidebar para Mobile -->
+  <div id="mobile-sidebar-backdrop" class="modal-overlay" style="z-index:24" onclick="toggleSidebar()"></div>
+
   <header class="header">
     <div style="display:flex;align-items:center;gap:6px">
-      <button class="btn-icon" id="menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')"><i class="ph ph-list"></i></button>
+      <button class="btn-icon" id="menu-btn" onclick="toggleSidebar()"><i class="ph ph-list"></i></button>
       <div class="brand"><div class="brand-icon">C</div><div class="brand-name">Cuscuz<span>-MED</span></div></div>
     </div>
     <div class="header-actions">
       <span id="cloud-dot" title="Status da nuvem" style="width:8px;height:8px;border-radius:50%;background:var(--text-disabled);display:inline-block;margin-right:2px;cursor:default"></span>
+      <button class="btn-outline btn-sm" onclick="goToLobby()"><i class="ph ph-game-controller"></i> Lobby</button>
       <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema"><span class="theme-toggle__track"><span class="theme-toggle__thumb"></span></span></button>
       <button class="btn-primary btn-sm" onclick="openPlanModal()">&#9889; Planejar</button>
       <button class="btn-icon" onclick="logout()" title="Sair" style="color:var(--rose)"><i class="ph ph-sign-out"></i></button>
@@ -409,6 +536,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 
   <main class="main">
     <div id="view-inicio" class="view-section active" style="padding-top:20px">
+      <!-- Barra de Busca Integrada -->
+      <div id="search-wrap">
+        <input id="global-search" placeholder="🔎 Buscar aula, PDF, resumo..." autocomplete="off">
+        <div class="search-results" id="search-results" style="display:none"></div>
+      </div>
+      
       <div class="demo-banner" id="demo-banner"></div>
       <h1 class="section-title" style="margin:8px 20px 16px">Em andamento</h1>
       <div id="resume-card"></div>
@@ -504,7 +637,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
         <h1 class="section-title" style="margin:8px 20px 16px">Acervo Completo</h1>
         <div style="margin:0 20px 16px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="filter-pill" onclick="openFavorites()"><i class="ph ph-star" style="color:#FFC107"></i> Favoritos</button>
-          <button class="filter-pill" onclick="openDriveModal()"><i class="ph ph-cloud" style="color:var(--teal)"></i> <span id="drive-btn-label">Sincronizar Drive</span></button>
+          <button class="filter-pill" onclick="openDriveModal()"><i class="ph ph-cloud" style="color:var(--teal)"></i> <span id="drive-btn-label">Sincronizar API Drive</span></button>
         </div>
         <div class="cards-grid" id="all-modules-container" style="padding:0 20px 40px"></div>
       </div>
@@ -515,6 +648,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
         <div class="content-list" id="videos-container"></div>
         <div class="content-list-title"><i class="ph ph-file-pdf" style="font-size:16px;vertical-align:middle"></i> Materiais</div>
         <div class="content-list" id="apostilas-container"></div>
+        <div class="content-list-title">📝 Resumos · casos</div>
+        <div class="content-list" id="resumos-container" style="grid-template-columns:1fr"></div>
+        <div style="padding:0 20px 40px"><button class="btn-outline" onclick="openResumoModal()"><i class="ph ph-plus"></i> Adicionar resumo / caso clínico</button></div>
       </div>
     </div>
 
@@ -528,7 +664,14 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
             <b style="font-size:15px">🗂️ Banco Unificado de Questões</b>
             <span id="bank-count" style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">0 questões</span>
           </div>
-          <div id="bank-stats" class="chips" style="font-size:12px;color:var(--text-muted)"></div>
+          <div id="bank-stats" class="chips" style="font-size:12px;color:var(--text-muted);margin-bottom:12px"></div>
+          
+          <div id="fc-actions" style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-primary btn-sm" onclick="startFC()"><i class="ph ph-cards"></i> Revisar flashcards (<span id="fc-due">0</span> pendentes)</button>
+            <button class="btn-outline btn-sm" onclick="startWrongQuiz()"><i class="ph ph-rotate-ccw"></i> Revisar erradas (<span id="wrong-count">0</span>)</button>
+            <button class="btn-outline btn-sm" onclick="openFCModal()"><i class="ph ph-plus"></i> Novo card</button>
+            <button class="btn-outline btn-sm" onclick="exportAnki()"><i class="ph ph-download-simple"></i> Exportar p/ Anki</button>
+          </div>
         </div>
         <div class="cards-grid" id="decks-grid"></div>
       </div>
@@ -594,7 +737,7 @@ const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math
 function lsGet(k,def){try{const v=JSON.parse(localStorage.getItem(k));return v==null?def:v}catch(e){return def}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){toast('⚠️ Armazenamento cheio — exporte um backup','error')}}
 function toast(msg,type=''){const t=document.createElement('div');t.className='toast '+type;t.innerHTML=msg;$('toasts').appendChild(t);setTimeout(()=>{t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(()=>t.remove(),300)},2800)}
-function closeModals(){$$('.modal-overlay').forEach(o=>o.remove())}
+function closeModals(){$$('.modal-overlay:not(#mobile-sidebar-backdrop)').forEach(o=>o.remove())}
 function openModal(html){const o=document.createElement('div');o.className='modal-overlay open';o.innerHTML='<div class="modal">'+html+'</div>';o.addEventListener('click',e=>{if(e.target===o||e.target.closest('.modal-close'))o.remove()});$('modal-container').appendChild(o);return o}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModals();const p=$('player-overlay');if(p&&p.classList.contains('show'))closePlayer()}});
 
@@ -605,20 +748,18 @@ const MODULES=[
  {id:'end',n:'Endócrino'},{id:'hem',n:'Hematologia'},{id:'inf',n:'Infectologia'},{id:'neu',n:'Neurologia'},
  {id:'ort',n:'Ortopedia'},{id:'orl',n:'Otorrino'},{id:'der',n:'Dermatologia'},{id:'pne',n:'Pneumologia'},
  {id:'cir',n:'Cirurgia'},{id:'psi',n:'Psiquiatria'},{id:'reu',n:'Reumatologia'},{id:'oft',n:'Oftalmologia'},
- {id:'leg',n:'Medicina Legal'},{id:'prov',n:'Provas'},{id:'casos',n:'Casos Clínicos'}
+ {id:'leg',n:'Medicina Legal'},{id:'prov',n:'Provas'},{id:'casos',n:'Casos Clínicos'},
+ {id:'drive',n:'☁️ Acervo do Drive'}
 ];
 const MOD=id=>MODULES.find(m=>m.id===id);
-const DEMO={
- videos:[{m:'car',t:'[exemplo] Insuficiência Cardíaca',y:'aqz-KE-bpKQ'},{m:'ped',t:'[exemplo] Desidratação na Pediatria',y:'aqz-KE-bpKQ'}],
- apostilas:[{m:'car',t:'[exemplo] Resumo de Cardiologia',u:'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'}]};
-let DRIVE=lsGet('cuscuz_med_drive',{videos:[],apostilas:[]}),USING_DEMO=true;
-function catalog(){const eV=window.videosData||[],eA=window.apostilasData||[];
+let DRIVE=lsGet('cuscuz_med_drive',{videos:[],apostilas:[]});
+function catalog(){
  MODULES.forEach(m=>{m.videos=[];m.apostilas=[]});
- [...eV,...DEMO.videos,...DRIVE.videos].forEach(v=>{const m=MOD(v.m);if(m&&v.t&&(v.y||v.u))m.videos.push(v)});
- [...eA,...DEMO.apostilas,...DRIVE.apostilas].forEach(a=>{const m=MOD(a.m);if(m&&a.t&&a.u)m.apostilas.push(a)});
- USING_DEMO=!(eV.length||eA.length||DRIVE.videos.length||DRIVE.apostilas.length)}
+ DRIVE.videos.forEach(v=>{const m=MOD(v.m)||MOD('drive'); m.videos.push(v)});
+ DRIVE.apostilas.forEach(a=>{const m=MOD(a.m)||MOD('drive'); m.apostilas.push(a)});
+}
 const itemsOf=m=>[...m.videos.map(v=>({type:'v',...v})),...m.apostilas.map(a=>({type:'a',...a}))];
-const itemKey=it=>it.m+':'+(it.type==='v'?'yt:'+it.y:'pdf:'+it.u);
+const itemKey=it=>it.m+':'+(it.type==='v'?'yt:'+(it.y||it.u):'pdf:'+it.u);
 
 /* ═══ ESTADO ═══ */
 const LS='cuscuz_med_v1';
@@ -640,10 +781,43 @@ const addDay=dk=>{const s=new Set(lsGet('acv_days',[]));s.add(dk);lsSet('acv_day
 function applyTheme(){document.documentElement.dataset.theme=lsGet('cuscuz_theme','dark')}
 function toggleTheme(){const t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;lsSet('cuscuz_theme',t)}
 
-/* ═══ NAVEGAÇÃO ═══ */
+/* ═══ MÚSICA LOBBY PES 2013 ═══ */
+let ytPlayer;
+let isMusicPlaying = false;
+window.onYouTubeIframeAPIReady = function() {
+  ytPlayer = new YT.Player('yt-player-container', {
+    height: '0', width: '0',
+    playerVars: { listType: 'playlist', list: 'PLHyOaRryP0rbpL4XkhpCPizrDHmNN-pbw', autoplay: 0, controls: 0, loop: 1 }
+  });
+};
+function toggleLobbyMusic() {
+  if(!ytPlayer || !ytPlayer.playVideo) return;
+  if(isMusicPlaying) { ytPlayer.pauseVideo(); $('music-icon').className = 'ph ph-speaker-slash'; }
+  else { ytPlayer.playVideo(); $('music-icon').className = 'ph ph-speaker-high'; }
+  isMusicPlaying = !isMusicPlaying;
+}
+
+/* ═══ NAVEGAÇÃO & LOBBY ═══ */
+function toggleSidebar() {
+  const sb = document.querySelector('.sidebar');
+  const bd = $('mobile-sidebar-backdrop');
+  sb.classList.toggle('open');
+  if (sb.classList.contains('open')) bd.classList.add('open'); else bd.classList.remove('open');
+}
+function goToLobby(){
+  $('app-main').style.display='none'; $('lobby-screen').style.display='flex';
+  if(ytPlayer && ytPlayer.playVideo) { ytPlayer.playVideo(); isMusicPlaying = true; $('music-icon').className = 'ph ph-speaker-high'; }
+}
+function enterApp(viewId){
+  $('lobby-screen').style.display='none'; $('app-main').style.display='grid';
+  if(ytPlayer && ytPlayer.pauseVideo) { ytPlayer.pauseVideo(); isMusicPlaying = false; $('music-icon').className = 'ph ph-speaker-slash'; }
+  if(viewId) go(viewId);
+}
+
 function go(id){$$('.view-section').forEach(v=>v.classList.remove('active'));$(id).classList.add('active');
  $$('.nav-item[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===id));
- document.querySelector('.sidebar').classList.remove('open');document.querySelector('.main').scrollTop=0;
+ document.querySelector('.sidebar').classList.remove('open');$('mobile-sidebar-backdrop').classList.remove('open');
+ document.querySelector('.main').scrollTop=0;
  ({'view-inicio':renderHome,'view-calendario':renderCalendar,'view-cronograma':renderSchedule,'view-semana':renderWeek,
    'view-preparatorio':renderPrep,'view-acervo':renderAcervo,'view-treino':renderDecks,'view-simulados':renderSim}[id]||(()=>{}))()}
 function refreshAll(){renderHome();renderCalendar();renderSchedule();renderWeek();renderPrep();renderAcervo();renderDecks();renderSim();renderDash();updateBadges();
@@ -672,7 +846,7 @@ function applyCloud(cl){lsSet(LS,Object.assign(JSON.parse(JSON.stringify(DEFDB))
  lsSet('acv_days',cl.days||[]);lsSet('acv_sims',cl.sims||[]);lsSet('acv_decks',cl.decks||[]);lsSet('acv_wrong',cl.wrong||[]);
  lsSet('acv_resumos',cl.resumos||{});lsSet('acv_fc',cl.fc||[]);lsSet('acv_fc_srs',cl.fcsrs||{})}
 function startApp(){
- $('login-screen').style.display='none';$('app-main').style.display='grid';
+ $('login-screen').style.display='none'; goToLobby();
  catalog();refreshAll();setDot(CLOUD_ON?'ok':'off');
  if(CLOUD_ON&&SYNC_USER){FBDB.ref('users/'+safeUser(SYNC_USER)+'/state').once('value').then(s=>{const cl=s.val();if(!cl)return;
   const cloudXp=cl.db&&cl.db.xp,changed=cloudXp!==DB.xp||(cl.done||[]).length!==DONE.size;
@@ -738,7 +912,7 @@ function planOn(dk){if(!DB.plan)return[];return DB.plan.items.map((it,ix)=>({ix,
 function setItem(dk,ix,field){const k=dk+'#'+ix;
  if(field==='done'){if(DB.done[k])delete DB.done[k];else{DB.done[k]=1;addXP(5,'tópico concluído');touchStreak();addDay(dk);checkMeta()}}
  else{DB.skipped[k]?delete DB.skipped[k]:DB.skipped[k]=1}
- saveDB();refreshLight();if(document.querySelector('.modal-overlay')){closeModals();openDay(dk)}}
+ saveDB();refreshLight();if(document.querySelector('.modal-overlay:not(#mobile-sidebar-backdrop)')){closeModals();openDay(dk)}}
 function addExam(dk){const n=cleanStr(prompt('Nome da prova:')||'');if(!n)return;DB.exams[dk]={name:n};saveDB();closeModals();openDay(dk);refreshLight()}
 function delExam(dk){delete DB.exams[dk];saveDB();closeModals();openDay(dk);refreshLight()}
 function toggleHoliday(dk){DB.holidays[dk]?delete DB.holidays[dk]:DB.holidays[dk]=1;saveDB();closeModals();openDay(dk);refreshLight()}
@@ -906,7 +1080,7 @@ function renderAcervo(){
  if(CUR_MOD){list.style.display='none';det.style.display='block';$('module-title').textContent=CUR_MOD.n;
   const row=(it,idx)=>{const k=itemKey(it),done=DONE.has(k),fav=FAV.has(k);
    const thumb=it.type==='v'
-    ?'<img class="vid-thumb" loading="lazy" alt="" src="https://i.ytimg.com/vi/'+esc(it.y)+'/mqdefault.jpg">'
+    ?'<img class="vid-thumb" loading="lazy" alt="" src="'+(it.y?'https://i.ytimg.com/vi/'+esc(it.y)+'/mqdefault.jpg':'https://via.placeholder.com/66x38/181c25/00c8a8?text=DRIVE')+'">'
     :'<span class="content-icon icon-pdf"><i class="ph ph-file-pdf"></i></span>';
    return '<div class="content-item'+(done?' watched':'')+'" onclick="openItem(\''+CUR_MOD.id+'\',\''+it.type+'\','+idx+')">'
    +'<div class="content-info">'+thumb+'<span class="content-title">'+esc(it.t)+'</span></div>'
@@ -919,7 +1093,7 @@ function renderAcervo(){
    :'<div style="color:var(--text-muted);font-size:13px">Nada aqui ainda — cole o output do NotebookLM'+(CUR_MOD.id==='casos'?' ou registre o caso (anamnese, diagnóstico, conduta)':'')+'.</div>';
   return}
  list.style.display='block';det.style.display='none';
- $('all-modules-container').innerHTML=MODULES.filter(m=>!SUBJ||m.id===SUBJ).map(moduleCard).join('')
+ $('all-modules-container').innerHTML=MODULES.filter(m=>(!SUBJ||m.id===SUBJ)&&(m.id!=='drive'||itemsOf(m).length>0)).map(moduleCard).join('')
  ||'<div style="padding:0 20px 40px;color:var(--text-muted)">Nenhum módulo para este filtro.</div>'}
 function openModule(id){CUR_MOD=MOD(id);renderAcervo()}
 function backAcervo(){CUR_MOD=null;renderAcervo()}
@@ -936,10 +1110,14 @@ function delResumo(i){RESUMOS[CUR_MOD.id].splice(i,1);lsSet('acv_resumos',RESUMO
 function openItem(mid,type,idx){const m=MOD(mid);if(!m)return;const it=type==='v'?m.videos[idx]:m.apostilas[idx];if(!it)return;
  lsSet('acv_last',{m:mid,type,idx});renderHome();
  $('player-overlay').classList.add('show');$('player-title').textContent=it.t;
- if(type==='v')$('player-frame').innerHTML='<iframe src="https://www.youtube.com/embed/'+esc(it.y)+'" allowfullscreen></iframe>';
- else{let u=it.u;const gd=String(u).match(/drive\.google\.com\/file\/d\/([^/]+)/);if(gd)u='https://drive.google.com/file/d/'+gd[1]+'/preview';
-  $('player-frame').innerHTML='<iframe src="'+esc(u)+'"></iframe>'}
- $('player-open').onclick=()=>window.open(type==='v'?'https://youtu.be/'+it.y:it.u,'_blank');
+ if(type==='v'){
+   if(it.y) $('player-frame').innerHTML='<iframe src="https://www.youtube.com/embed/'+esc(it.y)+'" allowfullscreen></iframe>';
+   else if(it.u) $('player-frame').innerHTML='<iframe src="'+esc(it.u.replace(/\/view.*/, '/preview'))+'"></iframe>';
+ } else {
+   let u=it.u;const gd=String(u).match(/drive\.google\.com\/file\/d\/([^/]+)/);if(gd)u='https://drive.google.com/file/d/'+gd[1]+'/preview';
+   $('player-frame').innerHTML='<iframe src="'+esc(u)+'"></iframe>'
+ }
+ $('player-open').onclick=()=>window.open(type==='v'?(it.y?'https://youtu.be/'+it.y:it.u):it.u,'_blank');
  $('player-done').innerHTML='<i class="ph ph-check"></i> Concluir (+2 XP)';
  $('player-done').onclick=()=>{const k=itemKey(it);
   if(!DONE.has(k)){DONE.add(k);lsSet('acv_done',[...DONE]);addXP(2,type==='v'?'video assistido':'material lido');touchStreak();checkBadges()}
@@ -956,16 +1134,72 @@ function openFavorites(){
   +'<span class="content-title">'+esc(it.t)+'</span></div><span style="font-size:11px;color:var(--text-muted)">'+esc(m.n)+'</span></div>'}}));
  openModal('<div class="modal-title">⭐ Favoritos<button class="modal-close"><i class="ph ph-x"></i></button></div>'
  +(body||'<div style="color:var(--text-muted);font-size:13px">Nenhum favorito ainda.</div>'))}
+
+/* ═══ INTEGRAÇÃO NATIVA GOOGLE DRIVE API ═══ */
 function openDriveModal(){
- openModal('<div class="modal-title"><i class="ph ph-cloud"></i> Sincronizar Drive<button class="modal-close"><i class="ph ph-x"></i></button></div>'
- +'<div style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-bottom:12px">Cole um JSON no formato:<br><code style="font-family:var(--font-mono);font-size:11px">{"videos":[{"m":"car","t":"Título","y":"ID_YOUTUBE"}],"apostilas":[{"m":"car","t":"Título","u":"https://drive.google.com/file/d/ID/view"}]}</code><br>IDs: '+MODULES.map(m=>m.id).join(', ')+'</div>'
- +'<textarea class="imp-textarea" id="drive-json" placeholder=\'{"videos":[],"apostilas":[]}\'></textarea>'
- +'<div class="form-actions"><button class="btn-outline" onclick="clearDrive()">Limpar</button><button class="btn-primary" onclick="saveDrive()">Salvar</button></div>');
- $('drive-json').value=(DRIVE.videos.length||DRIVE.apostilas.length)?JSON.stringify(DRIVE,null,1):''}
-function saveDrive(){try{const p=deepClean(JSON.parse($('drive-json').value||'{}'));
- const v=(p.videos||[]).filter(x=>MOD(x.m)&&x.t&&x.y),a=(p.apostilas||[]).filter(x=>MOD(x.m)&&x.t&&x.u);
- DRIVE={videos:v,apostilas:a};lsSet('cuscuz_med_drive',DRIVE);catalog();closeModals();refreshAll();
- toast('Sincronizado: '+(v.length+a.length)+' itens','success')}catch(e){toast('JSON inválido','error')}}
+ const cfg = lsGet('cuscuz_drive_config', {clientId:'', apiKey:'', folderId:''});
+ openModal('<div class="modal-title"><i class="ph ph-cloud"></i> Sincronizar API Drive<button class="modal-close"><i class="ph ph-x"></i></button></div>'
+ +'<div style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">Conecte-se com sua API do Google para ler pastas diretamente (somente leitura). Os arquivos serão categorizados automaticamente pelo nome.</div>'
+ +'<div class="form-group"><label class="form-label">OAuth Client ID</label><input id="drive-client-id" placeholder="Ex: 123...apps.googleusercontent.com" value="'+esc(cfg.clientId)+'"></div>'
+ +'<div class="form-group"><label class="form-label">API Key</label><input id="drive-api-key" placeholder="Sua chave de API" value="'+esc(cfg.apiKey)+'"></div>'
+ +'<div class="form-group"><label class="form-label">ID da Pasta no Drive</label><input id="drive-folder-id" placeholder="Ex: 1BxiMVs0X_x..." value="'+esc(cfg.folderId)+'"></div>'
+ +'<div class="form-actions"><button class="btn-outline" onclick="clearDrive()">Limpar / Desconectar</button><button class="btn-primary" onclick="syncDriveDirect()"><i class="ph ph-arrows-clockwise"></i> Buscar na Nuvem</button></div>');
+}
+function guessModule(filename) {
+ const name = filename.toLowerCase();
+ for(let m of MODULES) {
+  if(m.id !== 'drive' && m.id !== 'casos' && m.id !== 'prov') {
+   if(name.includes(m.n.toLowerCase().substring(0, 4))) return m.id;
+  }
+ }
+ return 'drive';
+}
+let tokenClient;
+async function syncDriveDirect() {
+ const clientId = $('drive-client-id').value.trim();
+ const apiKey = $('drive-api-key').value.trim();
+ const folderId = $('drive-folder-id').value.trim();
+
+ if(!clientId || !apiKey || !folderId) { toast('Preencha os três campos obrigatórios','error'); return; }
+ lsSet('cuscuz_drive_config', {clientId, apiKey, folderId});
+
+ try {
+  await gapi.client.init({ apiKey: apiKey, discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] });
+  tokenClient = google.accounts.oauth2.initTokenClient({
+   client_id: clientId, scope: 'https://www.googleapis.com/auth/drive.readonly',
+   callback: async (resp) => {
+    if (resp.error !== undefined) throw resp;
+    toast('Autenticado. Buscando arquivos...','success');
+    await fetchDriveFiles(folderId);
+   },
+  });
+  if (gapi.client.getToken() === null) tokenClient.requestAccessToken({prompt: 'consent'});
+  else tokenClient.requestAccessToken({prompt: ''});
+ } catch (err) { toast('Erro ao inicializar Google API','error'); console.error(err); }
+}
+async function fetchDriveFiles(folderId) {
+ try {
+  const response = await gapi.client.drive.files.list({
+   q: `'${folderId}' in parents and trashed=false`,
+   fields: 'files(id, name, mimeType, webViewLink)', pageSize: 1000
+  });
+  const files = response.result.files;
+  if (!files || files.length === 0) { toast('A pasta está vazia ou inacessível','error'); return; }
+  
+  const newVideos = [], newPdfs = [];
+  files.forEach(f => {
+   const modId = guessModule(f.name);
+   const cleanName = f.name.replace(/\.[^/.]+$/, "");
+   if(f.mimeType.includes('video')) newVideos.push({ m: modId, t: cleanName, u: f.webViewLink });
+   else if(f.mimeType.includes('pdf')) newPdfs.push({ m: modId, t: cleanName, u: f.webViewLink });
+  });
+
+  DRIVE = { videos: newVideos, apostilas: newPdfs };
+  lsSet('cuscuz_med_drive', DRIVE);
+  catalog(); refreshAll(); closeModals();
+  toast(`${newVideos.length} vídeos e ${newPdfs.length} PDFs sincronizados!`, 'success');
+ } catch (err) { toast('Erro ao buscar. Verifique o ID da pasta.','error'); console.error(err); }
+}
 function clearDrive(){DRIVE={videos:[],apostilas:[]};lsSet('cuscuz_med_drive',DRIVE);catalog();closeModals();refreshAll();toast('Conteúdo do Drive removido')}
 
 /* ═══ TREINO: QUESTÕES (+ modo erradas) ═══ */
@@ -977,6 +1211,7 @@ function renderDecks(){
  const fd=$('fc-due');if(fd)fd.textContent=fcDue(buildFCList()).length;
  $('decks-grid').innerHTML=(all.length?'<div class="quiz-deck-card" onclick="startQuiz(null)"><i class="ph ph-squares-four quiz-deck-icon"></i><div class="quiz-deck-title">Todos os assuntos</div><div class="quiz-deck-meta">'+all.length+' questões</div></div>':'')
  +MODULES.filter(m=>!SUBJ||m.id===SUBJ).map(m=>{const n=byS[m.id]||0,sc=QUIZS[m.id];
+  if(m.id==='drive') return '';
   return '<div class="quiz-deck-card" style="'+(n?'':'opacity:.45')+'" onclick="'+(n?"startQuiz('"+m.id+"')":"openImport()")+'">'
   +'<i class="ph ph-cards quiz-deck-icon"></i><div class="quiz-deck-title">'+esc(m.n)+'</div>'
   +'<div class="quiz-deck-meta">'+(n?n+' questões':'vazio — importar')+'</div>'
@@ -1027,7 +1262,7 @@ function quitQuiz(){QR=null;$('quiz-runner-screen').style.display='none';$('quiz
 function updateWrongBtn(){const el=$('wrong-count');if(el)el.textContent=WRONG.size}
 function openImport(){
  openModal('<div class="modal-title"><i class="ph ph-upload-simple"></i> Importar questões<button class="modal-close"><i class="ph ph-x"></i></button></div>'
- +'<div class="form-group"><label class="form-label">Matéria</label><select id="imp-subj">'+MODULES.map(m=>'<option value="'+m.id+'">'+m.n+'</option>').join('')+'</select></div>'
+ +'<div class="form-group"><label class="form-label">Matéria</label><select id="imp-subj">'+MODULES.filter(m=>m.id!=='drive').map(m=>'<option value="'+m.id+'">'+m.n+'</option>').join('')+'</select></div>'
  +'<div class="form-group"><label class="form-label">Cole as questões (texto ou JSON)</label><textarea class="imp-textarea" id="imp-txt" placeholder="P: enunciado\na) opção 1\nb) opção 2\nc) opção 3\nd) opção 4\nR: a\nE: comentário"></textarea></div>'
  +'<div style="font-size:11px;color:var(--text-muted)">Separe questões por linha em branco. JSON: [{"q":"","opts":["","","",""],"ans":0,"exp":""}]</div>'
  +'<div class="form-actions"><button class="btn-outline" onclick="previewImport()">Verificar</button><button class="btn-primary" onclick="saveImport()">Importar</button></div>')}
@@ -1114,7 +1349,7 @@ function renderSim(){
  const qs=bankAll();
  $('sim-config').innerHTML='<div><b style="font-size:15px">⏱️ Montar simulado</b><div style="font-size:12px;color:var(--text-muted)">Banco atual: '+qs.length+' questões</div></div>'
  +'<div><label class="sim-label">Matérias (nenhuma = todas)</label><div class="chips" id="sim-subs">'
- +MODULES.map(m=>'<span class="chip" data-sim="'+m.id+'" onclick="this.classList.toggle(\'active\')">'+m.n+'</span>').join('')+'</div></div>'
+ +MODULES.filter(m=>m.id!=='drive').map(m=>'<span class="chip" data-sim="'+m.id+'" onclick="this.classList.toggle(\'active\')">'+m.n+'</span>').join('')+'</div></div>'
  +'<div class="form-row"><div><label class="sim-label">Quantidade</label><select class="sim-select" id="sim-n"><option>10</option><option selected>20</option><option>30</option><option value="all">Todas</option></select></div>'
  +'<div><label class="sim-label">Minutos</label><input class="sim-select" id="sim-min" type="number" placeholder="auto (2/questão)"></div></div>'
  +'<button class="btn-primary" style="align-self:flex-start" onclick="startSim()">Iniciar simulado</button>';
@@ -1171,7 +1406,7 @@ function renderHome(){
  $('resume-card').innerHTML=(last&&MOD(last.m))?(()=>{const m=MOD(last.m),it=last.type==='v'?m.videos[last.idx]:m.apostilas[last.idx];
   return it?'<div class="resume-card"><div><div class="dash-title">Continuar de onde parou</div><b>'+esc(it.t)+'</b> <span style="color:var(--text-muted);font-size:12px">· '+esc(m.n)+'</span></div><button class="btn-primary" onclick="openItem(\''+last.m+'\',\''+last.type+'\','+last.idx+')"><i class="ph ph-play"></i> Continuar</button></div>':''})():'';
  $('modules-recent').innerHTML=MODULES.filter(m=>itemsOf(m).length).slice(0,4).map(moduleCard).join('')||'<div style="padding:0 20px;color:var(--text-muted)">Nenhum conteúdo carregado.</div>';
- const vids=[...DONE].filter(k=>k.includes(':yt:')).length,pdfs=[...DONE].length-vids;
+ const vids=[...DONE].filter(k=>k.includes(':yt:')||k.includes('drive.google')).length,pdfs=[...DONE].length-vids;
  const qtot=Object.values(QUIZS).reduce((a,s)=>a+(s.t||0),0);
  const studyMin=Object.values(DB.prep.sessions).reduce((a,b)=>a+b,0);
  $('dash-stats').innerHTML='<div class="cards-grid" style="padding:0;gap:12px">'
@@ -1205,7 +1440,7 @@ function renderDash(){
   +'<span class="game-badge-tip">'+esc(b.n)+'</span></span>').join('')+'</div></div>'}
 function setFilter(f){FILTER=f;$$('.nav-item[data-filter]').forEach(n=>n.classList.toggle('active',n.dataset.filter===f));renderAcervo()}
 function clearSubject(){SUBJ=null;CUR_MOD=null;$$('#subject-nav .nav-item').forEach(n=>n.classList.remove('active'));renderAcervo()}
-function buildSubjectNav(){$('subject-nav').innerHTML=MODULES.map(m=>'<div class="nav-item" data-subj="'+m.id+'" onclick="pickSubject(\''+m.id+'\',this)"><i class="ph ph-bookmark"></i>'+m.n+'<span class="nav-badge" id="sn-'+m.id+'">0</span></div>').join('')}
+function buildSubjectNav(){$('subject-nav').innerHTML=MODULES.filter(m=>m.id!=='drive').map(m=>'<div class="nav-item" data-subj="'+m.id+'" onclick="pickSubject(\''+m.id+'\',this)"><i class="ph ph-bookmark"></i>'+m.n+'<span class="nav-badge" id="sn-'+m.id+'">0</span></div>').join('')}
 function pickSubject(s,el){SUBJ=s;CUR_MOD=null;$$('#subject-nav .nav-item').forEach(n=>n.classList.toggle('active',n===el));renderAcervo()}
 function updateBadges(){let tot=0,dn=0;
  MODULES.forEach(m=>{const its=itemsOf(m),d=its.filter(i=>DONE.has(itemKey(i))).length;tot+=its.length;dn+=d;
@@ -1255,53 +1490,18 @@ function importData(ev){const f=ev.target.files[0];if(!f)return;const r=new File
   toast('Backup restaurado! Recarregando...','success');setTimeout(()=>location.reload(),700)}catch(e){toast('Arquivo inválido','error')}};
  r.readAsText(f);ev.target.value=''}
 
-/* ═══ INJEÇÕES (CSS novo + seções) ═══ */
-function injectExtras(){
- if(!$('cuscuz-extras')){const st=document.createElement('style');st.id='cuscuz-extras';
-  st.textContent=[
-  '.cover-leg{background:linear-gradient(135deg,#475569,#0f172a)}','.cover-cas{background:linear-gradient(135deg,#0ea5e9,#6366f1)}',
-  '.fc-meta{font-family:var(--font-mono);font-size:10px;color:var(--text-muted)}',
-  '.srs-btns{display:flex;gap:8px;margin-top:12px}',
-  '.fc-btn{flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;border:1px solid var(--border-muted);background:var(--bg-elevated);color:inherit}',
-  '.fc-btn:hover{border-color:var(--border-default)}',
-  '.hab-ico{position:absolute;bottom:4px;left:4px;font-size:10px}',
-  '.resumo-item{background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6}',
-  '.resumo-item b{display:block;margin-bottom:4px}','.resumo-wrap{white-space:pre-wrap}',
-  '#search-wrap{position:relative;z-index:15}#global-search{max-width:860px}',
-  '.search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;max-width:860px;max-height:55vh;overflow-y:auto;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:40}',
-  '.sr-grupo{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-disabled);padding:10px 14px 4px}',
-  '.sr-item{display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:13px;cursor:pointer;color:var(--text-secondary)}',
-  '.sr-item:hover{background:var(--bg-elevated);color:var(--text-primary)}',
-  '.sr-item i{color:var(--teal)}',
-  '.sr-mod{margin-left:auto;font-size:10px;font-family:var(--font-mono);color:var(--text-muted);flex-shrink:0}',
-  '.vid-thumb{width:66px;height:38px;object-fit:cover;border-radius:6px;flex-shrink:0;background:var(--bg-active)}'
-  ].join('');document.head.appendChild(st)}
- if($('view-inicio')&&!$('global-search')){
-  $('view-inicio').insertAdjacentHTML('afterbegin',
-   '<div id="search-wrap" style="margin:0 20px 14px">'
-   +'<input id="global-search" placeholder="🔎 Buscar aula, PDF, resumo..." autocomplete="off" style="width:100%;padding:11px 14px">'
-   +'<div class="search-results" id="search-results" style="display:none"></div></div>');
-  $('global-search').addEventListener('input',e=>searchDebounced(e.target.value));
-  document.addEventListener('click',e=>{if(!e.target.closest('#search-wrap'))srHide()})}
- if(!$('resumos-container')&&$('apostilas-container')){
-  $('apostilas-container').insertAdjacentHTML('afterend',
-   '<div class="content-list-title">📝 Resumos · casos</div><div class="content-list" id="resumos-container" style="grid-template-columns:1fr"></div>'
-  +'<div style="padding:0 20px 40px"><button class="btn-outline" onclick="openResumoModal()"><i class="ph ph-plus"></i> Adicionar resumo / caso clínico</button></div>')}
- if(!$('fc-actions')&&$('bank-panel')){
-  $('bank-panel').insertAdjacentHTML('beforeend',
-   '<div id="fc-actions" style="display:flex;gap:8px;flex-wrap:wrap">'
-  +'<button class="btn-primary btn-sm" onclick="startFC()"><i class="ph ph-cards"></i> Revisar flashcards (<span id="fc-due">0</span> pendentes)</button>'
-  +'<button class="btn-outline btn-sm" onclick="startWrongQuiz()"><i class="ph ph-rotate-ccw"></i> Revisar erradas (<span id="wrong-count">0</span>)</button>'
-  +'<button class="btn-outline btn-sm" onclick="openFCModal()"><i class="ph ph-plus"></i> Novo card</button>'
-  +'<button class="btn-outline btn-sm" onclick="exportAnki()"><i class="ph ph-download-simple"></i> Exportar p/ Anki</button></div>')}
- updateWrongBtn()}
-
 /* ═══ INIT ═══ */
 window.addEventListener('DOMContentLoaded',()=>{
  applyTheme();
  try{if(firebaseConfig.databaseURL&&typeof firebase!=='undefined'){firebase.initializeApp(firebaseConfig);FBDB=firebase.database();CLOUD_ON=true}}catch(e){console.warn('Firebase off:',e)}
- injectExtras();catalog();buildSubjectNav();
+ catalog();buildSubjectNav();
+ const searchInput = document.getElementById('global-search');
+ if(searchInput){
+   searchInput.addEventListener('input', e=>searchDebounced(e.target.value));
+   document.addEventListener('click', e => { if(!e.target.closest('#search-wrap')) srHide() });
+ }
  if(localStorage.getItem('medplan_logged')==='1'){SYNC_USER=localStorage.getItem('medplan_user');startApp()}else refreshAll();
+ updateWrongBtn();
 });
 window.addEventListener('load',()=>{if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'});
 </script>
