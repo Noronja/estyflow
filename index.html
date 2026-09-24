@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Cuscuz-MED — Planejador + Acervo</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,700&display=swap" rel="stylesheet">
@@ -11,7 +12,6 @@
 <script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
-/* ═══ SEU CSS ORIGINAL — INTACTO ═══ */
 :root{
 --bg-void:#0b0d11;--bg-base:#11141a;--bg-surface:#181c25;--bg-elevated:#1f2532;
 --bg-overlay:#252d3d;--bg-hover:#2a3448;--bg-active:#303c54;
@@ -47,6 +47,7 @@ body{font-family:var(--font-ui);font-size:14px;color:var(--text-primary);backgro
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border-muted);border-radius:99px}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 input,select,textarea{font-family:inherit;color:var(--text-primary);background:var(--bg-elevated);border:1px solid var(--border-muted);border-radius:var(--radius-md);padding:8px 12px;font-size:13px}
+input:focus,select,textarea:focus{outline:none;border-color:var(--teal)}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .theme-toggle{position:relative;display:inline-flex;align-items:center;padding:11px 4px;cursor:pointer}
 .theme-toggle__track{position:relative;width:40px;height:22px;border-radius:11px;background:#424242;transition:background .3s}
@@ -277,8 +278,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .quiz-review-item{display:flex;gap:10px;align-items:flex-start;font-size:13px;padding:10px 14px;border-radius:8px;background:var(--bg-elevated);border:1px solid var(--border-subtle);text-align:left}
 .quiz-review-item.ok i{color:var(--green)}.quiz-review-item.fail i{color:var(--rose)}
 .imp-box{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:12px;padding:22px;max-width:860px;display:flex;flex-direction:column;gap:14px;margin:0 20px 40px}
-.imp-drop{border:2px dashed var(--border-muted);border-radius:12px;padding:28px;text-align:center;color:var(--text-muted);cursor:pointer}
-.imp-drop:hover{border-color:var(--teal);background:var(--teal-dim)}
 .imp-textarea{width:100%;min-height:130px;resize:vertical;font-size:13px}
 .sim-config-card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:12px;padding:22px;max-width:720px;display:flex;flex-direction:column;gap:16px;margin:0 20px 30px}
 .sim-label{display:block;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-family:var(--font-mono)}
@@ -409,7 +408,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
   </aside>
 
   <main class="main">
-    <!-- INÍCIO -->
     <div id="view-inicio" class="view-section active" style="padding-top:20px">
       <div class="demo-banner" id="demo-banner"></div>
       <h1 class="section-title" style="margin:8px 20px 16px">Em andamento</h1>
@@ -421,7 +419,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
       </div>
     </div>
 
-    <!-- CALENDÁRIO -->
     <div id="view-calendario" class="view-section">
       <div class="toolbar">
         <div class="chips" id="subject-chips"></div>
@@ -438,11 +435,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
       </div>
     </div>
 
-    <!-- CRONOGRAMA / SEMANA -->
     <div id="view-cronograma" class="view-section"><div class="pad" id="schedule-view"></div></div>
     <div id="view-semana" class="view-section"><div class="pad" id="week-view"></div></div>
 
-    <!-- PREPARATÓRIO -->
     <div id="view-preparatorio" class="view-section" style="padding-top:20px">
       <h1 class="section-title" style="margin:8px 20px 16px">Preparatório — Prova + Graduação</h1>
       <div class="prep-grid">
@@ -504,7 +499,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
       </div>
     </div>
 
-    <!-- ACERVO -->
     <div id="view-acervo" class="view-section">
       <div id="acervo-list-screen" style="padding-top:20px">
         <h1 class="section-title" style="margin:8px 20px 16px">Acervo Completo</h1>
@@ -524,7 +518,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
       </div>
     </div>
 
-    <!-- TREINO -->
     <div id="view-treino" class="view-section">
       <div id="quiz-list-screen" style="padding-top:20px">
         <h1 class="section-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin:8px 20px 16px">Banco de Questões
@@ -542,7 +535,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
       <div id="quiz-runner-screen" style="display:none"><div class="quiz-runner" id="quiz-runner"></div></div>
     </div>
 
-    <!-- SIMULADOS -->
     <div id="view-simulados" class="view-section">
       <div id="sim-config-screen" style="padding-top:20px">
         <h1 class="section-title" style="margin:8px 20px 16px">Simulados</h1>
@@ -586,6 +578,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 /* ═══ HELPERS ═══ */
 const $=id=>document.getElementById(id),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cleanStr=s=>String(s??'').replace(/[<>]/g,'');
+function deepClean(o){if(typeof o==='string')return cleanStr(o);if(Array.isArray(o))return o.map(deepClean);if(o&&typeof o==='object'){const r={};Object.keys(o).forEach(k=>r[k]=deepClean(o[k]));return r}return o}
+const normAcc=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const fmt=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const todayKey=()=>fmt(new Date());
 const parseD=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
@@ -600,31 +595,22 @@ function lsGet(k,def){try{const v=JSON.parse(localStorage.getItem(k));return v==
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){toast('⚠️ Armazenamento cheio — exporte um backup','error')}}
 function toast(msg,type=''){const t=document.createElement('div');t.className='toast '+type;t.innerHTML=msg;$('toasts').appendChild(t);setTimeout(()=>{t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(()=>t.remove(),300)},2800)}
 function closeModals(){$$('.modal-overlay').forEach(o=>o.remove())}
-function openModal(html){const o=document.createElement('div');o.className='modal-overlay open';o.innerHTML='<div class="modal">'+html+'</div>';
- o.addEventListener('click',e=>{if(e.target===o||e.target.closest('.modal-close'))o.remove()});$('modal-container').appendChild(o);return o}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModals();if($('player-overlay').classList.contains('show'))closePlayer()}});
+function openModal(html){const o=document.createElement('div');o.className='modal-overlay open';o.innerHTML='<div class="modal">'+html+'</div>';o.addEventListener('click',e=>{if(e.target===o||e.target.closest('.modal-close'))o.remove()});$('modal-container').appendChild(o);return o}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModals();const p=$('player-overlay');if(p&&p.classList.contains('show'))closePlayer()}});
 
-/* ═══ CONTEÚDO — módulos + demo. Para dados reais: preencha DRIVE via botão "Sincronizar Drive"
-   ou crie um arquivo dados.js com window.videosData=[{m:'car',t:'Título',y:'ID_YT'},...] e
-   window.apostilasData=[{m:'car',t:'Título',u:'https://drive.google.com/...'}] e o inclua antes deste script. */
+/* ═══ CONTEÚDO ═══ */
 const MODULES=[
  {id:'car',n:'Cardiologia'},{id:'nef',n:'Nefrologia'},{id:'gin',n:'Ginecologia'},{id:'obs',n:'Obstetrícia'},
  {id:'ped',n:'Pediatria'},{id:'prv',n:'Preventiva'},{id:'hep',n:'Hepatologia'},{id:'gas',n:'Gastro'},
  {id:'end',n:'Endócrino'},{id:'hem',n:'Hematologia'},{id:'inf',n:'Infectologia'},{id:'neu',n:'Neurologia'},
  {id:'ort',n:'Ortopedia'},{id:'orl',n:'Otorrino'},{id:'der',n:'Dermatologia'},{id:'pne',n:'Pneumologia'},
- {id:'cir',n:'Cirurgia'},{id:'psi',n:'Psiquiatria'},{id:'reu',n:'Reumatologia'},{id:'oft',n:'Oftalmologia'},{id:'prov',n:'Provas'}
+ {id:'cir',n:'Cirurgia'},{id:'psi',n:'Psiquiatria'},{id:'reu',n:'Reumatologia'},{id:'oft',n:'Oftalmologia'},
+ {id:'leg',n:'Medicina Legal'},{id:'prov',n:'Provas'},{id:'casos',n:'Casos Clínicos'}
 ];
 const MOD=id=>MODULES.find(m=>m.id===id);
 const DEMO={
- videos:[
-  {m:'car',t:'[exemplo] Insuficiência Cardíaca',y:'aqz-KE-bpKQ'},
-  {m:'ped',t:'[exemplo] Desidratação na Pediatria',y:'aqz-KE-bpKQ'},
-  {m:'prv',t:'[exemplo] Atenção Primária e SUS',y:'aqz-KE-bpKQ'},
-  {m:'gas',t:'[exemplo] Abdome Agudo',y:'aqz-KE-bpKQ'}],
- apostilas:[
-  {m:'car',t:'[exemplo] Resumo de Cardiologia',u:'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'},
-  {m:'neu',t:'[exemplo] Cefaleias — resumo',u:'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'}]
-};
+ videos:[{m:'car',t:'[exemplo] Insuficiência Cardíaca',y:'aqz-KE-bpKQ'},{m:'ped',t:'[exemplo] Desidratação na Pediatria',y:'aqz-KE-bpKQ'}],
+ apostilas:[{m:'car',t:'[exemplo] Resumo de Cardiologia',u:'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'}]};
 let DRIVE=lsGet('cuscuz_med_drive',{videos:[],apostilas:[]}),USING_DEMO=true;
 function catalog(){const eV=window.videosData||[],eA=window.apostilasData||[];
  MODULES.forEach(m=>{m.videos=[];m.apostilas=[]});
@@ -636,14 +622,16 @@ const itemKey=it=>it.m+':'+(it.type==='v'?'yt:'+it.y:'pdf:'+it.u);
 
 /* ═══ ESTADO ═══ */
 const LS='cuscuz_med_v1';
-const DEFDB={plan:null,done:{},skipped:{},exams:{},holidays:{},qweek:{},xp:0,badges:[],streak:0,streakLast:null,
- prep:{routine:{},sessions:{},checklist:[],metaHit:{}}};
+const DEFDB={plan:null,done:{},skipped:{},exams:{},holidays:{},qweek:{},events:{},habits:{},xp:0,badges:[],streak:0,streakLast:null,prep:{routine:{},sessions:{},checklist:[],metaHit:{}}};
 let DB=Object.assign(JSON.parse(JSON.stringify(DEFDB)),lsGet(LS,{}));
 DB.prep=Object.assign({routine:{},sessions:{},checklist:[],metaHit:{}},DB.prep||{});
+DB.events=DB.events||{};DB.habits=DB.habits||{};
 let DONE=new Set(lsGet('acv_done',[])),FAV=new Set(lsGet('acv_fav',[])),WRONG=new Set(lsGet('acv_wrong',[]));
 let QUIZS=lsGet('acv_quiz',{}),SIMS=lsGet('acv_sims',[]),DECKS=lsGet('acv_decks',[]);
+let RESUMOS=lsGet('acv_resumos',{}),FCS=lsGet('acv_fc',[]),FCSRS=lsGet('acv_fc_srs',{});
 let FILTER='all',SUBJ=null,CUR_MOD=null,SYNC_USER=null;
 let calFilter=new Set(),CALM=new Date();CALM.setDate(1);
+const EVC={loja:'#b8c0cc',pessoal:'#e85b7a',facu:'#7c6af0',saude:'#34c97a'};
 const saveCloud=debounce(pushCloud,2500);
 function saveDB(sync=true){lsSet(LS,DB);if(sync)saveCloud()}
 const addDay=dk=>{const s=new Set(lsGet('acv_days',[]));s.add(dk);lsSet('acv_days',[...s])};
@@ -665,10 +653,10 @@ function refreshLight(){renderDash();renderCalendar();renderSchedule();renderWee
 /* ═══ LOGIN / FIREBASE ═══ */
 const firebaseConfig={apiKey:"AIzaSyA6aoGd1Yxj0Yn9JjzAABwQGOTkj7xEAVQ",authDomain:"estudoflow-409d4.firebaseapp.com",databaseURL:"https://estudoflow-409d4-default-rtdb.firebaseio.com",projectId:"estudoflow-409d4",storageBucket:"estudoflow-409d4.firebasestorage.app",messagingSenderId:"693665289108",appId:"1:693665289108:web:bc9b93f6018690a405b581"};
 let FBDB=null,CLOUD_ON=false;
-const safeUser=s=>String(s||'').toLowerCase().replace(/[^a-z0-9_-]/g,'')||'user'; // Firebase não aceita . # $ [ ] no caminho
+const safeUser=s=>String(s||'').toLowerCase().replace(/[^a-z0-9_-]/g,'')||'user';
 const hsh=s=>{let x=5381;for(const c of s)x=(x*33+c.charCodeAt(0))>>>0;return x.toString(36)};
-function setDot(st){$('cloud-dot').style.background=st==='ok'?'var(--green)':st==='off'?'var(--text-disabled)':'var(--amber)'}
-function doLogin(){const u=$('login-user').value.trim(),p=$('login-pass').value;
+function setDot(st){const d=$('cloud-dot');if(d)d.style.background=st==='ok'?'var(--green)':st==='off'?'var(--text-disabled)':'var(--amber)'}
+function doLogin(){const u=cleanStr($('login-user').value.trim()),p=$('login-pass').value;
  if(!u||!p){$('login-error').style.display='block';return}
  const users=lsGet('cuscuz_users',{});
  if(users[u]&&users[u]!==hsh(p)){$('login-error').style.display='block';return}
@@ -676,9 +664,7 @@ function doLogin(){const u=$('login-user').value.trim(),p=$('login-pass').value;
  SYNC_USER=u;localStorage.setItem('medplan_logged','1');localStorage.setItem('medplan_user',u);
  $('login-error').style.display='none';startApp()}
 function logout(){if(confirm('Sair? Os dados continuam salvos neste dispositivo.')){localStorage.removeItem('medplan_logged');location.reload()}}
-function payload(){return{db:DB,done:[...DONE],fav:[...FAV],quiz:QUIZS,last:lsGet('acv_last',null),days:lsGet('acv_days',[]),
- sims:SIMS,decks:DECKS,wrong:[...WRONG],
- resumos:(typeof RESUMOS!=='undefined')?RESUMOS:{},fc:(typeof FCS!=='undefined')?FCS:[],fcsrs:(typeof FCSRS!=='undefined')?FCSRS:{}}}
+function payload(){return{db:DB,done:[...DONE],fav:[...FAV],quiz:QUIZS,last:lsGet('acv_last',null),days:lsGet('acv_days',[]),sims:SIMS,decks:DECKS,wrong:[...WRONG],resumos:RESUMOS,fc:FCS,fcsrs:FCSRS}}
 function pushCloud(){if(!CLOUD_ON||!SYNC_USER)return;setDot('sync');
  FBDB.ref('users/'+safeUser(SYNC_USER)+'/state').set(payload()).then(()=>setDot('ok')).catch(()=>setDot('off'))}
 function applyCloud(cl){lsSet(LS,Object.assign(JSON.parse(JSON.stringify(DEFDB)),cl.db||{}));
@@ -692,8 +678,8 @@ function startApp(){
   const cloudXp=cl.db&&cl.db.xp,changed=cloudXp!==DB.xp||(cl.done||[]).length!==DONE.size;
   if(changed&&confirm('Dados encontrados na nuvem para "'+SYNC_USER+'".\nOK = restaurar da nuvem · Cancelar = manter local e sobrescrever nuvem')){
    applyCloud(cl);location.reload()}else if(changed)pushCloud()}).catch(()=>setDot('off'))}}
-  
-/* ═══ XP / BADGES / CONFETTI ═══ */
+
+/* ═══ XP / BADGES ═══ */
 const level=()=>Math.floor(DB.xp/100)+1;
 const BADGES=[
  {id:'start',i:'🌱',n:'Primeiro passo',c:()=>DB.xp>=5},
@@ -707,7 +693,10 @@ const BADGES=[
  {id:'q1',i:'✏️',n:'1º quiz respondido',c:()=>Object.keys(QUIZS).length>0},
  {id:'q80',i:'🧠',n:'80% num deck (10+ q)',c:()=>Object.values(QUIZS).some(s=>s.t>=10&&s.s/s.t>=.8)},
  {id:'sim',i:'⏱️',n:'1º simulado',c:()=>SIMS.length>0},
- {id:'meta',i:'🎯',n:'Bateu a meta do dia',c:()=>Object.keys(DB.prep.metaHit).length>0}];
+ {id:'meta',i:'🎯',n:'Bateu a meta do dia',c:()=>Object.keys(DB.prep.metaHit).length>0},
+ {id:'meio',i:'🩺',n:'Meio Médico — 50% do acervo',c:()=>{const t=MODULES.reduce((a,m)=>a+itemsOf(m).length,0);return t>0&&DONE.size>=t/2}},
+ {id:'emp',i:'💍',n:'Empreendedor — loja + estudo no mesmo dia',c:()=>Object.keys(DB.events).some(dk=>(DB.events[dk]||[]).some(e=>e.c==='loja')&&Object.keys(DB.done).some(k=>k.split('#')[0]===dk))},
+ {id:'tr10',i:'🏋️',n:'10 treinos registrados',c:()=>Object.values(DB.habits).filter(h=>h&&h.treino).length>=10}];
 function addXP(n,why){if(n<=0)return;DB.xp+=n;saveDB();toast('+'+n+' XP · '+esc(why),'xp');checkBadges();renderDash()}
 function touchStreak(){const t=todayKey();if(DB.streakLast===t)return;DB.streak=(DB.streakLast===addD(t,-1))?DB.streak+1:1;DB.streakLast=t;saveDB();checkBadges()}
 function checkBadges(){BADGES.forEach(b=>{if(!DB.badges.includes(b.id)&&b.c()){DB.badges.push(b.id);saveDB(false);
@@ -724,14 +713,14 @@ function confetti(){const c=$('confetti-canvas'),x=c.getContext('2d');c.width=in
 function openPlanModal(){
  const chips=MODULES.map(m=>'<span class="chip" data-pm="'+m.id+'" onclick="this.classList.toggle(\'active\')">'+m.n+'</span>').join('');
  openModal('<div class="modal-title">⚡ Gerar plano de estudos<button class="modal-close"><i class="ph ph-x"></i></button></div>'
- +'<div class="form-group"><label class="form-label">Nome da prova</label><input id="pl-name" placeholder="Ex: ENARE / URGENCIAS"></div>'
+ +'<div class="form-group"><label class="form-label">Nome da prova</label><input id="pl-name" placeholder="Ex: ENARE"></div>'
  +'<div class="form-row"><div class="form-group"><label class="form-label">Início</label><input id="pl-start" type="date" value="'+todayKey()+'"></div>'
  +'<div class="form-group"><label class="form-label">Data da prova</label><input id="pl-date" type="date"></div></div>'
  +'<div class="form-group"><label class="form-label">Matérias</label><div class="chips">'+chips+'</div></div>'
  +'<div class="form-group"><label class="form-label">Intensidade</label><select id="pl-int"><option value="1">Leve — 1 tópico/dia</option><option value="2" selected>Normal — 2 tópicos/dia</option><option value="3">Intenso — 3 tópicos/dia</option></select></div>'
  +'<div class="form-actions"><button class="btn-outline" onclick="closeModals()">Cancelar</button><button class="btn-primary" onclick="generatePlan()">Gerar plano</button></div>')}
 function generatePlan(){
- const name=$('pl-name').value.trim(),start=$('pl-start').value,end=$('pl-date').value,int=+$('pl-int').value;
+ const name=cleanStr($('pl-name').value.trim()),start=$('pl-start').value,end=$('pl-date').value,int=+$('pl-int').value;
  const subs=$$('.chip[data-pm].active').map(c=>c.dataset.pm);
  if(!name||!start||!end||!subs.length){toast('Preencha todos os campos e escolha matérias','error');return}
  if(end<=start){toast('A prova deve ser depois do início','error');return}
@@ -750,14 +739,14 @@ function setItem(dk,ix,field){const k=dk+'#'+ix;
  if(field==='done'){if(DB.done[k])delete DB.done[k];else{DB.done[k]=1;addXP(5,'tópico concluído');touchStreak();addDay(dk);checkMeta()}}
  else{DB.skipped[k]?delete DB.skipped[k]:DB.skipped[k]=1}
  saveDB();refreshLight();if(document.querySelector('.modal-overlay')){closeModals();openDay(dk)}}
-function addExam(dk){const n=prompt('Nome da prova:');if(!n)return;DB.exams[dk]={name:n};saveDB();closeModals();openDay(dk);refreshLight()}
+function addExam(dk){const n=cleanStr(prompt('Nome da prova:')||'');if(!n)return;DB.exams[dk]={name:n};saveDB();closeModals();openDay(dk);refreshLight()}
 function delExam(dk){delete DB.exams[dk];saveDB();closeModals();openDay(dk);refreshLight()}
 function toggleHoliday(dk){DB.holidays[dk]?delete DB.holidays[dk]:DB.holidays[dk]=1;saveDB();closeModals();openDay(dk);refreshLight()}
 function toggleCalFilter(s){calFilter.has(s)?calFilter.delete(s):calFilter.add(s);renderCalendar()}
 function changeMonth(n){CALM.setMonth(CALM.getMonth()+n);renderCalendar()}
 function goToday(){CALM=new Date();CALM.setDate(1);renderCalendar()}
 
-/* ═══ CALENDÁRIO ═══ */
+/* ═══ CALENDÁRIO HÍBRIDO ═══ */
 function renderCalendar(){
  const y=CALM.getFullYear(),mo=CALM.getMonth();
  $('month-label').textContent=CALM.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
@@ -766,29 +755,48 @@ function renderCalendar(){
  const start=(new Date(y,mo,1).getDay()+6)%7,dim=new Date(y,mo+1,0).getDate(),t=todayKey();
  let html='';for(let i=0;i<start;i++)html+='<div class="day other"></div>';
  for(let d=1;d<=dim;d++){
-  const dk=y+'-'+String(mo+1).padStart(2,'0')-'+String(d).padStart(2,'0');
+  const dk=y+'-'+String(mo+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
   const items=planOn(dk).filter(i=>!calFilter.size||calFilter.has(i.s));
+  const evs=DB.events[dk]||[],hb=DB.habits[dk]||{};
   const ex=DB.exams[dk],ho=DB.holidays[dk];
   let cls='day'+(dk===t?' today':'')+(ho?' holiday':'')+(ex?' exam':'')+(!ex&&!ho&&items.length?' study':'');
   const label=ex?esc(ex.name):(ho?'Feriado':'');
   const allDone=items.length&&items.every(i=>DB.done[dk+'#'+i.ix]);
-  const chips=items.slice(0,3).map(i=>'<span class="day-chip'+(DB.done[dk+'#'+i.ix]?' done':'')+'">'+esc(i.t)+'</span>').join('');
+  const chips=[...items.slice(0,3).map(i=>'<span class="day-chip'+(DB.done[dk+'#'+i.ix]?' done':'')+'">'+esc(i.t)+'</span>'),
+   ...evs.map(e=>'<span class="day-chip" style="background:'+EVC[e.c]+';color:#0b0d11">'+esc(e.t)+'</span>')].slice(0,3).join('');
   html+='<div class="'+cls+'" onclick="openDay(\''+dk+'\')"><div class="day-bar"></div><div class="dnum">'+d+'</div>'
   +(label?'<div class="day-label">'+label+'</div>':'')+'<div class="day-chips">'+chips+'</div>'
+  +((hb.treino||hb.macros)?'<div class="hab-ico">'+(hb.treino?'🏋️':'')+(hb.macros?'🍽️':'')+'</div>':'')
   +(allDone?'<div class="day-check"><i class="ph ph-check-bold"></i></div>':'')+'</div>'}
  $('cal-grid').innerHTML=html}
 function openDay(dk){
- const items=planOn(dk),ex=DB.exams[dk],p=dk.split('-');
+ const items=planOn(dk),ex=DB.exams[dk],evs=DB.events[dk]||[],hb=DB.habits[dk]||{},p=dk.split('-');
  let body=ex?'<div class="week-item"><span class="sdot" style="background:var(--amber)"></span><b>📝 '+esc(ex.name)+'</b><button class="btn-outline btn-sm" style="margin-left:auto" onclick="delExam(\''+dk+'\')">Remover</button></div>':'';
+ body+=evs.map((e,i)=>'<div class="week-item"><span class="sdot" style="background:'+EVC[e.c]+'"></span><span class="week-item-topic">'+esc(e.t)+'</span><span class="fc-meta">'+esc(e.c)+'</span><button class="btn-icon" style="width:28px;height:28px" onclick="delEvent(\''+dk+'\','+i+')"><i class="ph ph-x"></i></button></div>').join('');
  body+=items.length?items.map(i=>{const k=dk+'#'+i.ix,done=DB.done[k];
   return '<div class="week-item"><span class="week-item-code">'+fmtBR(dk)+'</span><span class="sdot" style="background:var(--violet)"></span><span class="week-item-topic'+(done?' completed':'')+'">'+esc(i.t)+'</span>'
   +'<button class="check-btn'+(done?' checked':'')+'" onclick="setItem(\''+dk+'\','+i.ix+',\'done\')"><i class="ph ph-check-bold"></i></button>'
   +'<button class="skip-btn" title="Pular" onclick="setItem(\''+dk+'\','+i.ix+',\'skip\')"><i class="ph ph-skip-forward"></i></button></div>'}).join('')
- :'<div style="color:var(--text-muted);font-size:13px">Nenhum tópico planejado para este dia.</div>';
- body+='<div class="form-actions" style="justify-content:flex-start">'
- +'<button class="btn-outline" onclick="addExam(\''+dk+'\')">📝 Marcar prova</button>'
- +'<button class="btn-outline" onclick="toggleHoliday(\''+dk+'\')">🏖️ '+(DB.holidays[dk]?'Remover feriado':'Marcar feriado')+'</button></div>';
+ :(evs.length?'':'<div style="color:var(--text-muted);font-size:13px">Nada planejado para este dia.</div>');
+ body+='<div class="form-actions" style="justify-content:flex-start;flex-wrap:wrap">'
+ +'<button class="btn-outline" onclick="addEvent(\''+dk+'\')">🏷️ Evento</button>'
+ +'<button class="btn-outline" onclick="toggleHabit(\''+dk+'\',\'treino\')">🏋️ '+(hb.treino?'Treino ✓':'Treino')+'</button>'
+ +'<button class="btn-outline" onclick="toggleHabit(\''+dk+'\',\'macros\')">🍽️ '+(hb.macros?'Macros ✓':'Macros')+'</button>'
+ +'<button class="btn-outline" onclick="addExam(\''+dk+'\')">📝 Prova</button>'
+ +'<button class="btn-outline" onclick="toggleHoliday(\''+dk+'\')">🏖️ '+(DB.holidays[dk]?'Remover feriado':'Feriado')+'</button></div>';
  openModal('<div class="modal-title">📅 '+p[2]+'/'+p[1]+'/'+p[0]+'<button class="modal-close"><i class="ph ph-x"></i></button></div>'+body)}
+function addEvent(dk){openModal('<div class="modal-title">🏷️ Evento — '+fmtBR(dk)+'<button class="modal-close"><i class="ph ph-x"></i></button></div>'
+ +'<div class="form-group"><label class="form-label">Descrição</label><input id="ev-txt" placeholder="Ex: Lançamento do catálogo · envio de pacotes"></div>'
+ +'<div class="form-group"><label class="form-label">Categoria</label><div class="chips" id="ev-colors">'
+ +Object.keys(EVC).map((k,i)=>'<span class="chip'+(i===0?' active':'')+'" data-evc="'+k+'" onclick="[...this.parentNode.children].forEach(c=>c.classList.remove(\'active\'));this.classList.add(\'active\')">'+k+'</span>').join('')
+ +'</div></div><div class="form-actions"><button class="btn-outline" onclick="closeModals()">Cancelar</button><button class="btn-primary" onclick="saveEvent(\''+dk+'\')">Salvar</button></div>')}
+function saveEvent(dk){const t=cleanStr($('ev-txt').value.trim());if(!t){toast('Descreva o evento','error');return}
+ const chip=document.querySelector('#ev-colors .chip.active');const c=chip?chip.dataset.evc:'loja';
+ (DB.events[dk]=DB.events[dk]||[]).push({t,c});saveDB();closeModals();openDay(dk);renderCalendar();toast('Evento adicionado','success')}
+function delEvent(dk,i){DB.events[dk].splice(i,1);if(!DB.events[dk].length)delete DB.events[dk];saveDB();closeModals();openDay(dk);renderCalendar()}
+function toggleHabit(dk,w){const h=DB.habits[dk]||(DB.habits[dk]={});const was=!!h[w];h[w]=!h[w];
+ if(!was&&h[w])addXP(w==='treino'?2:1,w==='treino'?'treino registrado 💪':'macros em dia 🍽️');
+ saveDB();closeModals();openDay(dk);renderCalendar();checkBadges()}
 
 /* ═══ CRONOGRAMA / SEMANA ═══ */
 const itemRow=i=>{const k=i.d+'#'+i.ix,done=DB.done[k],skip=DB.skipped[k];
@@ -859,7 +867,7 @@ function setRoutine(d,v){DB.prep.routine[d]=Math.max(0,Math.min(960,+v||0));save
 function prepSaveRoutine(){saveDB();toast('Rotina salva','success');renderPrep()}
 function checkMeta(){const t=todayKey(),goal=DB.prep.routine[new Date().getDay()]||0;
  if(goal>0&&(DB.prep.sessions[t]||0)>=goal&&!DB.prep.metaHit[t]){DB.prep.metaHit[t]=1;addXP(20,'meta do dia batida! 🎯');confetti();checkBadges()}}
-function prepAddItem(){const v=$('prep-new-item').value.trim();if(!v)return;DB.prep.checklist.push({t:v,on:false});$('prep-new-item').value='';saveDB();renderPrep()}
+function prepAddItem(){const v=cleanStr($('prep-new-item').value.trim());if(!v)return;DB.prep.checklist.push({t:v,on:false});$('prep-new-item').value='';saveDB();renderPrep()}
 function prepToggleItem(i){DB.prep.checklist[i].on=!DB.prep.checklist[i].on;saveDB(false);renderPrep()}
 function prepDelItem(i){DB.prep.checklist.splice(i,1);saveDB(false);renderPrep()}
 function renderPrep(){
@@ -885,7 +893,7 @@ function renderPrep(){
  $('prep-checklist').innerHTML=(DB.prep.checklist||[]).map((c,i)=>'<div class="check-item'+(c.on?' on':'')+'" onclick="prepToggleItem('+i+')"><span class="check-btn'+(c.on?' checked':'')+'"><i class="ph ph-check-bold"></i></span><span style="flex:1">'+esc(c.t)+'</span><i class="ph ph-x" style="color:var(--text-muted)" onclick="event.stopPropagation();prepDelItem('+i+')"></i></div>').join('')
  ||'<div style="font-size:12px;color:var(--text-muted)">Nada aqui ainda.</div>'}
 
-/* ═══ ACERVO ═══ */
+/* ═══ ACERVO (com thumbnails) ═══ */
 function moduleCard(m){const its=itemsOf(m),dn=its.filter(i=>DONE.has(itemKey(i))).length;
  return '<div class="module-card" onclick="openModule(\''+m.id+'\')">'
  +'<div class="card-cover cover-'+m.id+'">'+esc(m.n)+'</div>'
@@ -897,19 +905,34 @@ function renderAcervo(){
  const list=$('acervo-list-screen'),det=$('module-detail-view');
  if(CUR_MOD){list.style.display='none';det.style.display='block';$('module-title').textContent=CUR_MOD.n;
   const row=(it,idx)=>{const k=itemKey(it),done=DONE.has(k),fav=FAV.has(k);
+   const thumb=it.type==='v'
+    ?'<img class="vid-thumb" loading="lazy" alt="" src="https://i.ytimg.com/vi/'+esc(it.y)+'/mqdefault.jpg">'
+    :'<span class="content-icon icon-pdf"><i class="ph ph-file-pdf"></i></span>';
    return '<div class="content-item'+(done?' watched':'')+'" onclick="openItem(\''+CUR_MOD.id+'\',\''+it.type+'\','+idx+')">'
-   +'<div class="content-info"><span class="content-icon '+(it.type==='v'?'icon-video':'icon-pdf')+'"><i class="ph '+(it.type==='v'?'ph-play-circle':'ph-file-pdf')+'"></i></span>'
-   +'<span class="content-title">'+esc(it.t)+'</span></div>'
+   +'<div class="content-info">'+thumb+'<span class="content-title">'+esc(it.t)+'</span></div>'
    +'<i class="ph ph-star fav-btn'+(fav?' fav-on':'')+'" onclick="event.stopPropagation();toggleFav(\''+CUR_MOD.id+'\',\''+it.type+'\','+idx+')"></i>'
    +'<span class="check-icon"><i class="ph ph-check-bold"></i></span></div>'};
   $('videos-container').innerHTML=CUR_MOD.videos.map((v,i)=>row({...v,type:'v'},i)).join('')||'<div style="color:var(--text-muted);font-size:13px">Nenhum vídeo — adicione via Sincronizar Drive.</div>';
   $('apostilas-container').innerHTML=CUR_MOD.apostilas.map((a,i)=>row({...a,type:'a'},i)).join('')||'<div style="color:var(--text-muted);font-size:13px">Nenhum material — adicione via Sincronizar Drive.</div>';
+  const rs=RESUMOS[CUR_MOD.id]||[],rc=$('resumos-container');
+  if(rc)rc.innerHTML=rs.length?rs.map((r,i)=>'<div class="resumo-item"><b>'+esc(r.t)+'</b><span class="fc-meta">'+r.d+'</span><div class="resumo-wrap">'+esc(r.c)+'</div><div style="margin-top:8px"><button class="btn-outline btn-sm" onclick="delResumo('+i+')">Excluir</button></div></div>').join('')
+   :'<div style="color:var(--text-muted);font-size:13px">Nada aqui ainda — cole o output do NotebookLM'+(CUR_MOD.id==='casos'?' ou registre o caso (anamnese, diagnóstico, conduta)':'')+'.</div>';
   return}
  list.style.display='block';det.style.display='none';
  $('all-modules-container').innerHTML=MODULES.filter(m=>!SUBJ||m.id===SUBJ).map(moduleCard).join('')
  ||'<div style="padding:0 20px 40px;color:var(--text-muted)">Nenhum módulo para este filtro.</div>'}
 function openModule(id){CUR_MOD=MOD(id);renderAcervo()}
 function backAcervo(){CUR_MOD=null;renderAcervo()}
+function openResumoModal(){if(!CUR_MOD)return;
+ openModal('<div class="modal-title">📝 Novo resumo — '+esc(CUR_MOD.n)+'<button class="modal-close"><i class="ph ph-x"></i></button></div>'
+ +'<div class="form-group"><label class="form-label">Título</label><input id="rs-title" placeholder="Ex: IC — resumo do bloco"></div>'
+ +'<div class="form-group"><label class="form-label">Conteúdo</label><textarea class="imp-textarea" id="rs-body" style="min-height:220px" placeholder="Cole aqui o resumo do NotebookLM, mnemônicos ou o caso clínico..."></textarea></div>'
+ +'<div class="form-actions"><button class="btn-outline" onclick="closeModals()">Cancelar</button><button class="btn-primary" onclick="saveResumo()">Salvar</button></div>')}
+function saveResumo(){const t=cleanStr($('rs-title').value.trim()),c=cleanStr($('rs-body').value.trim());
+ if(!t||!c){toast('Preencha título e conteúdo','error');return}
+ (RESUMOS[CUR_MOD.id]=RESUMOS[CUR_MOD.id]||[]).unshift({t,c,d:todayKey()});
+ lsSet('acv_resumos',RESUMOS);saveCloud();closeModals();renderAcervo();addXP(3,'resumo arquivado');toast('Resumo salvo','success')}
+function delResumo(i){RESUMOS[CUR_MOD.id].splice(i,1);lsSet('acv_resumos',RESUMOS);saveCloud();renderAcervo()}
 function openItem(mid,type,idx){const m=MOD(mid);if(!m)return;const it=type==='v'?m.videos[idx]:m.apostilas[idx];if(!it)return;
  lsSet('acv_last',{m:mid,type,idx});renderHome();
  $('player-overlay').classList.add('show');$('player-title').textContent=it.t;
@@ -919,38 +942,39 @@ function openItem(mid,type,idx){const m=MOD(mid);if(!m)return;const it=type==='v
  $('player-open').onclick=()=>window.open(type==='v'?'https://youtu.be/'+it.y:it.u,'_blank');
  $('player-done').innerHTML='<i class="ph ph-check"></i> Concluir (+2 XP)';
  $('player-done').onclick=()=>{const k=itemKey(it);
-  if(!DONE.has(k)){DONE.add(k);lsSet('acv_done',[...DONE]);addXP(2,type==='v'?'video assistido':'material lido');touchStreak();updateBadges()}
+  if(!DONE.has(k)){DONE.add(k);lsSet('acv_done',[...DONE]);addXP(2,type==='v'?'video assistido':'material lido');touchStreak();checkBadges()}
   $('player-done').innerHTML='✅ Concluído';toast('Marcado como concluído','success')}}
 function closePlayer(){$('player-overlay').classList.remove('show');$('player-frame').innerHTML='';renderAcervo();renderHome();updateBadges()}
 function toggleFav(mid,type,idx){const m=MOD(mid),it=type==='v'?m.videos[idx]:m.apostilas[idx],k=itemKey(it);
  FAV.has(k)?FAV.delete(k):FAV.add(k);lsSet('acv_fav',[...FAV]);saveCloud();renderAcervo()}
 function openFavorites(){
- let body='',any=false;
- MODULES.forEach(m=>itemsOf(m).forEach(it=>{if(FAV.has(itemKey(it))){any=true;
+ let body='';
+ MODULES.forEach(m=>itemsOf(m).forEach(it=>{if(FAV.has(itemKey(it))){
   const idx=it.type==='v'?m.videos.indexOf(it):m.apostilas.indexOf(it);
   body+='<div class="content-item" onclick="closeModals();openItem(\''+m.id+'\',\''+it.type+'\','+idx+')">'
   +'<div class="content-info"><span class="content-icon '+(it.type==='v'?'icon-video':'icon-pdf')+'"><i class="ph '+(it.type==='v'?'ph-play-circle':'ph-file-pdf')+'"></i></span>'
   +'<span class="content-title">'+esc(it.t)+'</span></div><span style="font-size:11px;color:var(--text-muted)">'+esc(m.n)+'</span></div>'}}));
  openModal('<div class="modal-title">⭐ Favoritos<button class="modal-close"><i class="ph ph-x"></i></button></div>'
- +(body||'<div style="color:var(--text-muted);font-size:13px">Nenhum favorito ainda — toque na estrela nos conteúdos.</div>'))}
+ +(body||'<div style="color:var(--text-muted);font-size:13px">Nenhum favorito ainda.</div>'))}
 function openDriveModal(){
  openModal('<div class="modal-title"><i class="ph ph-cloud"></i> Sincronizar Drive<button class="modal-close"><i class="ph ph-x"></i></button></div>'
- +'<div style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-bottom:12px">Cole um JSON no formato:<br><code style="font-family:var(--font-mono);font-size:11px">{"videos":[{"m":"car","t":"Título","y":"ID_YOUTUBE"}],"apostilas":[{"m":"car","t":"Título","u":"https://drive.google.com/file/d/ID/view"}]}</code><br>IDs de matéria: '+MODULES.map(m=>m.id).join(', ')+'</div>'
- +'<textarea class="imp-textarea" id="drive-json" placeholder=\'{"videos":[...],"apostilas":[...]}\''+'></textarea>'
+ +'<div style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-bottom:12px">Cole um JSON no formato:<br><code style="font-family:var(--font-mono);font-size:11px">{"videos":[{"m":"car","t":"Título","y":"ID_YOUTUBE"}],"apostilas":[{"m":"car","t":"Título","u":"https://drive.google.com/file/d/ID/view"}]}</code><br>IDs: '+MODULES.map(m=>m.id).join(', ')+'</div>'
+ +'<textarea class="imp-textarea" id="drive-json" placeholder=\'{"videos":[],"apostilas":[]}\'></textarea>'
  +'<div class="form-actions"><button class="btn-outline" onclick="clearDrive()">Limpar</button><button class="btn-primary" onclick="saveDrive()">Salvar</button></div>');
  $('drive-json').value=(DRIVE.videos.length||DRIVE.apostilas.length)?JSON.stringify(DRIVE,null,1):''}
-function saveDrive(){try{const p=JSON.parse($('drive-json').value||'{}');
+function saveDrive(){try{const p=deepClean(JSON.parse($('drive-json').value||'{}'));
  const v=(p.videos||[]).filter(x=>MOD(x.m)&&x.t&&x.y),a=(p.apostilas||[]).filter(x=>MOD(x.m)&&x.t&&x.u);
  DRIVE={videos:v,apostilas:a};lsSet('cuscuz_med_drive',DRIVE);catalog();closeModals();refreshAll();
  toast('Sincronizado: '+(v.length+a.length)+' itens','success')}catch(e){toast('JSON inválido','error')}}
 function clearDrive(){DRIVE={videos:[],apostilas:[]};lsSet('cuscuz_med_drive',DRIVE);catalog();closeModals();refreshAll();toast('Conteúdo do Drive removido')}
 
-/* ═══ TREINO ═══ */
+/* ═══ TREINO: QUESTÕES (+ modo erradas) ═══ */
 const bankAll=()=>DECKS.flatMap(d=>d.qs.map(q=>({...q,s:d.subj})));
 function renderDecks(){
  const all=bankAll(),byS={};all.forEach(q=>byS[q.s]=(byS[q.s]||0)+1);
  $('bank-count').textContent=all.length+' questões';
  $('bank-stats').innerHTML=Object.keys(byS).length?Object.entries(byS).map(([s,n])=>'<span class="chip">'+esc(MOD(s)?MOD(s).n:s)+': '+n+'</span>').join(''):'Nenhuma questão ainda. Clique em <b>Importar</b> para começar.';
+ const fd=$('fc-due');if(fd)fd.textContent=fcDue(buildFCList()).length;
  $('decks-grid').innerHTML=(all.length?'<div class="quiz-deck-card" onclick="startQuiz(null)"><i class="ph ph-squares-four quiz-deck-icon"></i><div class="quiz-deck-title">Todos os assuntos</div><div class="quiz-deck-meta">'+all.length+' questões</div></div>':'')
  +MODULES.filter(m=>!SUBJ||m.id===SUBJ).map(m=>{const n=byS[m.id]||0,sc=QUIZS[m.id];
   return '<div class="quiz-deck-card" style="'+(n?'':'opacity:.45')+'" onclick="'+(n?"startQuiz('"+m.id+"')":"openImport()")+'">'
@@ -960,7 +984,12 @@ function renderDecks(){
 let QR=null;
 function startQuiz(subj){
  let qs=bankAll().filter(q=>!subj||q.s===subj);if(!qs.length)return;
- QR={qs:shuffle(qs).slice(0,50),i:0,subj,ans:[],correct:0};
+ QR={qs:shuffle(qs).slice(0,50),i:0,subj,ans:[],correct:0,wrongMode:false};
+ $('quiz-list-screen').style.display='none';$('quiz-runner-screen').style.display='block';renderQuiz()}
+function startWrongQuiz(){
+ const qs=bankAll().filter(q=>WRONG.has(q.q));
+ if(!qs.length){toast('Nenhuma questão errada guardada 🎉','success');return}
+ QR={qs:shuffle(qs),i:0,subj:null,ans:[],correct:0,wrongMode:true};
  $('quiz-list-screen').style.display='none';$('quiz-runner-screen').style.display='block';renderQuiz()}
 function renderQuiz(){
  const r=QR;if(r.i>=r.qs.length)return finishQuiz();
@@ -975,23 +1004,31 @@ function answerQ(i){const r=QR,q=r.qs[r.i],btns=$$('#quiz-runner .quiz-option');
  if(btns[0].classList.contains('locked'))return;
  btns.forEach((b,j)=>{b.classList.add('locked');if(j===q.ans)b.classList.add('correct');else if(j===i)b.classList.add('wrong')});
  r.ans.push(i);
- if(i===q.ans){r.correct++;addXP(5,'acerto!')}else{WRONG.add(q.q);lsSet('acv_wrong',[...WRONG])}
+ if(i===q.ans){r.correct++;addXP(5,'acerto!');
+  if(WRONG.has(q.q)){WRONG.delete(q.q);lsSet('acv_wrong',[...WRONG]);updateWrongBtn()}}
+ else if(!WRONG.has(q.q)){WRONG.add(q.q);lsSet('acv_wrong',[...WRONG]);updateWrongBtn()}
  $('q-exp').classList.add('show');$('q-next').style.visibility='visible';touchStreak()}
 function nextQ(){QR.i++;renderQuiz()}
-function finishQuiz(){const r=QR,key=r.subj||'all',prev=QUIZS[key]||{s:0,t:0};
- QUIZS[key]={s:prev.s+r.correct,t:prev.t+r.qs.length};lsSet('acv_quiz',QUIZS);checkBadges();
- $('quiz-runner').innerHTML='<div class="quiz-result-card"><i class="ph ph-trophy" style="font-size:40px;color:var(--amber)"></i>'
+function finishQuiz(){const r=QR;
+ if(!r.wrongMode){const key=r.subj||'all',prev=QUIZS[key]||{s:0,t:0};
+  QUIZS[key]={s:prev.s+r.correct,t:prev.t+r.qs.length};lsSet('acv_quiz',QUIZS);checkBadges()}
+ const zero=r.wrongMode&&r.correct===r.qs.length;
+ if(zero)confetti();
+ $('quiz-runner').innerHTML='<div class="quiz-result-card"><i class="ph '+(zero?'ph-party-popper':'ph-trophy')+'" style="font-size:40px;color:var(--amber)"></i>'
  +'<div class="quiz-result-score">'+pct(r.correct,r.qs.length)+'%</div>'
- +'<div style="color:var(--text-secondary)">'+r.correct+' de '+r.qs.length+' corretas</div>'
+ +'<div style="color:var(--text-secondary)">'+(zero?'🎉 Você zerou as erradas!':r.correct+' de '+r.qs.length+' corretas')+'</div>'
  +'<div style="display:flex;flex-direction:column;gap:8px;width:100%;margin-top:14px;max-height:300px;overflow-y:auto">'
  +r.qs.map((q,i)=>'<div class="quiz-review-item '+(r.ans[i]===q.ans?'ok':'fail')+'"><i class="ph '+(r.ans[i]===q.ans?'ph-check-circle':'ph-x-circle')+'"></i><span>'+esc(q.q.slice(0,80))+'</span></div>').join('')+'</div>'
  +'<div style="display:flex;gap:8px;margin-top:16px"><button class="btn-outline" onclick="quitQuiz()">Voltar</button>'
- +'<button class="btn-primary" onclick="startQuiz('+(r.subj?"'"+r.subj+"'":'null')+')">Repetir</button></div></div>'}
-function quitQuiz(){QR=null;$('quiz-runner-screen').style.display='none';$('quiz-list-screen').style.display='block';renderDecks();updateBadges()}
+ +(r.wrongMode?'<button class="btn-primary" onclick="startWrongQuiz()">Revisar de novo</button>'
+  :'<button class="btn-primary" onclick="startQuiz('+(r.subj?"'"+r.subj+"'":'null')+')">Repetir</button>')+'</div></div>';
+ updateWrongBtn()}
+function quitQuiz(){QR=null;$('quiz-runner-screen').style.display='none';$('quiz-list-screen').style.display='block';renderDecks();updateBadges();updateWrongBtn()}
+function updateWrongBtn(){const el=$('wrong-count');if(el)el.textContent=WRONG.size}
 function openImport(){
  openModal('<div class="modal-title"><i class="ph ph-upload-simple"></i> Importar questões<button class="modal-close"><i class="ph ph-x"></i></button></div>'
  +'<div class="form-group"><label class="form-label">Matéria</label><select id="imp-subj">'+MODULES.map(m=>'<option value="'+m.id+'">'+m.n+'</option>').join('')+'</select></div>'
- +'<div class="form-group"><label class="form-label">Cole as questões (texto ou JSON)</label><textarea class="imp-textarea" id="imp-txt" placeholder="P: enunciado da questão\na) opção 1\nb) opção 2\nc) opção 3\nd) opção 4\nR: a\nE: comentário"></textarea></div>'
+ +'<div class="form-group"><label class="form-label">Cole as questões (texto ou JSON)</label><textarea class="imp-textarea" id="imp-txt" placeholder="P: enunciado\na) opção 1\nb) opção 2\nc) opção 3\nd) opção 4\nR: a\nE: comentário"></textarea></div>'
  +'<div style="font-size:11px;color:var(--text-muted)">Separe questões por linha em branco. JSON: [{"q":"","opts":["","","",""],"ans":0,"exp":""}]</div>'
  +'<div class="form-actions"><button class="btn-outline" onclick="previewImport()">Verificar</button><button class="btn-primary" onclick="saveImport()">Importar</button></div>')}
 function parseQs(txt){txt=String(txt||'').trim();
@@ -1001,17 +1038,75 @@ function parseQs(txt){txt=String(txt||'').trim();
   b.split('\n').map(l=>l.trim()).filter(Boolean).forEach(l=>{
    if(/^p[:\-]/i.test(l))q=l.replace(/^p[:\-]\s*/i,'');
    else if(/^[a-e][\)\.\-]\s/i.test(l))opts.push(l.replace(/^[a-e][\)\.\-]\s*/i,''));
-   else if(/^r[:\-]/i.test(l))ans='abcde'.indexOf(l.replace(/^r[:\-]\s*/i,'')[0].toLowerCase());
+   else if(/^r[:\-]/i.test(l))ans='abcde'.indexOf((l.replace(/^r[:\-]\s*/i,'')[0]||'').toLowerCase());
    else if(/^e[:\-]/i.test(l))exp=l.replace(/^e[:\-]\s*/i,'');
    else if(q&&!opts.length)q+=' '+l});
   if(q&&opts.length>=2&&ans>=0)out.push({q,opts,ans,exp})});
  return out}
 function previewImport(){const qs=parseQs($('imp-txt').value);toast(qs.length+' questões válidas encontradas',qs.length?'success':'error')}
-function saveImport(){const qs=parseQs($('imp-txt').value);
+function saveImport(){const qs=deepClean(parseQs($('imp-txt').value));
  if(!qs.length){toast('Nada para importar — verifique o formato','error');return}
  const s=$('imp-subj').value;DECKS.push({id:'d'+Date.now(),subj:s,name:MOD(s).n,qs});lsSet('acv_decks',DECKS);
- closeModals();renderDecks();updateBadges();addXP(Math.min(qs.length,20),'banco ampliado');
+ closeModals();renderDecks();checkBadges();addXP(Math.min(qs.length,20),'banco ampliado');
  toast(qs.length+' questões importadas em '+MOD(s).n,'success')}
+
+/* ═══ FLASHCARDS + SRS ═══ */
+function buildFCList(){
+ const out=[];
+ DECKS.forEach(d=>d.qs.forEach(q=>{
+  const back=(q.opts&&q.opts[q.ans]!=null?'R: '+q.opts[q.ans]:'')+(q.exp?'\n'+q.exp:'');
+  out.push({f:q.q,b:back||'—',s:d.subj})}));
+ FCS.forEach(c=>out.push({f:c.f,b:c.b,s:c.s||'x'}));
+ return out}
+const fcKey=c=>'fc:'+hsh((c.f||'')+'::'+(c.b||''));
+function fcState(k){return FCSRS[k]||(FCSRS[k]={d:todayKey(),iv:0,e:2.5})}
+function fcDue(list){const t=todayKey();return list.filter(c=>fcState(fcKey(c)).d<=t)}
+function saveFC(){lsSet('acv_fc',FCS);lsSet('acv_fc_srs',FCSRS);saveCloud()}
+let FCR=null;
+function startFC(){const list=fcDue(buildFCList());
+ if(!list.length){toast('Nada para revisar hoje 🎉','success');return}
+ FCR={list:shuffle(list),i:0,shown:false};
+ $('quiz-list-screen').style.display='none';$('quiz-runner-screen').style.display='block';renderFC()}
+function renderFC(){const r=FCR;if(!r||r.i>=r.list.length)return finishFC();
+ const c=r.list[r.i],st=fcState(fcKey(c));
+ $('quiz-runner').innerHTML='<div><div class="quiz-progress-label"><span>Card '+(r.i+1)+' / '+r.list.length+'</span><span>revisão espaçada</span></div>'
+ +'<div class="quiz-progress-track"><div class="quiz-progress-fill" style="width:'+pct(r.i,r.list.length)+'%"></div></div></div>'
+ +'<div class="quiz-question-card"><div class="fc-meta">'+esc(MOD(c.s)?MOD(c.s).n:'Card personalizado')+' · voltar em: '+st.iv+'d · facilidade: '+st.e.toFixed(2)+'</div>'
+ +'<div class="quiz-question-text">'+esc(c.f)+'</div>'
+ +(r.shown?'<div class="quiz-explanation show" style="white-space:pre-wrap">'+esc(c.b)+'</div>'
+   +'<div class="srs-btns"><button class="fc-btn" style="color:var(--rose)" onclick="gradeFC(0)">Errei</button>'
+   +'<button class="fc-btn" style="color:var(--amber)" onclick="gradeFC(1)">Difícil</button>'
+   +'<button class="fc-btn" style="color:var(--green)" onclick="gradeFC(2)">Boa</button>'
+   +'<button class="fc-btn" style="color:var(--teal)" onclick="gradeFC(3)">Fácil</button></div>'
+  :'<button class="btn-primary" style="margin-top:14px" onclick="FCR.shown=true;renderFC()"><i class="ph ph-eye"></i> Mostrar resposta</button>')
+ +'</div><div class="quiz-nav-row"><button class="btn-outline" onclick="quitFC()">Sair</button></div>'}
+function gradeFC(g){const r=FCR,c=r.list[r.i],st=fcState(fcKey(c));r.i++;
+ if(g===0){st.iv=0;st.e=Math.max(1.3,st.e-.2);st.d=todayKey();r.list.push(c)}
+ else if(g===1){st.iv=Math.max(1,Math.round((st.iv||1)*1.2));st.e=Math.max(1.3,st.e-.15)}
+ else if(g===2){st.iv=st.iv<1?1:Math.round(st.iv*st.e)}
+ else{st.iv=st.iv<1?2:Math.round(st.iv*st.e*1.3);st.e=Math.min(3.2,st.e+.05)}
+ if(g>0){st.iv=Math.min(st.iv,365);st.d=addD(todayKey(),st.iv)}
+ addXP(g===3?2:1,'revisão espaçada');touchStreak();saveFC();renderFC()}
+function finishFC(){const n=FCR?FCR.list.length:0;FCR=null;confetti();
+ $('quiz-runner').innerHTML='<div class="quiz-result-card"><i class="ph ph-stack" style="font-size:40px;color:var(--teal)"></i>'
+ +'<div class="quiz-result-score">Sessão concluída</div>'
+ +'<div style="color:var(--text-secondary)">'+n+' cards revisados</div>'
+ +'<div style="color:var(--text-muted);font-size:12px">Os errados voltam hoje/amanhã · os fáceis demoram mais</div>'
+ +'<button class="btn-primary" style="margin-top:16px" onclick="quitFC()">Voltar ao Treino</button></div>'}
+function quitFC(){FCR=null;$('quiz-runner-screen').style.display='none';$('quiz-list-screen').style.display='block';renderDecks()}
+function openFCModal(){openModal('<div class="modal-title"><i class="ph ph-plus"></i> Novo flashcard<button class="modal-close"><i class="ph ph-x"></i></button></div>'
+ +'<div class="form-group"><label class="form-label">Frente (pergunta)</label><textarea class="imp-textarea" id="fc-front" style="min-height:80px"></textarea></div>'
+ +'<div class="form-group"><label class="form-label">Verso (resposta)</label><textarea class="imp-textarea" id="fc-back" style="min-height:80px"></textarea></div>'
+ +'<div class="form-actions"><button class="btn-outline" onclick="closeModals()">Cancelar</button><button class="btn-primary" onclick="saveFCNew()">Salvar</button></div>')}
+function saveFCNew(){const f=cleanStr($('fc-front').value.trim()),b=cleanStr($('fc-back').value.trim());
+ if(!f||!b){toast('Preencha frente e verso','error');return}
+ FCS.push({f,b,s:'x'});saveFC();closeModals();renderDecks();toast('Card criado — aparece na revisão de hoje','success')}
+function exportAnki(){const rows=buildFCList().map(c=>[c.f.replace(/\s+/g,' ').trim(),c.b.replace(/\s+/g,' ').trim(),MOD(c.s)?MOD(c.s).n:'geral']);
+ if(!rows.length){toast('Nenhum card para exportar','error');return}
+ const tsv='\uFEFF'+rows.map(r=>r.map(x=>x.replace(/\t/g,' ')).join('\t')).join('\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([tsv],{type:'text/tab-separated-values'}));
+ a.download='cuscuz-med-anki.txt';a.click();
+ toast(rows.length+' cards — no Anki: Arquivo › Importar (separador Tab)','success')}
 
 /* ═══ SIMULADOS ═══ */
 let SR=null,SRTIMER=null;
@@ -1105,7 +1200,9 @@ function renderDash(){
  +'<div class="dash-section"><div class="dash-title">Gamificação</div>'
  +'<div class="game-level"><span class="game-level-num">LV '+lv+'</span><div class="game-xp-bar"><div class="game-xp-fill" style="width:'+(DB.xp%100)+'%"></div></div><span class="game-xp-text">'+(DB.xp%100)+'/100</span></div>'
  +'<div class="game-streak">🔥 Sequência: <b>'+DB.streak+'</b> dia(s) · faltam <b>'+(100-DB.xp%100)+'</b> XP p/ LV '+(lv+1)+'</div>'
- +'<div class="game-badges">'+BADGES.map(b=>'<span class="game-badge'+(DB.badges.includes(b.id)?'':' locked')+'">'+b.i+'<span class="game-badge-tip">'+b.n+'</span></span>').join('')+'</div></div>'}
+ +'<div class="game-badges">'+BADGES.map(b=>'<span class="game-badge'+(DB.badges.includes(b.id)?'':' locked')+'">'
+  +(b.img?'<img src="'+esc(b.img)+'" style="width:24px;height:24px;border-radius:6px;object-fit:cover" alt="">':b.i)
+  +'<span class="game-badge-tip">'+esc(b.n)+'</span></span>').join('')+'</div></div>'}
 function setFilter(f){FILTER=f;$$('.nav-item[data-filter]').forEach(n=>n.classList.toggle('active',n.dataset.filter===f));renderAcervo()}
 function clearSubject(){SUBJ=null;CUR_MOD=null;$$('#subject-nav .nav-item').forEach(n=>n.classList.remove('active'));renderAcervo()}
 function buildSubjectNav(){$('subject-nav').innerHTML=MODULES.map(m=>'<div class="nav-item" data-subj="'+m.id+'" onclick="pickSubject(\''+m.id+'\',this)"><i class="ph ph-bookmark"></i>'+m.n+'<span class="nav-badge" id="sn-'+m.id+'">0</span></div>').join('')}
@@ -1115,30 +1212,96 @@ function updateBadges(){let tot=0,dn=0;
   const b=$('sn-'+m.id);if(b)b.textContent=its.length?d+'/'+its.length:'0'});
  $('badge-total').textContent=tot;$('badge-done').textContent=dn;$('badge-pending').textContent=tot-dn}
 
+/* ═══ BUSCA GLOBAL ═══ */
+const searchDebounced=debounce(doSearch,180);
+function doSearch(q){
+ const box=$('search-results');if(!box)return;
+ const t=normAcc(q).trim();
+ if(t.length<2){box.style.display='none';box.innerHTML='';return}
+ const mods=[],items=[],res=[];
+ MODULES.forEach(m=>{
+  if(mods.length<6&&normAcc(m.n).includes(t))mods.push(m);
+  m.videos.forEach((v,i)=>{if(items.length<12&&normAcc(v.t).includes(t))items.push({mid:m.id,n:m.n,type:'v',idx:i,t:v.t})});
+  m.apostilas.forEach((a,i)=>{if(items.length<12&&normAcc(a.t).includes(t))items.push({mid:m.id,n:m.n,type:'a',idx:i,t:a.t})});
+  (RESUMOS[m.id]||[]).forEach(r=>{if(res.length<6&&(normAcc(r.t).includes(t)||normAcc(r.c).includes(t)))res.push({mid:m.id,n:m.n,t:r.t})});
+ });
+ let html='';
+ if(mods.length)html+='<div class="sr-grupo">Módulos</div>'+mods.map(m=>'<div class="sr-item" onclick="srGoModule(\''+m.id+'\')"><i class="ph ph-squares-four"></i>'+esc(m.n)+'</div>').join('');
+ if(items.length)html+='<div class="sr-grupo">Aulas e PDFs</div>'+items.map(x=>'<div class="sr-item" onclick="srOpenItem(\''+x.mid+'\',\''+x.type+'\','+x.idx+')"><i class="ph '+(x.type==='v'?'ph-play-circle':'ph-file-pdf')+'"></i>'+esc(x.t)+'<span class="sr-mod">'+esc(x.n)+'</span></div>').join('');
+ if(res.length)html+='<div class="sr-grupo">Resumos</div>'+res.map(x=>'<div class="sr-item" onclick="srGoModule(\''+x.mid+'\')"><i class="ph ph-notebook"></i>'+esc(x.t)+'<span class="sr-mod">'+esc(x.n)+'</span></div>').join('');
+ if(!html)html='<div class="sr-item" style="color:var(--text-muted)">Nada encontrado para "'+esc(q)+'"</div>';
+ box.innerHTML=html;box.style.display='block'}
+function srHide(){const b=$('search-results');if(b){b.style.display='none';b.innerHTML=''}const i=$('global-search');if(i)i.value=''}
+function srGoModule(id){srHide();go('view-acervo');openModule(id)}
+function srOpenItem(mid,type,idx){srHide();openItem(mid,type,idx)}
+
 /* ═══ EXPORT / IMPORT ═══ */
 function exportData(){
- const payload={v:1,app:'cuscuz-med',exported:new Date().toISOString(),db:DB,done:[...DONE],fav:[...FAV],quiz:QUIZS,
-  last:lsGet('acv_last',null),days:lsGet('acv_days',[]),sims:SIMS,decks:DECKS,wrong:[...WRONG],drive:DRIVE,users:lsGet('cuscuz_users',{})};
+ const payload={v:2,app:'cuscuz-med',exported:new Date().toISOString(),db:DB,done:[...DONE],fav:[...FAV],quiz:QUIZS,
+  last:lsGet('acv_last',null),days:lsGet('acv_days',[]),sims:SIMS,decks:DECKS,wrong:[...WRONG],
+  drive:DRIVE,users:lsGet('cuscuz_users',{}),resumos:RESUMOS,fc:FCS,fcsrs:FCSRS};
  const a=document.createElement('a');
  a.href=URL.createObjectURL(new Blob([JSON.stringify(payload)],{type:'application/json'}));
  a.download='cuscuz-med-backup-'+todayKey()+'.json';a.click();toast('Backup exportado ✅','success')}
 function importData(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();
- r.onload=()=>{try{const p=JSON.parse(r.result);
+ r.onload=()=>{try{const p=deepClean(JSON.parse(r.result));
   if(!p.db){toast('Arquivo inválido','error');return}
   if(!confirm('Substituir todos os dados locais por este backup?'))return;
   lsSet(LS,p.db);lsSet('acv_done',p.done||[]);lsSet('acv_fav',p.fav||[]);lsSet('acv_quiz',p.quiz||{});
   lsSet('acv_last',p.last||null);lsSet('acv_days',p.days||[]);lsSet('acv_sims',p.sims||[]);
   lsSet('acv_decks',p.decks||[]);lsSet('acv_wrong',p.wrong||[]);lsSet('cuscuz_med_drive',p.drive||{videos:[],apostilas:[]});
+  lsSet('acv_resumos',p.resumos||{});lsSet('acv_fc',p.fc||[]);lsSet('acv_fc_srs',p.fcsrs||{});
   if(p.users)lsSet('cuscuz_users',p.users);
   toast('Backup restaurado! Recarregando...','success');setTimeout(()=>location.reload(),700)}catch(e){toast('Arquivo inválido','error')}};
  r.readAsText(f);ev.target.value=''}
+
+/* ═══ INJEÇÕES (CSS novo + seções) ═══ */
+function injectExtras(){
+ if(!$('cuscuz-extras')){const st=document.createElement('style');st.id='cuscuz-extras';
+  st.textContent=[
+  '.cover-leg{background:linear-gradient(135deg,#475569,#0f172a)}','.cover-cas{background:linear-gradient(135deg,#0ea5e9,#6366f1)}',
+  '.fc-meta{font-family:var(--font-mono);font-size:10px;color:var(--text-muted)}',
+  '.srs-btns{display:flex;gap:8px;margin-top:12px}',
+  '.fc-btn{flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;border:1px solid var(--border-muted);background:var(--bg-elevated);color:inherit}',
+  '.fc-btn:hover{border-color:var(--border-default)}',
+  '.hab-ico{position:absolute;bottom:4px;left:4px;font-size:10px}',
+  '.resumo-item{background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6}',
+  '.resumo-item b{display:block;margin-bottom:4px}','.resumo-wrap{white-space:pre-wrap}',
+  '#search-wrap{position:relative;z-index:15}#global-search{max-width:860px}',
+  '.search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;max-width:860px;max-height:55vh;overflow-y:auto;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:40}',
+  '.sr-grupo{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-disabled);padding:10px 14px 4px}',
+  '.sr-item{display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:13px;cursor:pointer;color:var(--text-secondary)}',
+  '.sr-item:hover{background:var(--bg-elevated);color:var(--text-primary)}',
+  '.sr-item i{color:var(--teal)}',
+  '.sr-mod{margin-left:auto;font-size:10px;font-family:var(--font-mono);color:var(--text-muted);flex-shrink:0}',
+  '.vid-thumb{width:66px;height:38px;object-fit:cover;border-radius:6px;flex-shrink:0;background:var(--bg-active)}'
+  ].join('');document.head.appendChild(st)}
+ if($('view-inicio')&&!$('global-search')){
+  $('view-inicio').insertAdjacentHTML('afterbegin',
+   '<div id="search-wrap" style="margin:0 20px 14px">'
+   +'<input id="global-search" placeholder="🔎 Buscar aula, PDF, resumo..." autocomplete="off" style="width:100%;padding:11px 14px">'
+   +'<div class="search-results" id="search-results" style="display:none"></div></div>');
+  $('global-search').addEventListener('input',e=>searchDebounced(e.target.value));
+  document.addEventListener('click',e=>{if(!e.target.closest('#search-wrap'))srHide()})}
+ if(!$('resumos-container')&&$('apostilas-container')){
+  $('apostilas-container').insertAdjacentHTML('afterend',
+   '<div class="content-list-title">📝 Resumos · casos</div><div class="content-list" id="resumos-container" style="grid-template-columns:1fr"></div>'
+  +'<div style="padding:0 20px 40px"><button class="btn-outline" onclick="openResumoModal()"><i class="ph ph-plus"></i> Adicionar resumo / caso clínico</button></div>')}
+ if(!$('fc-actions')&&$('bank-panel')){
+  $('bank-panel').insertAdjacentHTML('beforeend',
+   '<div id="fc-actions" style="display:flex;gap:8px;flex-wrap:wrap">'
+  +'<button class="btn-primary btn-sm" onclick="startFC()"><i class="ph ph-cards"></i> Revisar flashcards (<span id="fc-due">0</span> pendentes)</button>'
+  +'<button class="btn-outline btn-sm" onclick="startWrongQuiz()"><i class="ph ph-rotate-ccw"></i> Revisar erradas (<span id="wrong-count">0</span>)</button>'
+  +'<button class="btn-outline btn-sm" onclick="openFCModal()"><i class="ph ph-plus"></i> Novo card</button>'
+  +'<button class="btn-outline btn-sm" onclick="exportAnki()"><i class="ph ph-download-simple"></i> Exportar p/ Anki</button></div>')}
+ updateWrongBtn()}
 
 /* ═══ INIT ═══ */
 window.addEventListener('DOMContentLoaded',()=>{
  applyTheme();
  try{if(firebaseConfig.databaseURL&&typeof firebase!=='undefined'){firebase.initializeApp(firebaseConfig);FBDB=firebase.database();CLOUD_ON=true}}catch(e){console.warn('Firebase off:',e)}
- catalog();buildSubjectNav();
- if(localStorage.getItem('medplan_logged')==='1'){SYNC_USER=localStorage.getItem('medplan_user');startApp()}
+ injectExtras();catalog();buildSubjectNav();
+ if(localStorage.getItem('medplan_logged')==='1'){SYNC_USER=localStorage.getItem('medplan_user');startApp()}else refreshAll();
 });
 window.addEventListener('load',()=>{if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'});
 </script>
