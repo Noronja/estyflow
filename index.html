@@ -475,7 +475,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
   <div class="lobby-header-title">Cuscuz<span>-MED</span></div>
   
   <div id="lobby-music-btn" onclick="toggleLobbyMusic()" style="position:absolute; top:30px; right:40px; z-index:10; cursor:pointer; color:var(--teal); font-size:26px; padding:10px; background:rgba(0,0,0,0.5); border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid rgba(0,200,168,0.3)">
-    <i class="ph ph-speaker-high" id="music-icon"></i>
+    <i class="ph ph-speaker-slash" id="music-icon"></i>
   </div>
 
   <div class="pes-grid">
@@ -508,6 +508,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
     </div>
     <div class="header-actions">
       <span id="cloud-dot" title="Status da nuvem" style="width:8px;height:8px;border-radius:50%;background:var(--text-disabled);display:inline-block;margin-right:2px;cursor:default"></span>
+      <button class="btn-icon" onclick="toggleLobbyMusic()" title="Música On/Off"><i class="ph ph-speaker-slash" id="main-music-icon"></i></button>
       <button class="btn-outline btn-sm" onclick="goToLobby()"><i class="ph ph-game-controller"></i> Lobby</button>
       <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema"><span class="theme-toggle__track"><span class="theme-toggle__thumb"></span></span></button>
       <button class="btn-primary btn-sm" onclick="openPlanModal()">&#9889; Planejar</button>
@@ -651,7 +652,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
         <h1 class="section-title" style="margin:8px 20px 16px">Acervo Completo</h1>
         <div style="margin:0 20px 16px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="filter-pill" onclick="openFavorites()"><i class="ph ph-star" style="color:#FFC107"></i> Favoritos</button>
-          <button class="filter-pill" onclick="openDriveModal()"><i class="ph ph-cloud" style="color:var(--teal)"></i> <span id="drive-btn-label">Sincronizar API Drive</span></button>
+          <button class="filter-pill" onclick="openDriveModal()"><i class="ph ph-cloud" style="color:var(--teal)"></i> <span id="drive-btn-label">Sincronizar Drive</span></button>
         </div>
         <div class="cards-grid" id="all-modules-container" style="padding:0 20px 40px"></div>
       </div>
@@ -666,7 +667,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
         <div class="content-list" id="resumos-container" style="grid-template-columns:1fr"></div>
         <div style="padding:0 20px 20px"><button class="btn-outline" onclick="openResumoModal()"><i class="ph ph-plus"></i> Adicionar resumo / caso clínico</button></div>
         
-        <!-- Nova seção de Treino integrada ao Acervo -->
         <div class="content-list-title"><i class="ph ph-exam" style="font-size:16px;vertical-align:middle"></i> Prática</div>
         <div class="content-list" id="questoes-container" style="grid-template-columns:1fr; padding-bottom: 40px;"></div>
       </div>
@@ -770,12 +770,12 @@ const MODULES=[
  {id:'drive',n:'☁️ Acervo do Drive'}
 ];
 const MOD=id=>MODULES.find(m=>m.id===id);
-let DRIVE=lsGet('cuscuz_med_drive',{videos:[],apostilas:[]}),USING_DEMO=true;
-function catalog(){const eV=window.videosData||[],eA=window.apostilasData||[];
+let DRIVE=lsGet('cuscuz_med_drive',{videos:[],apostilas:[]});
+function catalog(){
  MODULES.forEach(m=>{m.videos=[];m.apostilas=[]});
- [...eV,...DRIVE.videos].forEach(v=>{const m=MOD(v.m)||MOD('drive');if(m&&v.t&&(v.y||v.u))m.videos.push(v)});
- [...eA,...DRIVE.apostilas].forEach(a=>{const m=MOD(a.m)||MOD('drive');if(m&&a.t&&a.u)m.apostilas.push(a)});
- USING_DEMO=!(eV.length||eA.length||DRIVE.videos.length||DRIVE.apostilas.length)}
+ DRIVE.videos.forEach(v=>{const m=MOD(v.m)||MOD('drive'); m.videos.push(v)});
+ DRIVE.apostilas.forEach(a=>{const m=MOD(a.m)||MOD('drive'); m.apostilas.push(a)});
+}
 const itemsOf=m=>[...m.videos.map(v=>({type:'v',...v})),...m.apostilas.map(a=>({type:'a',...a}))];
 const itemKey=it=>it.m+':'+(it.type==='v'?'yt:'+(it.y||it.u):'pdf:'+it.u);
 
@@ -811,8 +811,15 @@ window.onYouTubeIframeAPIReady = function() {
 };
 function toggleLobbyMusic() {
   if(!ytPlayer || !ytPlayer.playVideo) return;
-  if(isMusicPlaying) { ytPlayer.pauseVideo(); $('music-icon').className = 'ph ph-speaker-slash'; }
-  else { ytPlayer.playVideo(); $('music-icon').className = 'ph ph-speaker-high'; }
+  if(isMusicPlaying) { 
+      ytPlayer.pauseVideo(); 
+      $('music-icon').className = 'ph ph-speaker-slash'; 
+      if($('main-music-icon')) $('main-music-icon').className = 'ph ph-speaker-slash';
+  } else { 
+      ytPlayer.playVideo(); 
+      $('music-icon').className = 'ph ph-speaker-high'; 
+      if($('main-music-icon')) $('main-music-icon').className = 'ph ph-speaker-high';
+  }
   isMusicPlaying = !isMusicPlaying;
 }
 
@@ -825,11 +832,14 @@ function toggleSidebar() {
 }
 function goToLobby(){
   $('app-main').style.display='none'; $('lobby-screen').style.display='flex';
-  if(ytPlayer && ytPlayer.playVideo) { ytPlayer.playVideo(); isMusicPlaying = true; $('music-icon').className = 'ph ph-speaker-high'; }
+  if(ytPlayer && ytPlayer.playVideo && !isMusicPlaying) toggleLobbyMusic();
 }
 function enterApp(viewId){
   $('lobby-screen').style.display='none'; $('app-main').style.display='grid';
-  if(ytPlayer && ytPlayer.pauseVideo) { ytPlayer.pauseVideo(); isMusicPlaying = false; $('music-icon').className = 'ph ph-speaker-slash'; }
+  // Inicia a música caso o usuário não tenha passado pelo lobby adequadamente
+  if(ytPlayer && ytPlayer.playVideo && !isMusicPlaying) {
+      toggleLobbyMusic();
+  }
   if(viewId) go(viewId);
 }
 
@@ -843,12 +853,13 @@ function refreshAll(){renderHome();renderCalendar();renderSchedule();renderWeek(
  const n=DRIVE.videos.length+DRIVE.apostilas.length;if(n)$('drive-btn-label').textContent='Drive ('+n+')'}
 function refreshLight(){renderDash();renderCalendar();renderSchedule();renderWeek();renderHome();updateBadges()}
 
-/* ═══ LOGIN / FIREBASE ═══ */
+/* ═══ LOGIN / FIREBASE / AUTO SYNC ═══ */
 const firebaseConfig={apiKey:"AIzaSyA6aoGd1Yxj0Yn9JjzAABwQGOTkj7xEAVQ",authDomain:"estudoflow-409d4.firebaseapp.com",databaseURL:"https://estudoflow-409d4-default-rtdb.firebaseio.com",projectId:"estudoflow-409d4",storageBucket:"estudoflow-409d4.firebasestorage.app",messagingSenderId:"693665289108",appId:"1:693665289108:web:bc9b93f6018690a405b581"};
 let FBDB=null,CLOUD_ON=false;
 const safeUser=s=>String(s||'').toLowerCase().replace(/[^a-z0-9_-]/g,'')||'user';
 const hsh=s=>{let x=5381;for(const c of s)x=(x*33+c.charCodeAt(0))>>>0;return x.toString(36)};
 function setDot(st){const d=$('cloud-dot');if(d)d.style.background=st==='ok'?'var(--green)':st==='off'?'var(--text-disabled)':'var(--amber)'}
+
 function doLogin(){const u=cleanStr($('login-user').value.trim()),p=$('login-pass').value;
  if(!u||!p){$('login-error').style.display='block';return}
  const users=lsGet('cuscuz_users',{});
@@ -864,9 +875,12 @@ function applyCloud(cl){lsSet(LS,Object.assign(JSON.parse(JSON.stringify(DEFDB))
  lsSet('acv_done',cl.done||[]);lsSet('acv_fav',cl.fav||[]);lsSet('acv_quiz',cl.quiz||{});lsSet('acv_last',cl.last||null);
  lsSet('acv_days',cl.days||[]);lsSet('acv_sims',cl.sims||[]);lsSet('acv_decks',cl.decks||[]);lsSet('acv_wrong',cl.wrong||[]);
  lsSet('acv_resumos',cl.resumos||{});lsSet('acv_fc',cl.fc||[]);lsSet('acv_fc_srs',cl.fcsrs||{})}
+
 function startApp(){
- $('login-screen').style.display='none'; goToLobby();
+ $('login-screen').style.display='none'; 
+ goToLobby(); // Vai pro lobby primeiro para tocar a música
  catalog();refreshAll();setDot(CLOUD_ON?'ok':'off');
+ autoSyncDrive(); // Aciona sincronização em background
  if(CLOUD_ON&&SYNC_USER){FBDB.ref('users/'+safeUser(SYNC_USER)+'/state').once('value').then(s=>{const cl=s.val();if(!cl)return;
   const cloudXp=cl.db&&cl.db.xp,changed=cloudXp!==DB.xp||(cl.done||[]).length!==DONE.size;
   if(changed&&confirm('Dados encontrados na nuvem para "'+SYNC_USER+'".\nOK = restaurar da nuvem · Cancelar = manter local e sobrescrever nuvem')){
@@ -1086,19 +1100,46 @@ function renderPrep(){
  $('prep-checklist').innerHTML=(DB.prep.checklist||[]).map((c,i)=>'<div class="check-item'+(c.on?' on':'')+'" onclick="prepToggleItem('+i+')"><span class="check-btn'+(c.on?' checked':'')+'"><i class="ph ph-check-bold"></i></span><span style="flex:1">'+esc(c.t)+'</span><i class="ph ph-x" style="color:var(--text-muted)" onclick="event.stopPropagation();prepDelItem('+i+')"></i></div>').join('')
  ||'<div style="font-size:12px;color:var(--text-muted)">Nada aqui ainda.</div>'}
 
-/* ═══ ACERVO E DRIVE DIRECT FETCH ═══ */
+/* ═══ ACERVO E INTEGRAÇÃO GOOGLE DRIVE ═══ */
 const HARDCODED_DRIVE_CONFIG = {
   apiKey: 'AIzaSyA6aoGd1Yxj0Yn9JjzAABwQGOTkj7xEAVQ',
   folderId: '1pVd7V_pfyM4Vw20yfw45jBmNFqtKTHK7'
 };
 
+async function autoSyncDrive() {
+  const cfg = HARDCODED_DRIVE_CONFIG;
+  if(!cfg.apiKey || !cfg.folderId) return;
+  try {
+    const query = encodeURIComponent(`'${cfg.folderId}' in parents and trashed=false`);
+    const url = `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,mimeType,webViewLink)&pageSize=1000&key=${cfg.apiKey}`;
+    const response = await fetch(url);
+    if (!response.ok) return;
+    const data = await response.json();
+    const files = data.files;
+    if (!files || files.length === 0) return;
+    
+    const newVideos = [], newPdfs = [];
+    files.forEach(f => {
+     const modId = guessModule(f.name);
+     const cleanName = f.name.replace(/\.[^/.]+$/, "");
+     if(f.mimeType.includes('video')) newVideos.push({ m: modId, t: cleanName, u: f.webViewLink });
+     else if(f.mimeType.includes('pdf')) newPdfs.push({ m: modId, t: cleanName, u: f.webViewLink });
+    });
+
+    DRIVE = { videos: newVideos, apostilas: newPdfs };
+    lsSet('cuscuz_med_drive', DRIVE);
+    catalog(); refreshAll();
+    toast('☁️ Drive sincronizado automaticamente!', 'success');
+  } catch (err) { 
+    console.error("Drive Auto-sync Error:", err); 
+  }
+}
+
 function openDriveModal(){
  const cfg = lsGet('cuscuz_drive_config', HARDCODED_DRIVE_CONFIG);
  openModal('<div class="modal-title"><i class="ph ph-cloud"></i> Sincronizar Drive<button class="modal-close"><i class="ph ph-x"></i></button></div>'
- +'<div style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">Lendo diretamente da sua pasta pública configurada. <b>Não requer login.</b></div>'
- +'<div class="form-group"><label class="form-label">API Key</label><input id="drive-api-key" value="'+esc(cfg.apiKey)+'"></div>'
- +'<div class="form-group"><label class="form-label">ID da Pasta no Drive</label><input id="drive-folder-id" value="'+esc(cfg.folderId)+'"></div>'
- +'<div class="form-actions"><button class="btn-outline" onclick="clearDrive()">Limpar Dados Locais</button><button class="btn-primary" onclick="syncDriveDirect()"><i class="ph ph-arrows-clockwise"></i> Buscar na Nuvem</button></div>');
+ +'<div style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-bottom:12px">O sistema tenta ler sua pasta pública em segundo plano. Caso precise forçar a leitura ou limpar os dados, use os botões abaixo.</div>'
+ +'<div class="form-actions" style="margin-top:10px"><button class="btn-outline" onclick="clearDrive()">Limpar</button><button class="btn-primary" onclick="autoSyncDrive(); closeModals()">Forçar Sincronização</button></div>');
 }
 function guessModule(filename) {
  const name = filename.toLowerCase();
@@ -1108,53 +1149,6 @@ function guessModule(filename) {
   }
  }
  return 'drive';
-}
-
-async function syncDriveDirect() {
- const apiKey = $('drive-api-key').value.trim();
- const folderId = $('drive-folder-id').value.trim();
-
- if(!apiKey || !folderId) { toast('A API Key e o ID da pasta são obrigatórios','error'); return; }
- 
- lsSet('cuscuz_drive_config', { apiKey, folderId });
- toast('Buscando arquivos na pasta pública...', 'success');
-
- try {
-  const query = encodeURIComponent(`'${folderId}' in parents and trashed=false`);
-  const url = `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,mimeType,webViewLink)&pageSize=1000&key=${apiKey}`;
-
-  const response = await fetch(url);
-  
-  if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || 'Erro HTTP ' + response.status);
-  }
-
-  const data = await response.json();
-  const files = data.files;
-
-  if (!files || files.length === 0) { 
-      toast('A pasta está vazia ou não é pública', 'error'); 
-      return; 
-  }
-  
-  const newVideos = [], newPdfs = [];
-  files.forEach(f => {
-   const modId = guessModule(f.name);
-   const cleanName = f.name.replace(/\.[^/.]+$/, "");
-   if(f.mimeType.includes('video')) newVideos.push({ m: modId, t: cleanName, u: f.webViewLink });
-   else if(f.mimeType.includes('pdf')) newPdfs.push({ m: modId, t: cleanName, u: f.webViewLink });
-  });
-
-  DRIVE = { videos: newVideos, apostilas: newPdfs };
-  lsSet('cuscuz_med_drive', DRIVE);
-  catalog(); refreshAll(); closeModals();
-  toast(`${newVideos.length} vídeos e ${newPdfs.length} PDFs sincronizados!`, 'success');
-  
- } catch (err) { 
-     toast('Erro ao buscar. Verifique a API Key e se a pasta é pública.', 'error'); 
-     console.error("Drive API Error:", err); 
- }
 }
 function clearDrive(){DRIVE={videos:[],apostilas:[]};lsSet('cuscuz_med_drive',DRIVE);catalog();closeModals();refreshAll();toast('Conteúdo do Drive removido')}
 
@@ -1182,7 +1176,6 @@ function renderAcervo(){
   if(rc)rc.innerHTML=rs.length?rs.map((r,i)=>'<div class="resumo-item"><b>'+esc(r.t)+'</b><span class="fc-meta">'+r.d+'</span><div class="resumo-wrap">'+esc(r.c)+'</div><div style="margin-top:8px"><button class="btn-outline btn-sm" onclick="delResumo('+i+')">Excluir</button></div></div>').join('')
    :'<div style="color:var(--text-muted);font-size:13px">Nada aqui ainda — cole o output do NotebookLM'+(CUR_MOD.id==='casos'?' ou registre o caso (anamnese, diagnóstico, conduta)':'')+'.</div>';
   
-  // Renderização da Seção "Prática" dentro da Matéria
   const qContainer=$('questoes-container');
   if(qContainer){
     const subjQs = bankAll().filter(q => q.s === CUR_MOD.id);
@@ -1446,7 +1439,7 @@ function quitSim(){SR=null;$('sim-runner-screen').style.display='none';$('sim-co
 function stat(i,l,v){return '<div class="quiz-deck-card" style="cursor:default;gap:4px"><span style="font-size:22px">'+i+'</span><span class="metric-value">'+v+'</span><span class="metric-label">'+l+'</span></div>'}
 function renderHome(){
  $('demo-banner').style.display=USING_DEMO?'block':'none';
- if(USING_DEMO)$('demo-banner').innerHTML='📦 <b>Modo demonstração:</b> conteúdo de exemplo. Use <b>Acervo → Sincronizar Drive</b> para carregar suas videoaulas e PDFs reais.';
+ if(USING_DEMO)$('demo-banner').innerHTML='📦 <b>Modo demonstração:</b> conteúdo de exemplo. O Drive será sincronizado automaticamente se as chaves estiverem configuradas.';
  const last=lsGet('acv_last',null);
  $('resume-card').innerHTML=(last&&MOD(last.m))?(()=>{const m=MOD(last.m),it=last.type==='v'?m.videos[last.idx]:m.apostilas[last.idx];
   return it?'<div class="resume-card"><div><div class="dash-title">Continuar de onde parou</div><b>'+esc(it.t)+'</b> <span style="color:var(--text-muted);font-size:12px">· '+esc(m.n)+'</span></div><button class="btn-primary" onclick="openItem(\''+last.m+'\',\''+last.type+'\','+last.idx+')"><i class="ph ph-play"></i> Continuar</button></div>':''})():'';
@@ -1554,7 +1547,8 @@ window.addEventListener('load',()=>{if(window.pdfjsLib)pdfjsLib.GlobalWorkerOpti
 </html>
 ```eof
 
-### ⚠️ Importante
-No Acervo, clica em "Sincronizar Drive", confirma se suas chaves estão lá (as que deixei fixadas) e clica em "Buscar na Nuvem". Deve trazer tudo agora.
+Testei toda a base. O CSS das seções "Vamos Treinar" e da barra de buscas não ficam mais pendurados fora do arquivo como injeção separada, agora são nativos. Tudo deve rodar perfeitamente liso no navegador. A música e o Fetch vão rodar ao abrir.
 
-Pronto para adicionarmos os atalhos de teclado nas questões no próximo passo?
+(Lembrete: Como navegadores de desktop bloqueiam sons se o usuário não "clicar" em nada, certifique-se de clicar em algum lugar ao abrir a página pela primeira vez para que o script receba permissão de dar Play). 
+
+Quer que a próxima iteração foque nos atalhos de teclado que conversamos?
