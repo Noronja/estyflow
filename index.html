@@ -1,18 +1,19 @@
 <!DOCTYPE html>
-<html lang="pt-PT" data-theme="dark">
+<html lang="pt-BR" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Cuscuz-MED — Planeador + Acervo</title>
+<title>Cuscuz-MED — Planejador + Acervo</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,700&display=swap" rel="stylesheet">
 <script defer src="https://unpkg.com/@phosphor-icons/web"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
-<!-- Google Identity e Drive API -->
-<script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-<script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+<!-- API de Áudio do YouTube para o Lobby -->
+<script async defer src="https://www.youtube.com/iframe_api"></script>
 
 <style>
 :root{
@@ -50,7 +51,6 @@ body{font-family:var(--font-ui);font-size:14px;color:var(--text-primary);backgro
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border-muted);border-radius:99px}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 input,select,textarea{font-family:inherit;color:var(--text-primary);background:var(--bg-elevated);border:1px solid var(--border-muted);border-radius:var(--radius-md);padding:8px 12px;font-size:13px}
-input:focus,select,textarea:focus{outline:none;border-color:var(--teal)}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .theme-toggle{position:relative;display:inline-flex;align-items:center;padding:11px 4px;cursor:pointer}
 .theme-toggle__track{position:relative;width:40px;height:22px;border-radius:11px;background:#424242;transition:background .3s}
@@ -59,6 +59,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 [data-theme="light"] .theme-toggle__thumb{transform:translateX(18px)}
 .theme-toggle__thumb::after{content:"🌙"}
 [data-theme="light"] .theme-toggle__thumb::after{content:"☀️"}
+
 .app{display:grid;grid-template-columns:var(--sidebar-w) 1fr var(--dash-w);grid-template-rows:var(--header-h) 1fr;grid-template-areas:"hd hd hd""sb main dash";height:100vh;height:100dvh}
 .header{grid-area:hd;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:var(--bg-base);border-bottom:1px solid var(--border-subtle);z-index:20}
 .brand{display:flex;align-items:center;gap:10px}
@@ -88,6 +89,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .view-section{display:none;animation:fadeIn .25s ease}
 .view-section.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
 .toolbar{display:flex;align-items:center;gap:10px;padding:10px 20px;background:var(--bg-base);border-bottom:1px solid var(--border-subtle);position:sticky;top:0;z-index:10;flex-wrap:wrap}
 .month-nav{display:flex;align-items:center;gap:8px;margin-left:auto}
 .month-label{font-size:15px;font-weight:600;min-width:150px;text-align:center}
@@ -116,6 +118,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .day-label{font-size:8px;font-family:var(--font-mono);font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .day.exam .day-label{color:var(--amber)}.day.holiday .day-label{color:var(--text-muted)}
 .day-check{position:absolute;bottom:4px;right:4px;width:14px;height:14px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--text-inverse)}
+
 .pad{padding:16px 20px}
 .week-card{margin-bottom:14px;border:1px solid var(--border-subtle);border-radius:var(--radius-lg);overflow:hidden;background:var(--bg-surface)}
 .week-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg-surface);cursor:pointer}
@@ -162,6 +165,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .subj-bar{flex:1;height:6px;background:var(--bg-elevated);border-radius:var(--radius-full);overflow:hidden}
 .subj-bar-fill{height:100%;border-radius:var(--radius-full);transition:width .4s}
 .subj-pct{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);min-width:32px;text-align:right}
+
 .game-level{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .game-level-num{font-family:var(--font-mono);font-size:15px;font-weight:800;color:var(--amber);min-width:44px}
 .game-xp-bar{flex:1;height:8px;background:var(--bg-active);border-radius:var(--radius-full);overflow:hidden}
@@ -173,6 +177,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .game-badge.locked{opacity:.22;filter:grayscale(1)}
 .game-badge-tip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg-overlay);color:var(--text-primary);font-size:10px;padding:4px 8px;border-radius:var(--radius-sm);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:5}
 .game-badge:hover .game-badge-tip{opacity:1}
+
 .reward-overlay{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(8px)}
 .reward-overlay.open{display:flex}
 .reward-box{text-align:center;padding:32px 40px;background:var(--bg-surface);border:1px solid var(--border-muted);border-radius:20px;box-shadow:0 0 60px rgba(0,200,168,.15);max-width:380px;width:90%;animation:rewardIn .4s cubic-bezier(.34,1.56,.64,1)}
@@ -183,6 +188,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .reward-subtitle{font-size:13px;color:var(--text-secondary);margin-bottom:12px}
 .reward-xp{font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--teal);background:var(--teal-dim);padding:6px 16px;border-radius:var(--radius-full);display:inline-block}
 #confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:61}
+
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:30;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .modal-overlay.open{display:flex}
 .modal{background:var(--bg-surface);border:1px solid var(--border-muted);border-radius:var(--radius-xl);width:92%;max-width:520px;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg);padding:24px}
@@ -194,18 +200,21 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .form-group input,.form-group select{width:100%}
 .form-row{display:flex;gap:10px}.form-row>*{flex:1}
 .form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+
 .toast-container{position:fixed;top:var(--header-h);right:16px;z-index:50;display:flex;flex-direction:column;gap:8px}
 .toast{padding:10px 16px;background:var(--bg-elevated);border:1px solid var(--border-muted);border-radius:var(--radius-lg);font-size:13px;box-shadow:var(--shadow-md);animation:slideIn .3s ease;display:flex;align-items:center;gap:8px;max-width:320px}
 .toast.success{border-color:var(--green-border);color:var(--green)}
 .toast.error{border-color:var(--rose-border);color:var(--rose)}
 .toast.xp{border-color:var(--teal-border);color:var(--teal)}
 @keyframes slideIn{from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:translateX(0)}}
+
 .chips{display:flex;gap:4px;flex-wrap:wrap}
 .chip{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--radius-full);font-size:11px;font-weight:600;border:1px solid var(--border-muted);color:var(--text-secondary);font-family:var(--font-mono);cursor:pointer}
 .chip:hover{border-color:var(--border-default);color:var(--text-primary)}
 .chip.active{color:var(--text-inverse);border-color:transparent;background:var(--teal)}
 .section-title{font-size:22px;font-weight:700;margin:0 0 20px;color:var(--text-primary)}
 .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;padding:0 20px 40px}
+
 .module-card{display:flex;flex-direction:column;gap:14px;cursor:pointer;transition:transform .2s}
 .module-card:hover{transform:translateY(-4px)}
 .card-cover{height:110px;border-radius:12px;padding:18px;display:flex;align-items:flex-start;font-size:21px;font-weight:800;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.25);text-transform:uppercase;letter-spacing:1px}
@@ -215,6 +224,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .metric-value{font-size:15px;font-weight:700;display:block}
 .progress-bar{height:5px;background:var(--bg-active);border-radius:4px;overflow:hidden}
 .progress-fill{height:100%;background:var(--teal);transition:width .3s}
+
 .back-btn{display:inline-flex;align-items:center;gap:8px;color:var(--text-muted);cursor:pointer;font-size:14px;font-weight:500;margin-bottom:20px;width:fit-content}
 .back-btn:hover{color:var(--text-primary)}
 .module-header-title{font-size:28px;font-weight:800;margin:0 20px 10px}
@@ -231,8 +241,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .fav-btn{color:var(--text-muted);font-size:20px;flex-shrink:0;transition:transform .15s}
 .fav-btn:hover{transform:scale(1.2)}
 .fav-btn.fav-on{color:#FFC107}
+
 .filter-pill{background:var(--bg-surface);border:1px solid var(--border-muted);color:var(--text-secondary);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
 .filter-pill.on{border-color:var(--teal);color:var(--teal)}
+
 .cover-cir{background:linear-gradient(135deg,#00E1D9,#38C779)}.cover-gin{background:linear-gradient(135deg,#DF54DF,#9032E6)}
 .cover-obs{background:linear-gradient(135deg,#FF6B6B,#FF8E53)}.cover-gas{background:linear-gradient(135deg,#4facfe,#00f2fe)}
 .cover-hem{background:linear-gradient(135deg,#f83600,#f9d423)}.cover-end{background:linear-gradient(135deg,#ff7e5f,#feb47b)}
@@ -244,7 +256,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .cover-hep{background:linear-gradient(135deg,#f953c6,#b91d73)}.cover-oft{background:linear-gradient(135deg,#11998e,#38ef7d)}
 .cover-reu{background:linear-gradient(135deg,#c31432,#240b36)}.cover-orl{background:linear-gradient(135deg,#f953c6,#b91d73)}
 .cover-prov{background:linear-gradient(135deg,#8E2DE2,#4A00E0)}
+.cover-drive{background:linear-gradient(135deg,#4285F4,#34A853)}
+.cover-leg{background:linear-gradient(135deg,#475569,#0f172a)}
+.cover-cas{background:linear-gradient(135deg,#0ea5e9,#6366f1)}
 .cover-default{background:linear-gradient(135deg,#8e9eab,#eef2f3);color:#121214}
+
 .overlay{position:fixed;inset:0;background:rgba(10,10,12,.95);display:none;align-items:center;justify-content:center;z-index:100;padding:24px;backdrop-filter:blur(8px)}
 .overlay.show{display:flex;animation:fadeIn .2s}
 .player-box{background:var(--bg-surface);width:100%;max-width:1100px;height:85vh;border:1px solid var(--border-muted);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
@@ -253,6 +269,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .player-frame-container{flex:1;position:relative;width:100%;background:#000}
 .player-frame-container iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .player-foot{padding:14px 20px;display:flex;justify-content:space-between;align-items:center;background:var(--bg-surface);gap:12px;flex-wrap:wrap}
+
 .resume-card{margin:0 20px 24px;background:linear-gradient(135deg,var(--bg-surface),var(--bg-elevated));border:1px solid var(--border-subtle);border-left:4px solid var(--teal);border-radius:12px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
 .quiz-deck-card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:12px;padding:20px;cursor:pointer;transition:transform .2s,border-color .2s;display:flex;flex-direction:column;gap:12px}
 .quiz-deck-card:hover{transform:translateY(-4px);border-color:var(--border-default)}
@@ -280,6 +297,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .quiz-result-score{font-size:46px;font-weight:800;color:var(--teal);font-family:var(--font-serif)}
 .quiz-review-item{display:flex;gap:10px;align-items:flex-start;font-size:13px;padding:10px 14px;border-radius:8px;background:var(--bg-elevated);border:1px solid var(--border-subtle);text-align:left}
 .quiz-review-item.ok i{color:var(--green)}.quiz-review-item.fail i{color:var(--rose)}
+
 .imp-box{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:12px;padding:22px;max-width:860px;display:flex;flex-direction:column;gap:14px;margin:0 20px 40px}
 .imp-textarea{width:100%;min-height:130px;resize:vertical;font-size:13px}
 .sim-config-card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:12px;padding:22px;max-width:720px;display:flex;flex-direction:column;gap:16px;margin:0 20px 30px}
@@ -295,6 +313,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .sim-nav-cell.ans{background:var(--teal-dim);color:var(--teal)}
 .sim-nav-cell.cur{outline:2px solid var(--teal);color:var(--text-primary)}
 .sim-history-item{display:flex;justify-content:space-between;align-items:center;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:8px;padding:12px 16px;font-size:13px;flex-wrap:wrap;gap:8px}
+
 .demo-banner{background:#3a2e10;border:1px solid var(--amber);color:var(--amber);padding:12px 16px;border-radius:8px;font-size:13px;font-weight:600;margin:0 20px 20px;display:none;line-height:1.6}
 .prep-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;padding:0 20px 40px}
 @media(max-width:900px){.prep-grid{grid-template-columns:1fr}}
@@ -337,34 +356,182 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 #menu-btn{display:none}
 @media(max-width:480px){.cards-grid{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ═══ ESTILOS DO LOBBY PES 2013 ═══ */
+#lobby-screen {
+  position: fixed; inset: 0; z-index: 95;
+  background: #050a15;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.lobby-bg-glow {
+  position: absolute; width: 150vw; height: 150vh;
+  background: radial-gradient(circle at 50% 50%, rgba(0,200,168,0.1) 0%, transparent 60%);
+  animation: pulseLobbyBg 8s ease-in-out infinite alternate;
+  z-index: 1; pointer-events: none;
+}
+@keyframes pulseLobbyBg {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.1); opacity: 1; }
+}
+.lobby-header-title {
+  position: absolute; top: 30px; left: 40px;
+  font-size: 28px; font-weight: 800; color: #fff;
+  letter-spacing: 2px; font-family: var(--font-mono);
+  text-transform: uppercase; z-index: 5;
+  text-shadow: 0 0 15px rgba(255,255,255,0.2);
+}
+.lobby-header-title span { color: var(--teal); }
+.pes-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 140px);
+  gap: 16px; max-width: 900px; width: 90%; z-index: 5; margin-bottom: 40px;
+}
+.pes-tile {
+  background: rgba(255,255,255,0.03); border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 8px; padding: 24px; display: flex; flex-direction: column;
+  justify-content: flex-end; gap: 12px; cursor: pointer; transition: all 0.25s cubic-bezier(0.2,0.8,0.2,1);
+  backdrop-filter: blur(8px); color: #fff; text-transform: uppercase;
+  font-weight: 800; font-family: var(--font-mono); font-size: 14px; position: relative; overflow: hidden;
+}
+.pes-tile i { font-size: 32px; color: rgba(255,255,255,0.7); transition: color 0.2s; margin-bottom: auto; }
+.pes-tile:hover {
+  border-color: var(--teal); transform: scale(1.03); box-shadow: 0 0 30px var(--teal-glow);
+  background: linear-gradient(135deg, rgba(0,200,168,0.2), rgba(0,200,168,0.05));
+}
+.pes-tile:hover i { color: var(--teal); }
+.tile-large { grid-column: span 2; grid-row: span 2; font-size: 22px; padding: 32px; }
+.tile-large i { font-size: 54px; }
+.tile-wide { grid-column: span 2; }
+.pes-ticker-wrap {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,0.85); border-top: 1px solid var(--teal);
+  padding: 10px 0; overflow: hidden; display: flex; align-items: center; z-index: 5;
+}
+.pes-ticker {
+  white-space: nowrap; animation: ticker 30s linear infinite;
+  font-family: var(--font-mono); font-size: 12px; color: var(--teal); text-transform: uppercase;
+  letter-spacing: 1px;
+}
+@keyframes ticker {
+  0% { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+@media (max-width: 768px) {
+  .pes-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+  .tile-large, .tile-wide { grid-column: span 1; grid-row: span 1; font-size: 16px; padding: 20px; }
+  .tile-large i { font-size: 32px; }
+  .lobby-header-title { position: relative; top: 0; left: 0; margin-bottom: 20px; text-align: center; }
+}
+
+/* ═══ COMPONENTES ADICIONAIS ═══ */
+.fc-meta{font-family:var(--font-mono);font-size:10px;color:var(--text-muted)}
+.srs-btns{display:flex;gap:8px;margin-top:12px}
+.fc-btn{flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;border:1px solid var(--border-muted);background:var(--bg-elevated);color:inherit}
+.fc-btn:hover{border-color:var(--border-default)}
+.hab-ico{position:absolute;bottom:4px;left:4px;font-size:10px}
+.resumo-item{background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6}
+.resumo-item b{display:block;margin-bottom:4px}
+.resumo-wrap{white-space:pre-wrap}
+#search-wrap{position:relative;z-index:15;margin:0 20px 14px}
+#global-search{width:100%;padding:11px 14px;max-width:860px}
+.search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;max-width:860px;max-height:55vh;overflow-y:auto;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:40}
+.sr-grupo{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-disabled);padding:10px 14px 4px}
+.sr-item{display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:13px;cursor:pointer;color:var(--text-secondary)}
+.sr-item:hover{background:var(--bg-elevated);color:var(--text-primary)}
+.sr-item i{color:var(--teal)}
+.sr-mod{margin-left:auto;font-size:10px;font-family:var(--font-mono);color:var(--text-muted);flex-shrink:0}
+.vid-thumb{width:66px;height:38px;object-fit:cover;border-radius:6px;flex-shrink:0;background:var(--bg-active)}
+
+/* ═══ PLAYER v2 (vídeo direto + loading) ═══ */
+.close-btn{width:32px;height:32px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;color:var(--text-muted)}
+.close-btn:hover{background:var(--bg-elevated);color:var(--text-primary)}
+.btn-secondary{border:1px solid var(--border-muted);color:var(--text-secondary);background:transparent;display:inline-flex;align-items:center;gap:6px;padding:0 12px;height:32px;border-radius:var(--radius-md);font-size:12px;font-weight:600;transition:border-color .15s,background-color .15s,color .15s}
+.btn-secondary:hover{border-color:var(--border-default);background:var(--bg-elevated);color:var(--text-primary)}
+#player-video{position:absolute;inset:0;width:100%;height:100%;background:#000;display:none;object-fit:contain}
+.player-loading{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:3}
+.player-loading.show{display:flex}
+.player-loading-card{display:flex;flex-direction:column;align-items:center;gap:12px;background:var(--bg-surface);border:1px solid var(--border-muted);border-radius:var(--radius-lg);padding:20px 30px;font-size:12px;color:var(--text-secondary)}
+.player-loading-ring{width:38px;height:38px;border-radius:50%;border:3px solid var(--border-muted);border-top-color:var(--teal);animation:spinRing .9s linear infinite}
+@keyframes spinRing{to{transform:rotate(360deg)}}
+.player-meta-link{cursor:pointer}
+.player-meta-link:hover{color:var(--text-secondary);text-decoration:underline}
+
+/* ═══ TASK MODAL (passo a passo) ═══ */
+.task-modal-box{background:var(--bg-surface);border:1px solid var(--border-muted);border-radius:var(--radius-xl);width:92%;max-width:560px;max-height:88vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
+.task-modal-body{padding:24px;overflow-y:auto}
+.task-modal-body h4{font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.14em;font-family:var(--font-mono);margin-bottom:6px}
+.task-modal-body h2{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.task-modal-desc{font-size:14px;line-height:1.7;color:var(--text-secondary);white-space:pre-wrap}
+.task-modal-foot{display:flex;gap:8px;justify-content:flex-end;align-items:center;padding:16px 24px;border-top:1px solid var(--border-subtle);flex-wrap:wrap}
 </style>
 </head>
 <body>
 
-<!-- ═══ LOGIN DRIVE ═══ -->
+<!-- YouTube Audio Player (invisível) -->
+<div id="yt-player-container" style="display:none"></div>
+
+<!-- ═══ LOGIN ═══ -->
 <div id="login-screen" style="position:fixed;inset:0;z-index:100;background:var(--bg-void);display:flex;align-items:center;justify-content:center">
   <div style="width:90%;max-width:360px;text-align:center">
     <div style="font-size:36px;font-weight:800;color:var(--teal);margin-bottom:4px">Cuscuz<span style="color:var(--text-primary)">-MED</span></div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:32px">Planeador + Acervo · sync no Drive ☁️</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:32px">Planejador + Acervo · sync na nuvem ☁️</div>
     <div style="background:var(--bg-surface);border:1px solid var(--border-muted);border-radius:16px;padding:28px 24px">
-      <button onclick="doLoginGoogle()" style="width:100%;padding:12px;border-radius:var(--radius-md);background:var(--teal);color:var(--text-inverse);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px">
-        <i class="ph ph-google-logo" style="font-size:18px"></i> Entrar com conta Google
-      </button>
-      <div style="font-size:10px;color:var(--text-muted);margin-top:14px;line-height:1.5">
-        O seu progresso e acervo serão guardados automaticamente num ficheiro privado na sua pasta do Google Drive.
+      <div style="margin-bottom:16px;text-align:left">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-family:var(--font-mono)">Usuário</label>
+        <input id="login-user" placeholder="seu usuário" style="width:100%;padding:10px 14px;font-size:14px" autocomplete="username">
       </div>
+      <div style="margin-bottom:20px;text-align:left">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-family:var(--font-mono)">Senha</label>
+        <input id="login-pass" type="password" placeholder="sua senha" style="width:100%;padding:10px 14px;font-size:14px" autocomplete="current-password" onkeypress="if(event.key==='Enter')doLogin()">
+      </div>
+      <div id="login-error" style="color:var(--rose);font-size:12px;margin-bottom:12px;display:none">Usuário ou senha incorretos</div>
+      <button onclick="doLogin()" style="width:100%;padding:12px;border-radius:var(--radius-md);background:var(--teal);color:var(--text-inverse);font-size:14px;font-weight:700">Entrar</button>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:10px">Primeiro acesso? A conta é criada automaticamente e o progresso sincroniza entre dispositivos.</div>
     </div>
   </div>
 </div>
 
+<!-- ═══ LOBBY PES 2013 ═══ -->
+<div id="lobby-screen" style="display:none">
+  <div class="lobby-bg-glow"></div>
+  <div class="lobby-header-title">Cuscuz<span>-MED</span></div>
+  
+  <div id="lobby-music-btn" onclick="toggleLobbyMusic()" style="position:absolute; top:30px; right:40px; z-index:10; cursor:pointer; color:var(--teal); font-size:26px; padding:10px; background:rgba(0,0,0,0.5); border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid rgba(0,200,168,0.3)">
+    <i class="ph ph-speaker-slash" id="music-icon"></i>
+  </div>
+
+  <div class="pes-grid">
+    <div class="pes-tile tile-large" onclick="enterApp('view-inicio')">
+      <i class="ph ph-play-circle"></i> <span>Modo Carreira<br><small style="font-size:12px;color:var(--text-muted);text-transform:none;font-family:var(--font-ui)">Continuar estudos e painel</small></span>
+    </div>
+    <div class="pes-tile tile-wide" onclick="enterApp('view-treino')">
+      <i class="ph ph-exam"></i> <span>Treino Livre<br><small style="font-size:11px;color:var(--text-muted);text-transform:none;font-family:var(--font-ui)">Questões e Flashcards</small></span>
+    </div>
+    <div class="pes-tile" onclick="enterApp('view-preparatorio')">
+      <i class="ph ph-graduation-cap"></i> <span>Rumo ao Estrelato</span>
+    </div>
+    <div class="pes-tile" onclick="enterApp('view-simulados')">
+      <i class="ph ph-timer"></i> <span>Copa (Simulados)</span>
+    </div>
+  </div>
+  <div class="pes-ticker-wrap">
+    <div class="pes-ticker">INFO: Bem-vindo ao Cuscuz-MED. A janela de transferências de conhecimento está aberta. Revise seus flashcards diariamente para não acumular. Não esqueça de bater suas metas diárias. Mantenha a hidratação em dia.</div>
+  </div>
+</div>
+
+<!-- ═══ APP PRINCIPAL ═══ -->
 <div class="app" id="app-main" style="display:none">
+  <div id="mobile-sidebar-backdrop" class="modal-overlay" style="z-index:24" onclick="toggleSidebar()"></div>
+
   <header class="header">
     <div style="display:flex;align-items:center;gap:6px">
-      <button class="btn-icon" id="menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')"><i class="ph ph-list"></i></button>
+      <button class="btn-icon" id="menu-btn" onclick="toggleSidebar()"><i class="ph ph-list"></i></button>
       <div class="brand"><div class="brand-icon">C</div><div class="brand-name">Cuscuz<span>-MED</span></div></div>
     </div>
     <div class="header-actions">
       <span id="cloud-dot" title="Status da nuvem" style="width:8px;height:8px;border-radius:50%;background:var(--text-disabled);display:inline-block;margin-right:2px;cursor:default"></span>
+      <button class="btn-icon" onclick="toggleLobbyMusic()" title="Música On/Off"><i class="ph ph-speaker-slash" id="main-music-icon"></i></button>
+      <button class="btn-outline btn-sm" onclick="goToLobby()"><i class="ph ph-game-controller"></i> Lobby</button>
       <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema"><span class="theme-toggle__track"><span class="theme-toggle__thumb"></span></span></button>
       <button class="btn-primary btn-sm" onclick="openPlanModal()">&#9889; Planejar</button>
       <button class="btn-icon" onclick="logout()" title="Sair" style="color:var(--rose)"><i class="ph ph-sign-out"></i></button>
@@ -407,6 +574,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 
   <main class="main">
     <div id="view-inicio" class="view-section active" style="padding-top:20px">
+      <div id="search-wrap">
+        <input id="global-search" placeholder="🔎 Buscar aula, PDF, resumo..." autocomplete="off">
+        <div class="search-results" id="search-results" style="display:none"></div>
+      </div>
+      
       <div class="demo-banner" id="demo-banner"></div>
       <h1 class="section-title" style="margin:8px 20px 16px">Em andamento</h1>
       <div id="resume-card"></div>
@@ -502,7 +674,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
         <h1 class="section-title" style="margin:8px 20px 16px">Acervo Completo</h1>
         <div style="margin:0 20px 16px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="filter-pill" onclick="openFavorites()"><i class="ph ph-star" style="color:#FFC107"></i> Favoritos</button>
-          <button class="filter-pill" onclick="openDriveModal()"><i class="ph ph-cloud" style="color:var(--teal)"></i> <span id="drive-btn-label">Sincronizar Acervo Manual</span></button>
+          <button class="filter-pill" onclick="openDriveModal()"><i class="ph ph-cloud" style="color:var(--teal)"></i> <span id="drive-btn-label">Sincronizar Drive</span></button>
         </div>
         <div class="cards-grid" id="all-modules-container" style="padding:0 20px 40px"></div>
       </div>
@@ -513,6 +685,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
         <div class="content-list" id="videos-container"></div>
         <div class="content-list-title"><i class="ph ph-file-pdf" style="font-size:16px;vertical-align:middle"></i> Materiais</div>
         <div class="content-list" id="apostilas-container"></div>
+        <div class="content-list-title">📝 Resumos · casos</div>
+        <div class="content-list" id="resumos-container" style="grid-template-columns:1fr"></div>
+        <div style="padding:0 20px 20px"><button class="btn-outline" onclick="openResumoModal()"><i class="ph ph-plus"></i> Adicionar resumo / caso clínico</button></div>
+        
+        <div class="content-list-title"><i class="ph ph-exam" style="font-size:16px;vertical-align:middle"></i> Prática</div>
+        <div class="content-list" id="questoes-container" style="grid-template-columns:1fr; padding-bottom: 40px;"></div>
       </div>
     </div>
 
@@ -526,7 +704,14 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
             <b style="font-size:15px">🗂️ Banco Unificado de Questões</b>
             <span id="bank-count" style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">0 questões</span>
           </div>
-          <div id="bank-stats" class="chips" style="font-size:12px;color:var(--text-muted)"></div>
+          <div id="bank-stats" class="chips" style="font-size:12px;color:var(--text-muted);margin-bottom:12px"></div>
+          
+          <div id="fc-actions" style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-primary btn-sm" onclick="startFC()"><i class="ph ph-cards"></i> Revisar flashcards (<span id="fc-due">0</span> pendentes)</button>
+            <button class="btn-outline btn-sm" onclick="startWrongQuiz()"><i class="ph ph-rotate-ccw"></i> Revisar erradas (<span id="wrong-count">0</span>)</button>
+            <button class="btn-outline btn-sm" onclick="openFCModal()"><i class="ph ph-plus"></i> Novo card</button>
+            <button class="btn-outline btn-sm" onclick="exportAnki()"><i class="ph ph-download-simple"></i> Exportar p/ Anki</button>
+          </div>
         </div>
         <div class="cards-grid" id="decks-grid"></div>
       </div>
@@ -550,11 +735,39 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 <!-- PLAYER -->
 <div class="overlay" id="player-overlay">
   <div class="player-box">
-    <div class="player-head"><h3 id="player-title"></h3><button class="modal-close" onclick="closePlayer()"><i class="ph ph-x"></i></button></div>
-    <div class="player-frame-container" id="player-frame"></div>
+    <div class="player-head">
+      <h3 id="player-title">Mídia</h3>
+      <button class="close-btn" id="close-player"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="player-frame-container">
+      <iframe id="player-frame" src="" allowfullscreen=""></iframe>
+      <video id="player-video" controls="" playsinline="" preload="auto"></video>
+      <div class="player-loading" id="player-loading" aria-live="polite">
+        <div class="player-loading-card">
+          <div class="player-loading-ring"></div>
+          <span>Carregando…</span>
+        </div>
+      </div>
+    </div>
     <div class="player-foot">
-      <button class="btn-outline" id="player-open"><i class="ph ph-arrow-square-out"></i> Abrir original</button>
-      <button class="btn-primary" id="player-done"><i class="ph ph-check"></i> Concluir (+2 XP)</button>
+      <span style="font-size:13px;color:var(--text-muted);font-weight:500" id="player-meta" class="player-meta-link" title="Abrir original em nova aba"></span>
+      <button class="btn-primary" id="mark-btn"><i class="ph ph-check-circle"></i> Marcar como concluído</button>
+    </div>
+  </div>
+</div>
+
+<!-- TASK MODAL — passo a passo da tarefa -->
+<div class="overlay" id="task-modal">
+  <div class="task-modal-box">
+    <div class="task-modal-body">
+      <h4 id="task-modal-type">Tipo</h4>
+      <h2 id="task-modal-title">Assunto</h2>
+      <div style="margin:24px 0 12px 0;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Passo a Passo da Tarefa</div>
+      <div class="task-modal-desc" id="task-modal-desc">Descrição...</div>
+    </div>
+    <div class="task-modal-foot">
+      <button class="btn-secondary" id="close-task-modal">Fechar</button>
+      <button class="btn-primary" id="btn-buscar-aula"><i class="ph ph-magnifying-glass-plus"></i> Assistir Aulas Relacionadas</button>
     </div>
   </div>
 </div>
@@ -592,9 +805,9 @@ const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math
 function lsGet(k,def){try{const v=JSON.parse(localStorage.getItem(k));return v==null?def:v}catch(e){return def}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){toast('⚠️ Armazenamento cheio — exporte um backup','error')}}
 function toast(msg,type=''){const t=document.createElement('div');t.className='toast '+type;t.innerHTML=msg;$('toasts').appendChild(t);setTimeout(()=>{t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(()=>t.remove(),300)},2800)}
-function closeModals(){$$('.modal-overlay').forEach(o=>o.remove())}
+function closeModals(){$$('.modal-overlay:not(#mobile-sidebar-backdrop)').forEach(o=>o.remove())}
 function openModal(html){const o=document.createElement('div');o.className='modal-overlay open';o.innerHTML='<div class="modal">'+html+'</div>';o.addEventListener('click',e=>{if(e.target===o||e.target.closest('.modal-close'))o.remove()});$('modal-container').appendChild(o);return o}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModals();const p=$('player-overlay');if(p&&p.classList.contains('show'))closePlayer()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModals();const p=$('player-overlay');if(p&&p.classList.contains('show'))closePlayer();if($('task-modal').classList.contains('show'))closeTaskModal()}});
 
 /* ═══ CONTEÚDO ═══ */
 const MODULES=[
@@ -603,20 +816,20 @@ const MODULES=[
  {id:'end',n:'Endócrino'},{id:'hem',n:'Hematologia'},{id:'inf',n:'Infectologia'},{id:'neu',n:'Neurologia'},
  {id:'ort',n:'Ortopedia'},{id:'orl',n:'Otorrino'},{id:'der',n:'Dermatologia'},{id:'pne',n:'Pneumologia'},
  {id:'cir',n:'Cirurgia'},{id:'psi',n:'Psiquiatria'},{id:'reu',n:'Reumatologia'},{id:'oft',n:'Oftalmologia'},
- {id:'leg',n:'Medicina Legal'},{id:'prov',n:'Provas'},{id:'casos',n:'Casos Clínicos'}
+ {id:'leg',n:'Medicina Legal'},{id:'prov',n:'Provas'},{id:'casos',n:'Casos Clínicos'},
+ {id:'drive',n:'☁️ Acervo Online'}
 ];
 const MOD=id=>MODULES.find(m=>m.id===id);
-const DEMO={
- videos:[{m:'car',t:'[exemplo] Insuficiência Cardíaca',y:'aqz-KE-bpKQ'},{m:'ped',t:'[exemplo] Desidratação na Pediatria',y:'aqz-KE-bpKQ'}],
- apostilas:[{m:'car',t:'[exemplo] Resumo de Cardiologia',u:'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'}]};
-let DRIVE=lsGet('cuscuz_med_drive',{videos:[],apostilas:[]}),USING_DEMO=true;
-function catalog(){const eV=window.videosData||[],eA=window.apostilasData||[];
+let DRIVE=lsGet('cuscuz_med_drive',{videos:[],apostilas:[]});
+function catalog(){
  MODULES.forEach(m=>{m.videos=[];m.apostilas=[]});
- [...eV,...DEMO.videos,...DRIVE.videos].forEach(v=>{const m=MOD(v.m);if(m&&v.t&&(v.y||v.u))m.videos.push(v)});
- [...eA,...DEMO.apostilas,...DRIVE.apostilas].forEach(a=>{const m=MOD(a.m);if(m&&a.t&&a.u)m.apostilas.push(a)});
- USING_DEMO=!(eV.length||eA.length||DRIVE.videos.length||DRIVE.apostilas.length)}
+ const seen=new Set();
+ const add=(list,type)=>list.forEach(it=>{const key=it.u||it.t;if(seen.has(key))return;seen.add(key);
+  const m=MOD(it.m)||MOD('drive');(type==='a'?m.apostilas:m.videos).push(it)});
+ add(DRIVE.videos,'v');add(DRIVE.apostilas,'a');add(ACERVO.videos,'v');add(ACERVO.apostilas,'a');
+}
 const itemsOf=m=>[...m.videos.map(v=>({type:'v',...v})),...m.apostilas.map(a=>({type:'a',...a}))];
-const itemKey=it=>it.m+':'+(it.type==='v'?'yt:'+it.y:'pdf:'+it.u);
+const itemKey=it=>it.m+':'+(it.type==='v'?'yt:'+(it.y||it.u):'pdf:'+it.u);
 
 /* ═══ ESTADO ═══ */
 const LS='cuscuz_med_v1';
@@ -627,7 +840,7 @@ DB.events=DB.events||{};DB.habits=DB.habits||{};
 let DONE=new Set(lsGet('acv_done',[])),FAV=new Set(lsGet('acv_fav',[])),WRONG=new Set(lsGet('acv_wrong',[]));
 let QUIZS=lsGet('acv_quiz',{}),SIMS=lsGet('acv_sims',[]),DECKS=lsGet('acv_decks',[]);
 let RESUMOS=lsGet('acv_resumos',{}),FCS=lsGet('acv_fc',[]),FCSRS=lsGet('acv_fc_srs',{});
-let FILTER='all',SUBJ=null,CUR_MOD=null;
+let FILTER='all',SUBJ=null,CUR_MOD=null,SYNC_USER=null;
 let calFilter=new Set(),CALM=new Date();CALM.setDate(1);
 const EVC={loja:'#b8c0cc',pessoal:'#e85b7a',facu:'#7c6af0',saude:'#34c97a'};
 const saveCloud=debounce(pushCloud,2500);
@@ -638,210 +851,93 @@ const addDay=dk=>{const s=new Set(lsGet('acv_days',[]));s.add(dk);lsSet('acv_day
 function applyTheme(){document.documentElement.dataset.theme=lsGet('cuscuz_theme','dark')}
 function toggleTheme(){const t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;lsSet('cuscuz_theme',t)}
 
-/* ═══ NAVEGAÇÃO ═══ */
+/* ═══ MÚSICA LOBBY PES 2013 ═══ */
+let ytPlayer;
+let isMusicPlaying = false;
+window.onYouTubeIframeAPIReady = function() {
+  ytPlayer = new YT.Player('yt-player-container', {
+    height: '0', width: '0',
+    videoId: 'CfZe9qy8YAs', // Savoir Adore - Dreamers (PES 2013)
+    playerVars: { autoplay: 0, controls: 0, loop: 1, playlist: 'CfZe9qy8YAs' }
+  });
+};
+function toggleLobbyMusic() {
+  if(!ytPlayer || !ytPlayer.playVideo) return;
+  if(isMusicPlaying) { 
+      ytPlayer.pauseVideo(); 
+      $('music-icon').className = 'ph ph-speaker-slash'; 
+      if($('main-music-icon')) $('main-music-icon').className = 'ph ph-speaker-slash';
+  } else { 
+      ytPlayer.playVideo(); 
+      $('music-icon').className = 'ph ph-speaker-high'; 
+      if($('main-music-icon')) $('main-music-icon').className = 'ph ph-speaker-high';
+  }
+  isMusicPlaying = !isMusicPlaying;
+}
+
+/* ═══ NAVEGAÇÃO & LOBBY ═══ */
+function toggleSidebar() {
+  const sb = document.querySelector('.sidebar');
+  const bd = $('mobile-sidebar-backdrop');
+  sb.classList.toggle('open');
+  if (sb.classList.contains('open')) bd.classList.add('open'); else bd.classList.remove('open');
+}
+function goToLobby(){
+  $('app-main').style.display='none'; $('lobby-screen').style.display='flex';
+  if(ytPlayer && ytPlayer.playVideo && !isMusicPlaying) toggleLobbyMusic();
+}
+function enterApp(viewId){
+  $('lobby-screen').style.display='none'; $('app-main').style.display='grid';
+  // Inicia a música caso o usuário não tenha passado pelo lobby adequadamente
+  if(ytPlayer && ytPlayer.playVideo && !isMusicPlaying) {
+      toggleLobbyMusic();
+  }
+  if(viewId) go(viewId);
+}
+
 function go(id){$$('.view-section').forEach(v=>v.classList.remove('active'));$(id).classList.add('active');
  $$('.nav-item[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===id));
- document.querySelector('.sidebar').classList.remove('open');document.querySelector('.main').scrollTop=0;
+ document.querySelector('.sidebar').classList.remove('open');$('mobile-sidebar-backdrop').classList.remove('open');
+ document.querySelector('.main').scrollTop=0;
  ({'view-inicio':renderHome,'view-calendario':renderCalendar,'view-cronograma':renderSchedule,'view-semana':renderWeek,
    'view-preparatorio':renderPrep,'view-acervo':renderAcervo,'view-treino':renderDecks,'view-simulados':renderSim}[id]||(()=>{}))()}
 function refreshAll(){renderHome();renderCalendar();renderSchedule();renderWeek();renderPrep();renderAcervo();renderDecks();renderSim();renderDash();updateBadges();
- const n=DRIVE.videos.length+DRIVE.apostilas.length;if(n)$('drive-btn-label').textContent='Sincronizar Acervo Manual ('+n+')'}
+ const n=DRIVE.videos.length+DRIVE.apostilas.length+ACERVO.videos.length+ACERVO.apostilas.length;if(n)$('drive-btn-label').textContent='Acervo ('+n+')'}
 function refreshLight(){renderDash();renderCalendar();renderSchedule();renderWeek();renderHome();updateBadges()}
 
-/* ═══ LOGIN DRIVE (OAUTH) ═══ */
-const G_CLIENT_ID = "693665289108-qnt143hdbajhgitcufj8g97f9o73q261.apps.googleusercontent.com"; 
-const G_API_KEY = "AIzaSyA6aoGd1Yxj0Yn9JjzAABwQGOTkj7xEAVQ";
-const G_FOLDER_ID = "1pVd7V_pfyM4Vw20yfw45jBmNFqtKTHK7";
-const G_DISCOVERY_DOC = "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest";
-const G_SCOPES = "https://www.googleapis.com/auth/drive.file";
+/* ═══ LOGIN / FIREBASE / AUTO SYNC ═══ */
+const firebaseConfig={apiKey:"AIzaSyA6aoGd1Yxj0Yn9JjzAABwQGOTkj7xEAVQ",authDomain:"estudoflow-409d4.firebaseapp.com",databaseURL:"https://estudoflow-409d4-default-rtdb.firebaseio.com",projectId:"estudoflow-409d4",storageBucket:"estudoflow-409d4.firebasestorage.app",messagingSenderId:"693665289108",appId:"1:693665289108:web:bc9b93f6018690a405b581"};
+let FBDB=null,CLOUD_ON=false;
+const safeUser=s=>String(s||'').toLowerCase().replace(/[^a-z0-9_-]/g,'')||'user';
+const hsh=s=>{let x=5381;for(const c of s)x=(x*33+c.charCodeAt(0))>>>0;return x.toString(36)};
+function setDot(st){const d=$('cloud-dot');if(d)d.style.background=st==='ok'?'var(--green)':st==='off'?'var(--text-disabled)':'var(--amber)'}
 
-let tokenClient, gapiInited = false, gisInited = false;
-let driveFileId = localStorage.getItem('cuscuz_drive_file_id');
-let CLOUD_ON = false;
-
-function gapiLoaded() {
-    gapi.load('client', () => {
-        gapi.client.init({ apiKey: G_API_KEY, discoveryDocs: [G_DISCOVERY_DOC] })
-        .then(() => { gapiInited = true; })
-        .catch(e => console.error("Erro no GAPI", e));
-    });
-}
-
-function gisLoaded() {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: G_CLIENT_ID,
-        scope: G_SCOPES,
-        callback: (tokenResponse) => {
-            if (tokenResponse && tokenResponse.access_token) {
-                CLOUD_ON = true;
-                localStorage.setItem('medplan_logged', '1');
-                checkSyncFile();
-            }
-        }
-    });
-    gisInited = true;
-}
-
-function doLoginGoogle() {
-    if (!gapiInited || !gisInited) {
-        toast('A aguardar a Google API...', 'error');
-        return;
-    }
-    if (gapi.client.getToken() === null) {
-        tokenClient.requestAccessToken({prompt: 'consent'});
-    } else {
-        tokenClient.requestAccessToken({prompt: ''});
-    }
-}
-
-function setDot(st){
-    const d = $('cloud-dot');
-    if(d) d.style.background = st==='ok'?'var(--green)':st==='off'?'var(--text-disabled)':'var(--amber)';
-}
-
-function checkSyncFile() {
-    setDot('sync');
-    $('login-screen').innerHTML = '<div style="color:var(--teal);font-weight:700;text-align:center">A sincronizar com o Google Drive...</div>';
-    gapi.client.drive.files.list({
-        q: `name='cuscuz_med_data.json' and '${G_FOLDER_ID}' in parents and trashed=false`,
-        spaces: 'drive',
-        fields: 'files(id)'
-    }).then(res => {
-        const files = res.result.files;
-        if (files && files.length > 0) {
-            driveFileId = files[0].id;
-            localStorage.setItem('cuscuz_drive_file_id', driveFileId);
-            loadFromDrive();
-        } else {
-            createDriveFile(JSON.stringify(payload()));
-        }
-    }).catch(err => {
-        console.error("Erro ao procurar ficheiro no Drive", err);
-        toast('Erro ao aceder ao Drive.', 'error');
-        setDot('off');
-        startApp();
-    });
-}
-
-function loadFromDrive() {
-    gapi.client.drive.files.get({ fileId: driveFileId, alt: 'media' })
-    .then(res => {
-        const data = res.result;
-        if (data && typeof data === 'object') {
-            if (confirm('Foram encontrados dados no seu Google Drive.\n\n[OK] Restaurar dados da nuvem\n[Cancelar] Manter dados locais e sobrescrever a nuvem')) {
-                applyCloud(data);
-                location.reload();
-            } else {
-                pushCloud();
-                startApp();
-            }
-        } else {
-            startApp();
-        }
-    }).catch(err => {
-        console.error("Erro ao transferir dados do Drive", err);
-        startApp();
-    });
-}
-
-function createDriveFile(content) {
-    const boundary = '-------314159265358979323846';
-    const delimiter = "\r\n--" + boundary + "\r\n";
-    const close_delim = "\r\n--" + boundary + "--";
-    const metadata = { name: 'cuscuz_med_data.json', mimeType: 'application/json', parents: [G_FOLDER_ID] };
-    const multipartRequestBody = delimiter + 'Content-Type: application/json\r\n\r\n' + JSON.stringify(metadata) + delimiter + 'Content-Type: application/json\r\n\r\n' + content + close_delim;
-
-    const request = gapi.client.request({
-        path: '/upload/drive/v3/files',
-        method: 'POST',
-        params: { uploadType: 'multipart' },
-        headers: { 'Content-Type': 'multipart/related; boundary="' + boundary + '"' },
-        body: multipartRequestBody
-    });
-    request.execute(file => {
-        if (file.id) {
-            driveFileId = file.id;
-            localStorage.setItem('cuscuz_drive_file_id', driveFileId);
-            setDot('ok');
-        } else setDot('off');
-        startApp();
-    });
-}
-
-function pushCloud() {
-    if (!CLOUD_ON || !driveFileId || !gapi.client.getToken()) return;
-    setDot('sync');
-    const content = JSON.stringify(payload());
-    const request = gapi.client.request({
-        path: '/upload/drive/v3/files/' + driveFileId,
-        method: 'PATCH',
-        params: { uploadType: 'media' },
-        body: content
-    });
-    request.execute(file => {
-        if(file && file.id) setDot('ok');
-        else setDot('off');
-    });
-}
-
-function payload(){
-    return{
-        v: 2,
-        app: 'cuscuz-med',
-        db: DB,
-        done: [...DONE],
-        fav: [...FAV],
-        quiz: QUIZS,
-        last: lsGet('acv_last', null),
-        days: lsGet('acv_days', []),
-        sims: SIMS,
-        decks: DECKS,
-        wrong: [...WRONG],
-        resumos: RESUMOS,
-        fc: FCS,
-        fcsrs: FCSRS,
-        drive: DRIVE 
-    };
-}
-
-function applyCloud(cl){
-    lsSet(LS, Object.assign(JSON.parse(JSON.stringify(DEFDB)), cl.db || {}));
-    lsSet('acv_done', cl.done || []);
-    lsSet('acv_fav', cl.fav || []);
-    lsSet('acv_quiz', cl.quiz || {});
-    lsSet('acv_last', cl.last || null);
-    lsSet('acv_days', cl.days || []);
-    lsSet('acv_sims', cl.sims || []);
-    lsSet('acv_decks', cl.decks || []);
-    lsSet('acv_wrong', cl.wrong || []);
-    lsSet('acv_resumos', cl.resumos || {});
-    lsSet('acv_fc', cl.fc || []);
-    lsSet('acv_fc_srs', cl.fcsrs || {});
-    if(cl.drive) {
-        DRIVE = cl.drive;
-        lsSet('cuscuz_med_drive', DRIVE);
-    }
-}
-
-function logout(){
-    if(confirm('Pretende sair da conta e voltar ao ecrã inicial?')) {
-        localStorage.removeItem('medplan_logged');
-        if (gapiInited && gapi.client.getToken()) {
-            google.accounts.oauth2.revoke(gapi.client.getToken().access_token);
-            gapi.client.setToken('');
-        }
-        location.reload();
-    }
-}
+function doLogin(){const u=cleanStr($('login-user').value.trim()),p=$('login-pass').value;
+ if(!u||!p){$('login-error').style.display='block';return}
+ const users=lsGet('cuscuz_users',{});
+ if(users[u]&&users[u]!==hsh(p)){$('login-error').style.display='block';return}
+ users[u]=hsh(p);lsSet('cuscuz_users',users);
+ SYNC_USER=u;localStorage.setItem('medplan_logged','1');localStorage.setItem('medplan_user',u);
+ $('login-error').style.display='none';startApp()}
+function logout(){if(confirm('Sair? Os dados continuam salvos neste dispositivo.')){localStorage.removeItem('medplan_logged');location.reload()}}
+function payload(){return{db:DB,done:[...DONE],fav:[...FAV],quiz:QUIZS,last:lsGet('acv_last',null),days:lsGet('acv_days',[]),sims:SIMS,decks:DECKS,wrong:[...WRONG],resumos:RESUMOS,fc:FCS,fcsrs:FCSRS}}
+function pushCloud(){if(!CLOUD_ON||!SYNC_USER)return;setDot('sync');
+ FBDB.ref('users/'+safeUser(SYNC_USER)+'/state').set(payload()).then(()=>setDot('ok')).catch(()=>setDot('off'))}
+function applyCloud(cl){lsSet(LS,Object.assign(JSON.parse(JSON.stringify(DEFDB)),cl.db||{}));
+ lsSet('acv_done',cl.done||[]);lsSet('acv_fav',cl.fav||[]);lsSet('acv_quiz',cl.quiz||{});lsSet('acv_last',cl.last||null);
+ lsSet('acv_days',cl.days||[]);lsSet('acv_sims',cl.sims||[]);lsSet('acv_decks',cl.decks||[]);lsSet('acv_wrong',cl.wrong||[]);
+ lsSet('acv_resumos',cl.resumos||{});lsSet('acv_fc',cl.fc||[]);lsSet('acv_fc_srs',cl.fcsrs||{})}
 
 function startApp(){
-    $('login-screen').style.display = 'none';
-    $('app-main').style.display = 'grid';
-    catalog(); 
-    refreshAll();
-    setDot(CLOUD_ON ? 'ok' : 'off');
-    toast('Bem-vindo ao Cuscuz-MED!', 'success');
-}
+ $('login-screen').style.display='none'; 
+ goToLobby(); // Vai pro lobby primeiro para tocar a música
+ catalog();refreshAll();setDot(CLOUD_ON?'ok':'off');
+ autoSyncDrive(); // Aciona sincronização em background
+ loadAcervoData().then(ok=>{if(ok)toast('📚 Acervo online: '+(ACERVO.videos.length+ACERVO.apostilas.length)+' itens','success')});
+ if(CLOUD_ON&&SYNC_USER){FBDB.ref('users/'+safeUser(SYNC_USER)+'/state').once('value').then(s=>{const cl=s.val();if(!cl)return;
+  const cloudXp=cl.db&&cl.db.xp,changed=cloudXp!==DB.xp||(cl.done||[]).length!==DONE.size;
+  if(changed&&confirm('Dados encontrados na nuvem para "'+SYNC_USER+'".\nOK = restaurar da nuvem · Cancelar = manter local e sobrescrever nuvem')){
+   applyCloud(cl);location.reload()}else if(changed)pushCloud()}).catch(()=>setDot('off'))}}
 
 /* ═══ XP / BADGES ═══ */
 const level=()=>Math.floor(DB.xp/100)+1;
@@ -902,7 +998,7 @@ function planOn(dk){if(!DB.plan)return[];return DB.plan.items.map((it,ix)=>({ix,
 function setItem(dk,ix,field){const k=dk+'#'+ix;
  if(field==='done'){if(DB.done[k])delete DB.done[k];else{DB.done[k]=1;addXP(5,'tópico concluído');touchStreak();addDay(dk);checkMeta()}}
  else{DB.skipped[k]?delete DB.skipped[k]:DB.skipped[k]=1}
- saveDB();refreshLight();if(document.querySelector('.modal-overlay')){closeModals();openDay(dk)}}
+ saveDB();refreshLight();if(document.querySelector('.modal-overlay:not(#mobile-sidebar-backdrop)')){closeModals();openDay(dk)}}
 function addExam(dk){const n=cleanStr(prompt('Nome da prova:')||'');if(!n)return;DB.exams[dk]={name:n};saveDB();closeModals();openDay(dk);refreshLight()}
 function delExam(dk){delete DB.exams[dk];saveDB();closeModals();openDay(dk);refreshLight()}
 function toggleHoliday(dk){DB.holidays[dk]?delete DB.holidays[dk]:DB.holidays[dk]=1;saveDB();closeModals();openDay(dk);refreshLight()}
@@ -941,7 +1037,7 @@ function openDay(dk){
   return '<div class="week-item"><span class="week-item-code">'+fmtBR(dk)+'</span><span class="sdot" style="background:var(--violet)"></span><span class="week-item-topic'+(done?' completed':'')+'">'+esc(i.t)+'</span>'
   +'<button class="check-btn'+(done?' checked':'')+'" onclick="setItem(\''+dk+'\','+i.ix+',\'done\')"><i class="ph ph-check-bold"></i></button>'
   +'<button class="skip-btn" title="Pular" onclick="setItem(\''+dk+'\','+i.ix+',\'skip\')"><i class="ph ph-skip-forward"></i></button></div>'}).join('')
- :(evs.length?'':'<div style="color:var(--text-muted);font-size:13px">Nada planeado para este dia.</div>');
+ :(evs.length?'':'<div style="color:var(--text-muted);font-size:13px">Nada planejado para este dia.</div>');
  body+='<div class="form-actions" style="justify-content:flex-start;flex-wrap:wrap">'
  +'<button class="btn-outline" onclick="addEvent(\''+dk+'\')">🏷️ Evento</button>'
  +'<button class="btn-outline" onclick="toggleHabit(\''+dk+'\',\'treino\')">🏋️ '+(hb.treino?'Treino ✓':'Treino')+'</button>'
@@ -959,7 +1055,7 @@ function saveEvent(dk){const t=cleanStr($('ev-txt').value.trim());if(!t){toast('
  (DB.events[dk]=DB.events[dk]||[]).push({t,c});saveDB();closeModals();openDay(dk);renderCalendar();toast('Evento adicionado','success')}
 function delEvent(dk,i){DB.events[dk].splice(i,1);if(!DB.events[dk].length)delete DB.events[dk];saveDB();closeModals();openDay(dk);renderCalendar()}
 function toggleHabit(dk,w){const h=DB.habits[dk]||(DB.habits[dk]={});const was=!!h[w];h[w]=!h[w];
- if(!was&&h[w])addXP(w==='treino'?2:1,w==='treino'?'treino registado 💪':'macros em dia 🍽️');
+ if(!was&&h[w])addXP(w==='treino'?2:1,w==='treino'?'treino registrado 💪':'macros em dia 🍽️');
  saveDB();closeModals();openDay(dk);renderCalendar();checkBadges()}
 
 /* ═══ CRONOGRAMA / SEMANA ═══ */
@@ -969,7 +1065,7 @@ const itemRow=i=>{const k=i.d+'#'+i.ix,done=DB.done[k],skip=DB.skipped[k];
  +'<button class="skip-btn" onclick="setItem(\''+i.d+'\','+i.ix+',\'skip\')"><i class="ph ph-skip-forward"></i></button></div>'};
 function renderSchedule(){
  const el=$('schedule-view');
- if(!DB.plan||!DB.plan.items.length){el.innerHTML='<div style="color:var(--text-muted);padding:40px 0">Nenhum plano activo. Clique em <b>⚡ Planejar</b> no topo para gerar um cronograma.</div>';return}
+ if(!DB.plan||!DB.plan.items.length){el.innerHTML='<div style="color:var(--text-muted);padding:40px 0">Nenhum plano ativo. Clique em <b>⚡ Planejar</b> no topo para gerar um cronograma.</div>';return}
  const weeks={};DB.plan.items.forEach((it,ix)=>{const wk=weekKey(it.d);(weeks[wk]=weeks[wk]||[]).push({ix,...it})});
  const tot=DB.plan.items.length,dn=DB.plan.items.filter(i=>DB.done[i.d+'#'+i.ix]).length;
  el.innerHTML='<div class="week-target"><b>📌 '+esc(DB.plan.exam.name)+'</b><span style="color:var(--text-muted);font-family:var(--font-mono);font-size:12px">prova: '+fmtBR(DB.plan.exam.d)+' · '+Math.max(0,diffDays(todayKey(),DB.plan.exam.d))+' dias · '+dn+'/'+tot+' concluídos</span>'
@@ -991,9 +1087,9 @@ function renderWeek(){
  +'<button class="btn-outline btn-sm" onclick="addWkQ(25)">+25</button>'
  +'<b style="font-family:var(--font-mono)">'+q.done+' / '+q.goal+'</b></div>'
  +'<div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:'+pct(q.done,q.goal)+'%"></div></div></div></div>'
- +'<div class="week-card"><div class="week-hdr" style="cursor:default"><span class="week-num">Semana actual</span>'
+ +'<div class="week-card"><div class="week-hdr" style="cursor:default"><span class="week-num">Semana atual</span>'
  +'<span class="week-dates">'+fmtBR(wk)+' – '+fmtBR(addD(wk,6))+'</span><span class="week-progress">'+dn+'/'+items.length+' tópicos</span></div>'
- +(items.length?items.map(itemRow).join(''):'<div class="week-item" style="color:var(--text-muted)">Semana sem tópicos planeados.</div>')+'</div>'}
+ +(items.length?items.map(itemRow).join(''):'<div class="week-item" style="color:var(--text-muted)">Semana sem tópicos planejados.</div>')+'</div>'}
 function saveWkGoal(){const wk=weekKey(todayKey());const q=DB.qweek[wk]||{done:0,hit:false};q.goal=Math.max(0,+$('wk-goal').value||0);DB.qweek[wk]=q;saveDB();renderWeek()}
 function addWkQ(n){const wk=weekKey(todayKey());const q=DB.qweek[wk]||{goal:100,done:0,hit:false};q.done+=n;
  if(!q.hit&&q.goal>0&&q.done>=q.goal){q.hit=true;addXP(15,'meta de questões!');confetti()}
@@ -1057,7 +1153,191 @@ function renderPrep(){
  $('prep-checklist').innerHTML=(DB.prep.checklist||[]).map((c,i)=>'<div class="check-item'+(c.on?' on':'')+'" onclick="prepToggleItem('+i+')"><span class="check-btn'+(c.on?' checked':'')+'"><i class="ph ph-check-bold"></i></span><span style="flex:1">'+esc(c.t)+'</span><i class="ph ph-x" style="color:var(--text-muted)" onclick="event.stopPropagation();prepDelItem('+i+')"></i></div>').join('')
  ||'<div style="font-size:12px;color:var(--text-muted)">Nada aqui ainda.</div>'}
 
-/* ═══ ACERVO (com thumbnails) ═══ */
+/* ═══ ACERVO E INTEGRAÇÃO GOOGLE DRIVE ═══ */
+const HARDCODED_DRIVE_CONFIG = {
+  apiKey: 'AIzaSyA6aoGd1Yxj0Yn9JjzAABwQGOTkj7xEAVQ',
+  folderId: '1pVd7V_pfyM4Vw20yfw45jBmNFqtKTHK7'
+};
+
+async function autoSyncDrive() {
+  const cfg = HARDCODED_DRIVE_CONFIG;
+  if(!cfg.apiKey || !cfg.folderId) return;
+  try {
+    const query = encodeURIComponent(`'${cfg.folderId}' in parents and trashed=false`);
+    const url = `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,mimeType,webViewLink)&pageSize=1000&key=${cfg.apiKey}`;
+    const response = await fetch(url);
+    if (!response.ok) return;
+    const data = await response.json();
+    const files = data.files;
+    if (!files || files.length === 0) return;
+    
+    const newVideos = [], newPdfs = [];
+    files.forEach(f => {
+     const modId = guessModule(f.name);
+     const cleanName = f.name.replace(/\.[^/.]+$/, "");
+     if(f.mimeType.includes('video')) newVideos.push({ m: modId, t: cleanName, u: f.webViewLink });
+     else if(f.mimeType.includes('pdf')) newPdfs.push({ m: modId, t: cleanName, u: f.webViewLink });
+    });
+
+    DRIVE = { videos: newVideos, apostilas: newPdfs };
+    lsSet('cuscuz_med_drive', DRIVE);
+    catalog(); refreshAll();
+    toast('☁️ Drive sincronizado automaticamente!', 'success');
+  } catch (err) { 
+    console.error("Drive Auto-sync Error:", err); 
+  }
+}
+
+function openDriveModal(){
+ openModal('<div class="modal-title"><i class="ph ph-cloud"></i> Acervo & Drive<button class="modal-close"><i class="ph ph-x"></i></button></div>'
+ +'<div style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-bottom:12px">O acervo online (<b>acervo-index.php</b> / <b>acervo-manifest.json</b>) é lido automaticamente ao entrar e atualizado a cada 10s. O Google Drive sincroniza em segundo plano. Abrindo o arquivo direto do computador (file://), use a <b>pasta local</b>.</div>'
+ +'<div class="form-actions" style="margin-top:10px">'
+ +'<button class="btn-outline" onclick="requestLocalFolder()"><i class="ph ph-folder-open"></i> Pasta local</button>'
+ +'<button class="btn-outline" onclick="clearDrive()">Limpar Drive</button>'
+ +'<button class="btn-primary" onclick="autoSyncDrive();loadAcervoData({force:true});closeModals()">Forçar sincronização</button></div>');
+}
+function guessModule(filename) {
+ const name = filename.toLowerCase();
+ for(let m of MODULES) {
+  if(m.id !== 'drive' && m.id !== 'casos' && m.id !== 'prov') {
+   if(name.includes(m.n.toLowerCase().substring(0, 4))) return m.id;
+  }
+ }
+ return 'drive';
+}
+function clearDrive(){DRIVE={videos:[],apostilas:[]};lsSet('cuscuz_med_drive',DRIVE);catalog();closeModals();refreshAll();toast('Conteúdo do Drive removido')}
+
+/* ═══ ACERVO ONLINE (acervo-index.php / acervo-manifest.json) + PASTA LOCAL ═══ */
+const ACERVO_ENDPOINTS=['./acervo-index.php','./acervo-manifest.json'];
+const VIDEO_EXTENSIONS=new Set(['mp4','webm','mov','m4v','mkv','avi']);
+const MATERIAL_EXTENSIONS=new Set(['pdf']);
+const VIDEO_FILE_RE=/\.(mp4|webm|mov|m4v|mkv|avi)(?:\?|#|$)/i;
+let ACERVO=lsGet('cuscuz_med_acervo_cache',{videos:[],apostilas:[]});
+let acervoLoaded=false,lastAcervoSig='',localObjectUrls=[];
+const ytId=u=>{const m=String(u||'').match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);return m?m[1]:null};
+
+// Fallback para abrir o HTML direto do computador: o usuário escolhe a pasta
+// do acervo e os arquivos locais viram blob URLs (sem enviar nada pra rede).
+const localFolderInput=document.createElement('input');
+localFolderInput.type='file';localFolderInput.multiple=true;
+localFolderInput.setAttribute('webkitdirectory','');localFolderInput.hidden=true;
+document.body.appendChild(localFolderInput);
+
+function normalizeAcervoItem(item,type,index){
+ const title=String(item?.t??item?.title??item?.name??'').trim();
+ const src=String(item?.src??item?.url??item?.path??'').trim();
+ if(!title||!src)return null;
+ return{d:String(item?.d??item?.discipline??item?.folder??'Cursos').trim()||'Cursos',
+  t:title,id:String(item?.id??'local:'+src+':'+index),src,type,
+  provider:String(item?.provider??item?.courseName??item?.d??'Outros'),area:String(item?.area??'Geral')};
+}
+const acervoToDrive=n=>{const y=ytId(n.src);const o={m:guessModule(n.d+' '+n.t),t:n.t,u:n.src};if(y)o.y=y;return o};
+function applyAcervoList(videos,materials,silent){
+ const conv=arr=>arr.map((it,ix)=>{const n=normalizeAcervoItem(it,'x',ix);return n?acervoToDrive(n):null}).filter(Boolean);
+ ACERVO={videos:conv(videos),apostilas:conv(materials)};
+ acervoLoaded=true;
+ const cacheable=x=>x.filter(it=>!String(it.u||'').startsWith('blob:')); // blob: não sobrevive ao reload
+ lsSet('cuscuz_med_acervo_cache',{videos:cacheable(ACERVO.videos),apostilas:cacheable(ACERVO.apostilas)});
+ catalog();refreshAll();
+ if(!silent)toast('📚 Acervo atualizado ('+(ACERVO.videos.length+ACERVO.apostilas.length)+' itens)','success');
+}
+function parseAcervoPayload(payload){
+ if(!payload||typeof payload!=='object')return null;
+ if(Array.isArray(payload)){
+  const isV=i=>String(i?.type??i?.kind??'').toLowerCase()==='video';
+  const isM=i=>['pdf','material','apostila'].includes(String(i?.type??i?.kind??'').toLowerCase());
+  return{videos:payload.filter(isV),materials:payload.filter(isM)};
+ }
+ const videos=payload.videos??payload.videoaulas??[];
+ const materials=payload.materials??payload.apostilas??payload.pdfs??[];
+ if(!Array.isArray(videos)&&!Array.isArray(materials))return null;
+ return{videos:Array.isArray(videos)?videos:[],materials:Array.isArray(materials)?materials:[]};
+}
+async function fetchAcervoPayload(){
+ if(location.protocol==='file:')return null;
+ for(const endpoint of ACERVO_ENDPOINTS){
+  try{const sep=endpoint.includes('?')?'&':'?';
+   const r=await fetch(endpoint+sep+'v='+Date.now(),{cache:'no-store'});
+   if(!r.ok)continue;
+   const payload=await r.json();
+   const parsed=parseAcervoPayload(payload);
+   if(parsed)return parsed;
+  }catch(e){console.debug('acervo: não foi possível carregar '+endpoint,e)}
+ }
+ return null;
+}
+async function loadAcervoData({force=false}={}){
+ if(acervoLoaded&&!force)return true;
+ const parsed=await fetchAcervoPayload();
+ if(!parsed)return false;
+ applyAcervoList(parsed.videos,parsed.materials,true);
+ lastAcervoSig=JSON.stringify(parsed);
+ return true;
+}
+async function refreshAcervoData(){
+ if(location.protocol==='file:'||document.visibilityState!=='visible')return false;
+ const parsed=await fetchAcervoPayload();
+ if(!parsed)return false;
+ const sig=JSON.stringify(parsed);
+ if(sig===lastAcervoSig)return true;
+ lastAcervoSig=sig;
+ applyAcervoList(parsed.videos,parsed.materials,true);
+ return true;
+}
+// Mantém o catálogo sincronizado enquanto a página estiver aberta
+if(location.protocol!=='file:')setInterval(refreshAcervoData,10000);
+function buildLocalPayload(fileList){
+ localObjectUrls.forEach(url=>URL.revokeObjectURL(url));localObjectUrls=[];
+ const videos=[],materials=[];
+ Array.from(fileList).forEach(file=>{
+  const ext=String(file.name).toLowerCase().split('.').pop();
+  const isVideo=VIDEO_EXTENSIONS.has(ext),isMaterial=MATERIAL_EXTENSIONS.has(ext);
+  if(!isVideo&&!isMaterial)return;
+  const pathParts=(file.webkitRelativePath||file.name).split(/[\\/]/).filter(Boolean);
+  const folderParts=pathParts.slice(0,-1);
+  const discipline=folderParts.length>1?folderParts.slice(1).join(' / '):'Cursos';
+  const src=URL.createObjectURL(file);localObjectUrls.push(src);
+  (isVideo?videos:materials).push({d:discipline,t:file.name.replace(/\.[^.]+$/,''),src});
+ });
+ return{videos,materials};
+}
+function requestLocalFolder(){
+ return new Promise(resolve=>{
+  localFolderInput.value='';
+  localFolderInput.onchange=()=>{
+   const p=buildLocalPayload(localFolderInput.files);
+   closeModals();applyAcervoList(p.videos,p.materials,false);
+   lastAcervoSig='local:'+Date.now();
+   resolve(true);
+  };
+  localFolderInput.click();
+ });
+}
+
+/* ═══ PLAYER — loading / botões ═══ */
+let playerLoadingTimer=null;
+function showPLoading(on){const l=$('player-loading');if(!l)return;
+ if(on){l.classList.add('show');clearTimeout(playerLoadingTimer);playerLoadingTimer=setTimeout(()=>l.classList.remove('show'),8000)}
+ else{clearTimeout(playerLoadingTimer);l.classList.remove('show')}}
+$('close-player').onclick=closePlayer;
+
+/* ═══ TASK MODAL ═══ */
+function openTaskModal(type,title,desc){
+ $('task-modal-type').textContent=type||'Tarefa';
+ $('task-modal-title').textContent=title||'';
+ $('task-modal-desc').textContent=desc||'';
+ $('task-modal').classList.add('show');
+}
+function closeTaskModal(){$('task-modal').classList.remove('show')}
+$('close-task-modal').onclick=closeTaskModal;
+$('task-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeTaskModal()});
+$('btn-buscar-aula').onclick=e=>{
+ e.stopPropagation(); // sem isso o listener global de clique dispara srHide() e apaga a busca
+ const q=$('task-modal-title').textContent||'';
+ closeTaskModal();go('view-inicio');
+ const s=$('global-search');s.value=q;doSearch(q);
+};
+
 function moduleCard(m){const its=itemsOf(m),dn=its.filter(i=>DONE.has(itemKey(i))).length;
  return '<div class="module-card" onclick="openModule(\''+m.id+'\')">'
  +'<div class="card-cover cover-'+m.id+'">'+esc(m.n)+'</div>'
@@ -1070,27 +1350,48 @@ function renderAcervo(){
  if(CUR_MOD){list.style.display='none';det.style.display='block';$('module-title').textContent=CUR_MOD.n;
   const row=(it,idx)=>{const k=itemKey(it),done=DONE.has(k),fav=FAV.has(k);
    const thumb=it.type==='v'
-    ?'<img class="vid-thumb" loading="lazy" alt="" src="https://i.ytimg.com/vi/'+esc(it.y)+'/mqdefault.jpg">'
+    ?(it.y?'<img class="vid-thumb" loading="lazy" alt="" src="https://i.ytimg.com/vi/'+esc(it.y)+'/mqdefault.jpg">':'<span class="content-icon" style="color:var(--teal)"><i class="ph ph-film-strip"></i></span>')
     :'<span class="content-icon icon-pdf"><i class="ph ph-file-pdf"></i></span>';
    return '<div class="content-item'+(done?' watched':'')+'" onclick="openItem(\''+CUR_MOD.id+'\',\''+it.type+'\','+idx+')">'
    +'<div class="content-info">'+thumb+'<span class="content-title">'+esc(it.t)+'</span></div>'
    +'<i class="ph ph-star fav-btn'+(fav?' fav-on':'')+'" onclick="event.stopPropagation();toggleFav(\''+CUR_MOD.id+'\',\''+it.type+'\','+idx+')"></i>'
    +'<span class="check-icon"><i class="ph ph-check-bold"></i></span></div>'};
-  $('videos-container').innerHTML=CUR_MOD.videos.map((v,i)=>row({...v,type:'v'},i)).join('')||'<div style="color:var(--text-muted);font-size:13px">Nenhum vídeo — adicione via Sincronizar Acervo Manual.</div>';
-  $('apostilas-container').innerHTML=CUR_MOD.apostilas.map((a,i)=>row({...a,type:'a'},i)).join('')||'<div style="color:var(--text-muted);font-size:13px">Nenhum material — adicione via Sincronizar Acervo Manual.</div>';
+  $('videos-container').innerHTML=CUR_MOD.videos.map((v,i)=>row({...v,type:'v'},i)).join('')||'<div style="color:var(--text-muted);font-size:13px">Nenhum vídeo ainda — sincronize o acervo online ou o Drive.</div>';
+  $('apostilas-container').innerHTML=CUR_MOD.apostilas.map((a,i)=>row({...a,type:'a'},i)).join('')||'<div style="color:var(--text-muted);font-size:13px">Nenhum material ainda — sincronize o acervo online ou o Drive.</div>';
   const rs=RESUMOS[CUR_MOD.id]||[],rc=$('resumos-container');
   if(rc)rc.innerHTML=rs.length?rs.map((r,i)=>'<div class="resumo-item"><b>'+esc(r.t)+'</b><span class="fc-meta">'+r.d+'</span><div class="resumo-wrap">'+esc(r.c)+'</div><div style="margin-top:8px"><button class="btn-outline btn-sm" onclick="delResumo('+i+')">Excluir</button></div></div>').join('')
-   :'<div style="color:var(--text-muted);font-size:13px">Nada aqui ainda — cole o output do NotebookLM'+(CUR_MOD.id==='casos'?' ou registe o caso (anamnese, diagnóstico, conduta)':'')+'.</div>';
+   :'<div style="color:var(--text-muted);font-size:13px">Nada aqui ainda — cole o output do NotebookLM'+(CUR_MOD.id==='casos'?' ou registre o caso (anamnese, diagnóstico, conduta)':'')+'.</div>';
+  
+  const qContainer=$('questoes-container');
+  if(qContainer){
+    const subjQs = bankAll().filter(q => q.s === CUR_MOD.id);
+    if(subjQs.length > 0) {
+      const sc = QUIZS[CUR_MOD.id];
+      const scoreStr = sc && sc.t ? `<span class="quiz-deck-score" style="margin-left:8px;vertical-align:middle">melhor: ${Math.round(100*sc.s/sc.t)}%</span>` : '';
+      qContainer.innerHTML = `<div class="resume-card" style="margin:0;width:100%;background:linear-gradient(135deg, var(--bg-surface), var(--teal-dim));border-color:var(--teal)">
+          <div style="display:flex;flex-direction:column;gap:6px">
+              <div class="dash-title" style="color:var(--teal);margin:0">Vamos treinar?</div>
+              <b>Questões de ${esc(CUR_MOD.n)}</b>
+              <div style="font-size:12px;color:var(--text-muted)">${subjQs.length} questões disponíveis no banco ${scoreStr}</div>
+          </div>
+          <button class="btn-primary" onclick="go('view-treino'); setTimeout(()=>startQuiz('${CUR_MOD.id}'),100)"><i class="ph ph-play"></i> Iniciar Quiz</button>
+      </div>`;
+    } else {
+      qContainer.innerHTML = `<div class="content-item" style="opacity:0.6" onclick="go('view-treino'); setTimeout(openImport, 100)">
+          <div class="content-info"><i class="ph ph-upload-simple" style="font-size:24px;color:var(--text-muted)"></i> <span class="content-title">Nenhuma questão cadastrada para esta matéria. Clique aqui para importar.</span></div>
+      </div>`;
+    }
+  }
   return}
  list.style.display='block';det.style.display='none';
- $('all-modules-container').innerHTML=MODULES.filter(m=>!SUBJ||m.id===SUBJ).map(moduleCard).join('')
+ $('all-modules-container').innerHTML=MODULES.filter(m=>(!SUBJ||m.id===SUBJ)&&(m.id!=='drive'||itemsOf(m).length>0)).map(moduleCard).join('')
  ||'<div style="padding:0 20px 40px;color:var(--text-muted)">Nenhum módulo para este filtro.</div>'}
 function openModule(id){CUR_MOD=MOD(id);renderAcervo()}
 function backAcervo(){CUR_MOD=null;renderAcervo()}
 function openResumoModal(){if(!CUR_MOD)return;
  openModal('<div class="modal-title">📝 Novo resumo — '+esc(CUR_MOD.n)+'<button class="modal-close"><i class="ph ph-x"></i></button></div>'
  +'<div class="form-group"><label class="form-label">Título</label><input id="rs-title" placeholder="Ex: IC — resumo do bloco"></div>'
- +'<div class="form-group"><label class="form-label">Conteúdo</label><textarea class="imp-textarea" id="rs-body" style="min-height:220px" placeholder="Cole aqui o resumo do NotebookLM, mnemónicas ou o caso clínico..."></textarea></div>'
+ +'<div class="form-group"><label class="form-label">Conteúdo</label><textarea class="imp-textarea" id="rs-body" style="min-height:220px" placeholder="Cole aqui o resumo do NotebookLM, mnemônicos ou o caso clínico..."></textarea></div>'
  +'<div class="form-actions"><button class="btn-outline" onclick="closeModals()">Cancelar</button><button class="btn-primary" onclick="saveResumo()">Salvar</button></div>')}
 function saveResumo(){const t=cleanStr($('rs-title').value.trim()),c=cleanStr($('rs-body').value.trim());
  if(!t||!c){toast('Preencha título e conteúdo','error');return}
@@ -1100,15 +1401,35 @@ function delResumo(i){RESUMOS[CUR_MOD.id].splice(i,1);lsSet('acv_resumos',RESUMO
 function openItem(mid,type,idx){const m=MOD(mid);if(!m)return;const it=type==='v'?m.videos[idx]:m.apostilas[idx];if(!it)return;
  lsSet('acv_last',{m:mid,type,idx});renderHome();
  $('player-overlay').classList.add('show');$('player-title').textContent=it.t;
- if(type==='v')$('player-frame').innerHTML='<iframe src="https://www.youtube.com/embed/'+esc(it.y)+'" allowfullscreen></iframe>';
- else{let u=it.u;const gd=String(u).match(/drive\.google\.com\/file\/d\/([^/]+)/);if(gd)u='https://drive.google.com/file/d/'+gd[1]+'/preview';
-  $('player-frame').innerHTML='<iframe src="'+esc(u)+'"></iframe>'}
- $('player-open').onclick=()=>window.open(type==='v'?'https://youtu.be/'+it.y:it.u,'_blank');
- $('player-done').innerHTML='<i class="ph ph-check"></i> Concluir (+2 XP)';
- $('player-done').onclick=()=>{const k=itemKey(it);
-  if(!DONE.has(k)){DONE.add(k);lsSet('acv_done',[...DONE]);addXP(2,type==='v'?'video visto':'material lido');touchStreak();checkBadges()}
-  $('player-done').innerHTML='✅ Concluído';toast('Marcado como concluído','success')}}
-function closePlayer(){$('player-overlay').classList.remove('show');$('player-frame').innerHTML='';renderAcervo();renderHome();updateBadges()}
+ const fr=$('player-frame'),vd=$('player-video');
+ vd.oncanplay=vd.onerror=null;vd.pause();vd.removeAttribute('src');vd.load();
+ vd.style.display='none';fr.style.display='';
+ $('player-meta').textContent=m.n+(type==='v'?' · Videoaula':' · Material')+' ↗';
+ $('player-meta').onclick=()=>window.open(it.y?'https://youtu.be/'+it.y:(it.u||'#'),'_blank');
+ fr.onload=()=>showPLoading(false);
+ if(type==='v'&&it.y){showPLoading(true);fr.src='https://www.youtube.com/embed/'+it.y}
+ else if(type==='v'&&VIDEO_FILE_RE.test(it.u||'')){
+  fr.style.display='none';vd.style.display='block';showPLoading(true);
+  vd.oncanplay=()=>showPLoading(false);
+  vd.onerror=()=>{showPLoading(false);toast('Não foi possível carregar o vídeo','error')};
+  vd.src=it.u;vd.play().catch(()=>{});
+ }else{
+  let u=String(it.u||'');const gd=u.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+  if(gd)u='https://drive.google.com/file/d/'+gd[1]+'/preview';
+  else if(/drive\.google\.com/.test(u))u=u.replace(/\/view.*/,'/preview');
+  showPLoading(true);fr.src=u;
+ }
+ $('mark-btn').innerHTML='<i class="ph ph-check-circle"></i> Marcar como concluído';
+ $('mark-btn').onclick=()=>{const k=itemKey(it);
+  if(!DONE.has(k)){DONE.add(k);lsSet('acv_done',[...DONE]);addXP(2,type==='v'?'video assistido':'material lido');touchStreak();checkBadges()}
+  $('mark-btn').innerHTML='✅ Concluído';toast('Marcado como concluído','success')}}
+function closePlayer(){
+ $('player-overlay').classList.remove('show');
+ const fr=$('player-frame'),vd=$('player-video');
+ fr.onload=null;fr.src='about:blank';
+ vd.oncanplay=vd.onerror=null;vd.pause();vd.removeAttribute('src');vd.load();
+ vd.style.display='none';fr.style.display='';
+ showPLoading(false);renderAcervo();renderHome();updateBadges()}
 function toggleFav(mid,type,idx){const m=MOD(mid),it=type==='v'?m.videos[idx]:m.apostilas[idx],k=itemKey(it);
  FAV.has(k)?FAV.delete(k):FAV.add(k);lsSet('acv_fav',[...FAV]);saveCloud();renderAcervo()}
 function openFavorites(){
@@ -1120,17 +1441,6 @@ function openFavorites(){
   +'<span class="content-title">'+esc(it.t)+'</span></div><span style="font-size:11px;color:var(--text-muted)">'+esc(m.n)+'</span></div>'}}));
  openModal('<div class="modal-title">⭐ Favoritos<button class="modal-close"><i class="ph ph-x"></i></button></div>'
  +(body||'<div style="color:var(--text-muted);font-size:13px">Nenhum favorito ainda.</div>'))}
-function openDriveModal(){
- openModal('<div class="modal-title"><i class="ph ph-code"></i> Inserir JSON Acervo<button class="modal-close"><i class="ph ph-x"></i></button></div>'
- +'<div style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-bottom:12px">Cole o JSON das videoaulas e PDFs que deseja que fiquem no acervo visual:<br><code style="font-family:var(--font-mono);font-size:11px">{"videos":[{"m":"car","t":"Título","y":"ID_YOUTUBE"}],"apostilas":[{"m":"car","t":"Título","u":"https://drive.google.com/file/d/ID/view"}]}</code><br>IDs: '+MODULES.map(m=>m.id).join(', ')+'</div>'
- +'<textarea class="imp-textarea" id="drive-json" placeholder=\'{"videos":[],"apostilas":[]}\'></textarea>'
- +'<div class="form-actions"><button class="btn-outline" onclick="clearDrive()">Limpar</button><button class="btn-primary" onclick="saveDrive()">Salvar Acervo Manual</button></div>');
- $('drive-json').value=(DRIVE.videos.length||DRIVE.apostilas.length)?JSON.stringify(DRIVE,null,1):''}
-function saveDrive(){try{const p=deepClean(JSON.parse($('drive-json').value||'{}'));
- const v=(p.videos||[]).filter(x=>MOD(x.m)&&x.t&&x.y),a=(p.apostilas||[]).filter(x=>MOD(x.m)&&x.t&&x.u);
- DRIVE={videos:v,apostilas:a};lsSet('cuscuz_med_drive',DRIVE);saveCloud();catalog();closeModals();refreshAll();
- toast('Acervo manual salvo: '+(v.length+a.length)+' itens','success')}catch(e){toast('JSON inválido','error')}}
-function clearDrive(){DRIVE={videos:[],apostilas:[]};lsSet('cuscuz_med_drive',DRIVE);saveCloud();catalog();closeModals();refreshAll();toast('Conteúdo de acervo manual removido')}
 
 /* ═══ TREINO: QUESTÕES (+ modo erradas) ═══ */
 const bankAll=()=>DECKS.flatMap(d=>d.qs.map(q=>({...q,s:d.subj})));
@@ -1141,6 +1451,7 @@ function renderDecks(){
  const fd=$('fc-due');if(fd)fd.textContent=fcDue(buildFCList()).length;
  $('decks-grid').innerHTML=(all.length?'<div class="quiz-deck-card" onclick="startQuiz(null)"><i class="ph ph-squares-four quiz-deck-icon"></i><div class="quiz-deck-title">Todos os assuntos</div><div class="quiz-deck-meta">'+all.length+' questões</div></div>':'')
  +MODULES.filter(m=>!SUBJ||m.id===SUBJ).map(m=>{const n=byS[m.id]||0,sc=QUIZS[m.id];
+  if(m.id==='drive') return '';
   return '<div class="quiz-deck-card" style="'+(n?'':'opacity:.45')+'" onclick="'+(n?"startQuiz('"+m.id+"')":"openImport()")+'">'
   +'<i class="ph ph-cards quiz-deck-icon"></i><div class="quiz-deck-title">'+esc(m.n)+'</div>'
   +'<div class="quiz-deck-meta">'+(n?n+' questões':'vazio — importar')+'</div>'
@@ -1180,18 +1491,18 @@ function finishQuiz(){const r=QR;
  if(zero)confetti();
  $('quiz-runner').innerHTML='<div class="quiz-result-card"><i class="ph '+(zero?'ph-party-popper':'ph-trophy')+'" style="font-size:40px;color:var(--amber)"></i>'
  +'<div class="quiz-result-score">'+pct(r.correct,r.qs.length)+'%</div>'
- +'<div style="color:var(--text-secondary)">'+(zero?'🎉 Zerou as erradas!':r.correct+' de '+r.qs.length+' corretas')+'</div>'
+ +'<div style="color:var(--text-secondary)">'+(zero?'🎉 Você zerou as erradas!':r.correct+' de '+r.qs.length+' corretas')+'</div>'
  +'<div style="display:flex;flex-direction:column;gap:8px;width:100%;margin-top:14px;max-height:300px;overflow-y:auto">'
  +r.qs.map((q,i)=>'<div class="quiz-review-item '+(r.ans[i]===q.ans?'ok':'fail')+'"><i class="ph '+(r.ans[i]===q.ans?'ph-check-circle':'ph-x-circle')+'"></i><span>'+esc(q.q.slice(0,80))+'</span></div>').join('')+'</div>'
  +'<div style="display:flex;gap:8px;margin-top:16px"><button class="btn-outline" onclick="quitQuiz()">Voltar</button>'
- +(r.wrongMode?'<button class="btn-primary" onclick="startWrongQuiz()">Rever de novo</button>'
+ +(r.wrongMode?'<button class="btn-primary" onclick="startWrongQuiz()">Revisar de novo</button>'
   :'<button class="btn-primary" onclick="startQuiz('+(r.subj?"'"+r.subj+"'":'null')+')">Repetir</button>')+'</div></div>';
  updateWrongBtn()}
 function quitQuiz(){QR=null;$('quiz-runner-screen').style.display='none';$('quiz-list-screen').style.display='block';renderDecks();updateBadges();updateWrongBtn()}
 function updateWrongBtn(){const el=$('wrong-count');if(el)el.textContent=WRONG.size}
 function openImport(){
  openModal('<div class="modal-title"><i class="ph ph-upload-simple"></i> Importar questões<button class="modal-close"><i class="ph ph-x"></i></button></div>'
- +'<div class="form-group"><label class="form-label">Matéria</label><select id="imp-subj">'+MODULES.map(m=>'<option value="'+m.id+'">'+m.n+'</option>').join('')+'</select></div>'
+ +'<div class="form-group"><label class="form-label">Matéria</label><select id="imp-subj">'+MODULES.filter(m=>m.id!=='drive').map(m=>'<option value="'+m.id+'">'+m.n+'</option>').join('')+'</select></div>'
  +'<div class="form-group"><label class="form-label">Cole as questões (texto ou JSON)</label><textarea class="imp-textarea" id="imp-txt" placeholder="P: enunciado\na) opção 1\nb) opção 2\nc) opção 3\nd) opção 4\nR: a\nE: comentário"></textarea></div>'
  +'<div style="font-size:11px;color:var(--text-muted)">Separe questões por linha em branco. JSON: [{"q":"","opts":["","","",""],"ans":0,"exp":""}]</div>'
  +'<div class="form-actions"><button class="btn-outline" onclick="previewImport()">Verificar</button><button class="btn-primary" onclick="saveImport()">Importar</button></div>')}
@@ -1228,7 +1539,7 @@ function fcDue(list){const t=todayKey();return list.filter(c=>fcState(fcKey(c)).
 function saveFC(){lsSet('acv_fc',FCS);lsSet('acv_fc_srs',FCSRS);saveCloud()}
 let FCR=null;
 function startFC(){const list=fcDue(buildFCList());
- if(!list.length){toast('Nada para rever hoje 🎉','success');return}
+ if(!list.length){toast('Nada para revisar hoje 🎉','success');return}
  FCR={list:shuffle(list),i:0,shown:false};
  $('quiz-list-screen').style.display='none';$('quiz-runner-screen').style.display='block';renderFC()}
 function renderFC(){const r=FCR;if(!r||r.i>=r.list.length)return finishFC();
@@ -1254,7 +1565,7 @@ function gradeFC(g){const r=FCR,c=r.list[r.i],st=fcState(fcKey(c));r.i++;
 function finishFC(){const n=FCR?FCR.list.length:0;FCR=null;confetti();
  $('quiz-runner').innerHTML='<div class="quiz-result-card"><i class="ph ph-stack" style="font-size:40px;color:var(--teal)"></i>'
  +'<div class="quiz-result-score">Sessão concluída</div>'
- +'<div style="color:var(--text-secondary)">'+n+' cards revistos</div>'
+ +'<div style="color:var(--text-secondary)">'+n+' cards revisados</div>'
  +'<div style="color:var(--text-muted);font-size:12px">Os errados voltam hoje/amanhã · os fáceis demoram mais</div>'
  +'<button class="btn-primary" style="margin-top:16px" onclick="quitFC()">Voltar ao Treino</button></div>'}
 function quitFC(){FCR=null;$('quiz-runner-screen').style.display='none';$('quiz-list-screen').style.display='block';renderDecks()}
@@ -1276,9 +1587,9 @@ function exportAnki(){const rows=buildFCList().map(c=>[c.f.replace(/\s+/g,' ').t
 let SR=null,SRTIMER=null;
 function renderSim(){
  const qs=bankAll();
- $('sim-config').innerHTML='<div><b style="font-size:15px">⏱️ Montar simulado</b><div style="font-size:12px;color:var(--text-muted)">Banco actual: '+qs.length+' questões</div></div>'
+ $('sim-config').innerHTML='<div><b style="font-size:15px">⏱️ Montar simulado</b><div style="font-size:12px;color:var(--text-muted)">Banco atual: '+qs.length+' questões</div></div>'
  +'<div><label class="sim-label">Matérias (nenhuma = todas)</label><div class="chips" id="sim-subs">'
- +MODULES.map(m=>'<span class="chip" data-sim="'+m.id+'" onclick="this.classList.toggle(\'active\')">'+m.n+'</span>').join('')+'</div></div>'
+ +MODULES.filter(m=>m.id!=='drive').map(m=>'<span class="chip" data-sim="'+m.id+'" onclick="this.classList.toggle(\'active\')">'+m.n+'</span>').join('')+'</div></div>'
  +'<div class="form-row"><div><label class="sim-label">Quantidade</label><select class="sim-select" id="sim-n"><option>10</option><option selected>20</option><option>30</option><option value="all">Todas</option></select></div>'
  +'<div><label class="sim-label">Minutos</label><input class="sim-select" id="sim-min" type="number" placeholder="auto (2/questão)"></div></div>'
  +'<button class="btn-primary" style="align-self:flex-start" onclick="startSim()">Iniciar simulado</button>';
@@ -1327,15 +1638,16 @@ function finishSim(){clearInterval(SRTIMER);const r=SR;
 function quitSim(){SR=null;$('sim-runner-screen').style.display='none';$('sim-config-screen').style.display='block';renderSim()}
 
 /* ═══ HOME / DASH / FILTROS ═══ */
+const USING_DEMO=false; // true só quando houver conteúdo de exemplo embutido
 function stat(i,l,v){return '<div class="quiz-deck-card" style="cursor:default;gap:4px"><span style="font-size:22px">'+i+'</span><span class="metric-value">'+v+'</span><span class="metric-label">'+l+'</span></div>'}
 function renderHome(){
  $('demo-banner').style.display=USING_DEMO?'block':'none';
- if(USING_DEMO)$('demo-banner').innerHTML='📦 <b>Modo demonstração:</b> conteúdo de exemplo. Use <b>Acervo → Sincronizar Acervo Manual</b> para carregar as suas videoaulas e PDFs reais.';
+ if(USING_DEMO)$('demo-banner').innerHTML='📦 <b>Modo demonstração:</b> conteúdo de exemplo. O Drive será sincronizado automaticamente se as chaves estiverem configuradas.';
  const last=lsGet('acv_last',null);
  $('resume-card').innerHTML=(last&&MOD(last.m))?(()=>{const m=MOD(last.m),it=last.type==='v'?m.videos[last.idx]:m.apostilas[last.idx];
   return it?'<div class="resume-card"><div><div class="dash-title">Continuar de onde parou</div><b>'+esc(it.t)+'</b> <span style="color:var(--text-muted);font-size:12px">· '+esc(m.n)+'</span></div><button class="btn-primary" onclick="openItem(\''+last.m+'\',\''+last.type+'\','+last.idx+')"><i class="ph ph-play"></i> Continuar</button></div>':''})():'';
  $('modules-recent').innerHTML=MODULES.filter(m=>itemsOf(m).length).slice(0,4).map(moduleCard).join('')||'<div style="padding:0 20px;color:var(--text-muted)">Nenhum conteúdo carregado.</div>';
- const vids=[...DONE].filter(k=>k.includes(':yt:')).length,pdfs=[...DONE].length-vids;
+ const vids=[...DONE].filter(k=>k.includes(':yt:')||k.includes('drive.google')).length,pdfs=[...DONE].length-vids;
  const qtot=Object.values(QUIZS).reduce((a,s)=>a+(s.t||0),0);
  const studyMin=Object.values(DB.prep.sessions).reduce((a,b)=>a+b,0);
  $('dash-stats').innerHTML='<div class="cards-grid" style="padding:0;gap:12px">'
@@ -1369,7 +1681,7 @@ function renderDash(){
   +'<span class="game-badge-tip">'+esc(b.n)+'</span></span>').join('')+'</div></div>'}
 function setFilter(f){FILTER=f;$$('.nav-item[data-filter]').forEach(n=>n.classList.toggle('active',n.dataset.filter===f));renderAcervo()}
 function clearSubject(){SUBJ=null;CUR_MOD=null;$$('#subject-nav .nav-item').forEach(n=>n.classList.remove('active'));renderAcervo()}
-function buildSubjectNav(){$('subject-nav').innerHTML=MODULES.map(m=>'<div class="nav-item" data-subj="'+m.id+'" onclick="pickSubject(\''+m.id+'\',this)"><i class="ph ph-bookmark"></i>'+m.n+'<span class="nav-badge" id="sn-'+m.id+'">0</span></div>').join('')}
+function buildSubjectNav(){$('subject-nav').innerHTML=MODULES.filter(m=>m.id!=='drive').map(m=>'<div class="nav-item" data-subj="'+m.id+'" onclick="pickSubject(\''+m.id+'\',this)"><i class="ph ph-bookmark"></i>'+m.n+'<span class="nav-badge" id="sn-'+m.id+'">0</span></div>').join('')}
 function pickSubject(s,el){SUBJ=s;CUR_MOD=null;$$('#subject-nav .nav-item').forEach(n=>n.classList.toggle('active',n===el));renderAcervo()}
 function updateBadges(){let tot=0,dn=0;
  MODULES.forEach(m=>{const its=itemsOf(m),d=its.filter(i=>DONE.has(itemKey(i))).length;tot+=its.length;dn+=d;
@@ -1409,67 +1721,28 @@ function exportData(){
  a.download='cuscuz-med-backup-'+todayKey()+'.json';a.click();toast('Backup exportado ✅','success')}
 function importData(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();
  r.onload=()=>{try{const p=deepClean(JSON.parse(r.result));
-  if(!p.db){toast('Ficheiro inválido','error');return}
+  if(!p.db){toast('Arquivo inválido','error');return}
   if(!confirm('Substituir todos os dados locais por este backup?'))return;
   lsSet(LS,p.db);lsSet('acv_done',p.done||[]);lsSet('acv_fav',p.fav||[]);lsSet('acv_quiz',p.quiz||{});
   lsSet('acv_last',p.last||null);lsSet('acv_days',p.days||[]);lsSet('acv_sims',p.sims||[]);
   lsSet('acv_decks',p.decks||[]);lsSet('acv_wrong',p.wrong||[]);lsSet('cuscuz_med_drive',p.drive||{videos:[],apostilas:[]});
   lsSet('acv_resumos',p.resumos||{});lsSet('acv_fc',p.fc||[]);lsSet('acv_fc_srs',p.fcsrs||{});
   if(p.users)lsSet('cuscuz_users',p.users);
-  toast('Backup restaurado! A recarregar...','success');setTimeout(()=>location.reload(),700)}catch(e){toast('Ficheiro inválido','error')}};
+  toast('Backup restaurado! Recarregando...','success');setTimeout(()=>location.reload(),700)}catch(e){toast('Arquivo inválido','error')}};
  r.readAsText(f);ev.target.value=''}
-
-/* ═══ INJEÇÕES (CSS novo + seções) ═══ */
-function injectExtras(){
- if(!$('cuscuz-extras')){const st=document.createElement('style');st.id='cuscuz-extras';
-  st.textContent=[
-  '.cover-leg{background:linear-gradient(135deg,#475569,#0f172a)}','.cover-cas{background:linear-gradient(135deg,#0ea5e9,#6366f1)}',
-  '.fc-meta{font-family:var(--font-mono);font-size:10px;color:var(--text-muted)}',
-  '.srs-btns{display:flex;gap:8px;margin-top:12px}',
-  '.fc-btn{flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;border:1px solid var(--border-muted);background:var(--bg-elevated);color:inherit}',
-  '.fc-btn:hover{border-color:var(--border-default)}',
-  '.hab-ico{position:absolute;bottom:4px;left:4px;font-size:10px}',
-  '.resumo-item{background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6}',
-  '.resumo-item b{display:block;margin-bottom:4px}','.resumo-wrap{white-space:pre-wrap}',
-  '#search-wrap{position:relative;z-index:15}#global-search{max-width:860px}',
-  '.search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;max-width:860px;max-height:55vh;overflow-y:auto;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:40}',
-  '.sr-grupo{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-disabled);padding:10px 14px 4px}',
-  '.sr-item{display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:13px;cursor:pointer;color:var(--text-secondary)}',
-  '.sr-item:hover{background:var(--bg-elevated);color:var(--text-primary)}',
-  '.sr-item i{color:var(--teal)}',
-  '.sr-mod{margin-left:auto;font-size:10px;font-family:var(--font-mono);color:var(--text-muted);flex-shrink:0}',
-  '.vid-thumb{width:66px;height:38px;object-fit:cover;border-radius:6px;flex-shrink:0;background:var(--bg-active)}'
-  ].join('');document.head.appendChild(st)}
- if($('view-inicio')&&!$('global-search')){
-  $('view-inicio').insertAdjacentHTML('afterbegin',
-   '<div id="search-wrap" style="margin:0 20px 14px">'
-   +'<input id="global-search" placeholder="🔎 Procurar aula, PDF, resumo..." autocomplete="off" style="width:100%;padding:11px 14px">'
-   +'<div class="search-results" id="search-results" style="display:none"></div></div>');
-  $('global-search').addEventListener('input',e=>searchDebounced(e.target.value));
-  document.addEventListener('click',e=>{if(!e.target.closest('#search-wrap'))srHide()})}
- if(!$('resumos-container')&&$('apostilas-container')){
-  $('apostilas-container').insertAdjacentHTML('afterend',
-   '<div class="content-list-title">📝 Resumos · casos</div><div class="content-list" id="resumos-container" style="grid-template-columns:1fr"></div>'
-  +'<div style="padding:0 20px 40px"><button class="btn-outline" onclick="openResumoModal()"><i class="ph ph-plus"></i> Adicionar resumo / caso clínico</button></div>')}
- if(!$('fc-actions')&&$('bank-panel')){
-  $('bank-panel').insertAdjacentHTML('beforeend',
-   '<div id="fc-actions" style="display:flex;gap:8px;flex-wrap:wrap">'
-  +'<button class="btn-primary btn-sm" onclick="startFC()"><i class="ph ph-cards"></i> Rever flashcards (<span id="fc-due">0</span> pendentes)</button>'
-  +'<button class="btn-outline btn-sm" onclick="startWrongQuiz()"><i class="ph ph-rotate-ccw"></i> Rever erradas (<span id="wrong-count">0</span>)</button>'
-  +'<button class="btn-outline btn-sm" onclick="openFCModal()"><i class="ph ph-plus"></i> Novo card</button>'
-  +'<button class="btn-outline btn-sm" onclick="exportAnki()"><i class="ph ph-download-simple"></i> Exportar p/ Anki</button></div>')}
- updateWrongBtn()}
 
 /* ═══ INIT ═══ */
 window.addEventListener('DOMContentLoaded',()=>{
  applyTheme();
- injectExtras();catalog();buildSubjectNav();
- // Se houver login offline anterior armazenado, tenta arrancar diretamente. 
- // Caso contrário, fica no ecrã de login a aguardar a autenticação Google.
- if(localStorage.getItem('medplan_logged')==='1'){
-     // A inicialização real ocorre no callback do Google ou pode forçar arranque.
-     // Deixaremos o utilizador clicar novamente, mas pode automatizar.
+ try{if(firebaseConfig.databaseURL&&typeof firebase!=='undefined'){firebase.initializeApp(firebaseConfig);FBDB=firebase.database();CLOUD_ON=true}}catch(e){console.warn('Firebase off:',e)}
+ catalog();buildSubjectNav();
+ const searchInput = document.getElementById('global-search');
+ if(searchInput){
+   searchInput.addEventListener('input', e=>searchDebounced(e.target.value));
+   document.addEventListener('click', e => { if(!e.target.closest('#search-wrap')) srHide() });
  }
+ if(localStorage.getItem('medplan_logged')==='1'){SYNC_USER=localStorage.getItem('medplan_user');startApp()}else refreshAll();
+ updateWrongBtn();
 });
 window.addEventListener('load',()=>{if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'});
 </script>
