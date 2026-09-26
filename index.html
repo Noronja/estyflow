@@ -9,9 +9,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,700&display=swap" rel="stylesheet">
 <script defer src="https://unpkg.com/@phosphor-icons/web"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<!-- Google Drive API & Identity Services -->
-<script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-<script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<!-- API de Áudio do YouTube para o Lobby -->
+<script async defer src="https://www.youtube.com/iframe_api"></script>
 
 <style>
 :root{
@@ -49,7 +51,7 @@ body{font-family:var(--font-ui);font-size:14px;color:var(--text-primary);backgro
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border-muted);border-radius:99px}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 input,select,textarea{font-family:inherit;color:var(--text-primary);background:var(--bg-elevated);border:1px solid var(--border-muted);border-radius:var(--radius-md);padding:8px 12px;font-size:13px}
-input:focus,select,textarea:focus{outline:none;border-color:var(--teal)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
 .theme-toggle{position:relative;display:inline-flex;align-items:center;padding:11px 4px;cursor:pointer}
 .theme-toggle__track{position:relative;width:40px;height:22px;border-radius:11px;background:#424242;transition:background .3s}
 [data-theme="light"] .theme-toggle__track{background:#4db6ac}
@@ -137,7 +139,6 @@ input:focus,select,textarea:focus{outline:none;border-color:var(--teal)}
 .skip-btn:hover{background:var(--amber-dim)}
 .week-target{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .week-q-input{width:90px;text-align:center;font-family:var(--font-mono);font-weight:600}
-
 .dashboard{grid-area:dash;background:var(--bg-base);border-left:1px solid var(--border-subtle);overflow-y:auto;padding:16px}
 .dash-section{margin-bottom:20px}
 .dash-title{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--text-disabled);font-family:var(--font-mono);margin-bottom:10px}
@@ -159,12 +160,12 @@ input:focus,select,textarea:focus{outline:none;border-color:var(--teal)}
 .urgency-critical{background:var(--rose-dim);color:var(--rose)}
 .exam-stat-val{font-family:var(--font-mono);font-size:18px;font-weight:700}
 .exam-stat-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em}
-
 .subj-row{display:flex;align-items:center;gap:8px;padding:5px 0}
 .subj-name{font-size:11px;color:var(--text-secondary);min-width:88px;font-weight:500}
 .subj-bar{flex:1;height:6px;background:var(--bg-elevated);border-radius:var(--radius-full);overflow:hidden}
 .subj-bar-fill{height:100%;border-radius:var(--radius-full);transition:width .4s}
 .subj-pct{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);min-width:32px;text-align:right}
+
 .game-level{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .game-level-num{font-family:var(--font-mono);font-size:15px;font-weight:800;color:var(--amber);min-width:44px}
 .game-xp-bar{flex:1;height:8px;background:var(--bg-active);border-radius:var(--radius-full);overflow:hidden}
@@ -355,34 +356,182 @@ input:focus,select,textarea:focus{outline:none;border-color:var(--teal)}
 #menu-btn{display:none}
 @media(max-width:480px){.cards-grid{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ═══ ESTILOS DO LOBBY PES 2013 ═══ */
+#lobby-screen {
+  position: fixed; inset: 0; z-index: 95;
+  background: #050a15;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.lobby-bg-glow {
+  position: absolute; width: 150vw; height: 150vh;
+  background: radial-gradient(circle at 50% 50%, rgba(0,200,168,0.1) 0%, transparent 60%);
+  animation: pulseLobbyBg 8s ease-in-out infinite alternate;
+  z-index: 1; pointer-events: none;
+}
+@keyframes pulseLobbyBg {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.1); opacity: 1; }
+}
+.lobby-header-title {
+  position: absolute; top: 30px; left: 40px;
+  font-size: 28px; font-weight: 800; color: #fff;
+  letter-spacing: 2px; font-family: var(--font-mono);
+  text-transform: uppercase; z-index: 5;
+  text-shadow: 0 0 15px rgba(255,255,255,0.2);
+}
+.lobby-header-title span { color: var(--teal); }
+.pes-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 140px);
+  gap: 16px; max-width: 900px; width: 90%; z-index: 5; margin-bottom: 40px;
+}
+.pes-tile {
+  background: rgba(255,255,255,0.03); border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 8px; padding: 24px; display: flex; flex-direction: column;
+  justify-content: flex-end; gap: 12px; cursor: pointer; transition: all 0.25s cubic-bezier(0.2,0.8,0.2,1);
+  backdrop-filter: blur(8px); color: #fff; text-transform: uppercase;
+  font-weight: 800; font-family: var(--font-mono); font-size: 14px; position: relative; overflow: hidden;
+}
+.pes-tile i { font-size: 32px; color: rgba(255,255,255,0.7); transition: color 0.2s; margin-bottom: auto; }
+.pes-tile:hover {
+  border-color: var(--teal); transform: scale(1.03); box-shadow: 0 0 30px var(--teal-glow);
+  background: linear-gradient(135deg, rgba(0,200,168,0.2), rgba(0,200,168,0.05));
+}
+.pes-tile:hover i { color: var(--teal); }
+.tile-large { grid-column: span 2; grid-row: span 2; font-size: 22px; padding: 32px; }
+.tile-large i { font-size: 54px; }
+.tile-wide { grid-column: span 2; }
+.pes-ticker-wrap {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,0.85); border-top: 1px solid var(--teal);
+  padding: 10px 0; overflow: hidden; display: flex; align-items: center; z-index: 5;
+}
+.pes-ticker {
+  white-space: nowrap; animation: ticker 30s linear infinite;
+  font-family: var(--font-mono); font-size: 12px; color: var(--teal); text-transform: uppercase;
+  letter-spacing: 1px;
+}
+@keyframes ticker {
+  0% { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+@media (max-width: 768px) {
+  .pes-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+  .tile-large, .tile-wide { grid-column: span 1; grid-row: span 1; font-size: 16px; padding: 20px; }
+  .tile-large i { font-size: 32px; }
+  .lobby-header-title { position: relative; top: 0; left: 0; margin-bottom: 20px; text-align: center; }
+}
+
+/* ═══ COMPONENTES ADICIONAIS ═══ */
+.fc-meta{font-family:var(--font-mono);font-size:10px;color:var(--text-muted)}
+.srs-btns{display:flex;gap:8px;margin-top:12px}
+.fc-btn{flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;border:1px solid var(--border-muted);background:var(--bg-elevated);color:inherit}
+.fc-btn:hover{border-color:var(--border-default)}
+.hab-ico{position:absolute;bottom:4px;left:4px;font-size:10px}
+.resumo-item{background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6}
+.resumo-item b{display:block;margin-bottom:4px}
+.resumo-wrap{white-space:pre-wrap}
+#search-wrap{position:relative;z-index:15;margin:0 20px 14px}
+#global-search{width:100%;padding:11px 14px;max-width:860px}
+.search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;max-width:860px;max-height:55vh;overflow-y:auto;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:40}
+.sr-grupo{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-disabled);padding:10px 14px 4px}
+.sr-item{display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:13px;cursor:pointer;color:var(--text-secondary)}
+.sr-item:hover{background:var(--bg-elevated);color:var(--text-primary)}
+.sr-item i{color:var(--teal)}
+.sr-mod{margin-left:auto;font-size:10px;font-family:var(--font-mono);color:var(--text-muted);flex-shrink:0}
+.vid-thumb{width:66px;height:38px;object-fit:cover;border-radius:6px;flex-shrink:0;background:var(--bg-active)}
+
+/* ═══ PLAYER v2 (vídeo direto + loading) ═══ */
+.close-btn{width:32px;height:32px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;color:var(--text-muted)}
+.close-btn:hover{background:var(--bg-elevated);color:var(--text-primary)}
+.btn-secondary{border:1px solid var(--border-muted);color:var(--text-secondary);background:transparent;display:inline-flex;align-items:center;gap:6px;padding:0 12px;height:32px;border-radius:var(--radius-md);font-size:12px;font-weight:600;transition:border-color .15s,background-color .15s,color .15s}
+.btn-secondary:hover{border-color:var(--border-default);background:var(--bg-elevated);color:var(--text-primary)}
+#player-video{position:absolute;inset:0;width:100%;height:100%;background:#000;display:none;object-fit:contain}
+.player-loading{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:3}
+.player-loading.show{display:flex}
+.player-loading-card{display:flex;flex-direction:column;align-items:center;gap:12px;background:var(--bg-surface);border:1px solid var(--border-muted);border-radius:var(--radius-lg);padding:20px 30px;font-size:12px;color:var(--text-secondary)}
+.player-loading-ring{width:38px;height:38px;border-radius:50%;border:3px solid var(--border-muted);border-top-color:var(--teal);animation:spinRing .9s linear infinite}
+@keyframes spinRing{to{transform:rotate(360deg)}}
+.player-meta-link{cursor:pointer}
+.player-meta-link:hover{color:var(--text-secondary);text-decoration:underline}
+
+/* ═══ TASK MODAL (passo a passo) ═══ */
+.task-modal-box{background:var(--bg-surface);border:1px solid var(--border-muted);border-radius:var(--radius-xl);width:92%;max-width:560px;max-height:88vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
+.task-modal-body{padding:24px;overflow-y:auto}
+.task-modal-body h4{font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.14em;font-family:var(--font-mono);margin-bottom:6px}
+.task-modal-body h2{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.task-modal-desc{font-size:14px;line-height:1.7;color:var(--text-secondary);white-space:pre-wrap}
+.task-modal-foot{display:flex;gap:8px;justify-content:flex-end;align-items:center;padding:16px 24px;border-top:1px solid var(--border-subtle);flex-wrap:wrap}
 </style>
 </head>
 <body>
 
-<!-- ═══ LOGIN COM OAUTH DO GOOGLE DRIVE ═══ -->
+<!-- YouTube Audio Player (invisível) -->
+<div id="yt-player-container" style="display:none"></div>
+
+<!-- ═══ LOGIN ═══ -->
 <div id="login-screen" style="position:fixed;inset:0;z-index:100;background:var(--bg-void);display:flex;align-items:center;justify-content:center">
   <div style="width:90%;max-width:360px;text-align:center">
     <div style="font-size:36px;font-weight:800;color:var(--teal);margin-bottom:4px">Cuscuz<span style="color:var(--text-primary)">-MED</span></div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:32px">Planejador + Acervo · sync no Drive ☁️</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:32px">Planejador + Acervo · sync na nuvem ☁️</div>
     <div style="background:var(--bg-surface);border:1px solid var(--border-muted);border-radius:16px;padding:28px 24px">
-      <button onclick="doLoginGoogle()" style="width:100%;padding:12px;border-radius:var(--radius-md);background:var(--teal);color:var(--text-inverse);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px">
-        <i class="ph ph-google-logo" style="font-size:18px"></i> Entrar com conta Google
-      </button>
-      <div style="font-size:10px;color:var(--text-muted);margin-top:14px;line-height:1.5">
-        O seu progresso e acervo serão salvos automaticamente em um arquivo na sua pasta do Google Drive.
+      <div style="margin-bottom:16px;text-align:left">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-family:var(--font-mono)">Usuário</label>
+        <input id="login-user" placeholder="seu usuário" style="width:100%;padding:10px 14px;font-size:14px" autocomplete="username">
       </div>
+      <div style="margin-bottom:20px;text-align:left">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-family:var(--font-mono)">Senha</label>
+        <input id="login-pass" type="password" placeholder="sua senha" style="width:100%;padding:10px 14px;font-size:14px" autocomplete="current-password" onkeypress="if(event.key==='Enter')doLogin()">
+      </div>
+      <div id="login-error" style="color:var(--rose);font-size:12px;margin-bottom:12px;display:none">Usuário ou senha incorretos</div>
+      <button onclick="doLogin()" style="width:100%;padding:12px;border-radius:var(--radius-md);background:var(--teal);color:var(--text-inverse);font-size:14px;font-weight:700">Entrar</button>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:10px">Primeiro acesso? A conta é criada automaticamente e o progresso sincroniza entre dispositivos.</div>
     </div>
   </div>
 </div>
 
+<!-- ═══ LOBBY PES 2013 ═══ -->
+<div id="lobby-screen" style="display:none">
+  <div class="lobby-bg-glow"></div>
+  <div class="lobby-header-title">Cuscuz<span>-MED</span></div>
+  
+  <div id="lobby-music-btn" onclick="toggleLobbyMusic()" style="position:absolute; top:30px; right:40px; z-index:10; cursor:pointer; color:var(--teal); font-size:26px; padding:10px; background:rgba(0,0,0,0.5); border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid rgba(0,200,168,0.3)">
+    <i class="ph ph-speaker-slash" id="music-icon"></i>
+  </div>
+
+  <div class="pes-grid">
+    <div class="pes-tile tile-large" onclick="enterApp('view-inicio')">
+      <i class="ph ph-play-circle"></i> <span>Modo Carreira<br><small style="font-size:12px;color:var(--text-muted);text-transform:none;font-family:var(--font-ui)">Continuar estudos e painel</small></span>
+    </div>
+    <div class="pes-tile tile-wide" onclick="enterApp('view-treino')">
+      <i class="ph ph-exam"></i> <span>Treino Livre<br><small style="font-size:11px;color:var(--text-muted);text-transform:none;font-family:var(--font-ui)">Questões e Flashcards</small></span>
+    </div>
+    <div class="pes-tile" onclick="enterApp('view-preparatorio')">
+      <i class="ph ph-graduation-cap"></i> <span>Rumo ao Estrelato</span>
+    </div>
+    <div class="pes-tile" onclick="enterApp('view-simulados')">
+      <i class="ph ph-timer"></i> <span>Copa (Simulados)</span>
+    </div>
+  </div>
+  <div class="pes-ticker-wrap">
+    <div class="pes-ticker">INFO: Bem-vindo ao Cuscuz-MED. A janela de transferências de conhecimento está aberta. Revise seus flashcards diariamente para não acumular. Não esqueça de bater suas metas diárias. Mantenha a hidratação em dia.</div>
+  </div>
+</div>
+
+<!-- ═══ APP PRINCIPAL ═══ -->
 <div class="app" id="app-main" style="display:none">
+  <div id="mobile-sidebar-backdrop" class="modal-overlay" style="z-index:24" onclick="toggleSidebar()"></div>
+
   <header class="header">
     <div style="display:flex;align-items:center;gap:6px">
-      <button class="btn-icon" id="menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')"><i class="ph ph-list"></i></button>
+      <button class="btn-icon" id="menu-btn" onclick="toggleSidebar()"><i class="ph ph-list"></i></button>
       <div class="brand"><div class="brand-icon">C</div><div class="brand-name">Cuscuz<span>-MED</span></div></div>
     </div>
     <div class="header-actions">
       <span id="cloud-dot" title="Status da nuvem" style="width:8px;height:8px;border-radius:50%;background:var(--text-disabled);display:inline-block;margin-right:2px;cursor:default"></span>
+      <button class="btn-icon" onclick="toggleLobbyMusic()" title="Música On/Off"><i class="ph ph-speaker-slash" id="main-music-icon"></i></button>
+      <button class="btn-outline btn-sm" onclick="goToLobby()"><i class="ph ph-game-controller"></i> Lobby</button>
       <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema"><span class="theme-toggle__track"><span class="theme-toggle__thumb"></span></span></button>
       <button class="btn-primary btn-sm" onclick="openPlanModal()">&#9889; Planejar</button>
       <button class="btn-icon" onclick="logout()" title="Sair" style="color:var(--rose)"><i class="ph ph-sign-out"></i></button>
@@ -425,6 +574,11 @@ input:focus,select,textarea:focus{outline:none;border-color:var(--teal)}
 
   <main class="main">
     <div id="view-inicio" class="view-section active" style="padding-top:20px">
+      <div id="search-wrap">
+        <input id="global-search" placeholder="🔎 Buscar aula, PDF, resumo..." autocomplete="off">
+        <div class="search-results" id="search-results" style="display:none"></div>
+      </div>
+      
       <div class="demo-banner" id="demo-banner"></div>
       <h1 class="section-title" style="margin:8px 20px 16px">Em andamento</h1>
       <div id="resume-card"></div>
@@ -520,7 +674,7 @@ input:focus,select,textarea:focus{outline:none;border-color:var(--teal)}
         <h1 class="section-title" style="margin:8px 20px 16px">Acervo Completo</h1>
         <div style="margin:0 20px 16px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="filter-pill" onclick="openFavorites()"><i class="ph ph-star" style="color:#FFC107"></i> Favoritos</button>
-          <button class="filter-pill" onclick="openDriveModal()"><i class="ph ph-cloud" style="color:var(--teal)"></i> <span id="drive-btn-label">Sincronizar Acervo Manual</span></button>
+          <button class="filter-pill" onclick="openDriveModal()"><i class="ph ph-cloud" style="color:var(--teal)"></i> <span id="drive-btn-label">Sincronizar Drive</span></button>
         </div>
         <div class="cards-grid" id="all-modules-container" style="padding:0 20px 40px"></div>
       </div>
@@ -531,6 +685,12 @@ input:focus,select,textarea:focus{outline:none;border-color:var(--teal)}
         <div class="content-list" id="videos-container"></div>
         <div class="content-list-title"><i class="ph ph-file-pdf" style="font-size:16px;vertical-align:middle"></i> Materiais</div>
         <div class="content-list" id="apostilas-container"></div>
+        <div class="content-list-title">📝 Resumos · casos</div>
+        <div class="content-list" id="resumos-container" style="grid-template-columns:1fr"></div>
+        <div style="padding:0 20px 20px"><button class="btn-outline" onclick="openResumoModal()"><i class="ph ph-plus"></i> Adicionar resumo / caso clínico</button></div>
+        
+        <div class="content-list-title"><i class="ph ph-exam" style="font-size:16px;vertical-align:middle"></i> Prática</div>
+        <div class="content-list" id="questoes-container" style="grid-template-columns:1fr; padding-bottom: 40px;"></div>
       </div>
     </div>
 
@@ -544,7 +704,14 @@ input:focus,select,textarea:focus{outline:none;border-color:var(--teal)}
             <b style="font-size:15px">🗂️ Banco Unificado de Questões</b>
             <span id="bank-count" style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">0 questões</span>
           </div>
-          <div id="bank-stats" class="chips" style="font-size:12px;color:var(--text-muted)"></div>
+          <div id="bank-stats" class="chips" style="font-size:12px;color:var(--text-muted);margin-bottom:12px"></div>
+          
+          <div id="fc-actions" style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-primary btn-sm" onclick="startFC()"><i class="ph ph-cards"></i> Revisar flashcards (<span id="fc-due">0</span> pendentes)</button>
+            <button class="btn-outline btn-sm" onclick="startWrongQuiz()"><i class="ph ph-rotate-ccw"></i> Revisar erradas (<span id="wrong-count">0</span>)</button>
+            <button class="btn-outline btn-sm" onclick="openFCModal()"><i class="ph ph-plus"></i> Novo card</button>
+            <button class="btn-outline btn-sm" onclick="exportAnki()"><i class="ph ph-download-simple"></i> Exportar p/ Anki</button>
+          </div>
         </div>
         <div class="cards-grid" id="decks-grid"></div>
       </div>
@@ -568,11 +735,39 @@ input:focus,select,textarea:focus{outline:none;border-color:var(--teal)}
 <!-- PLAYER -->
 <div class="overlay" id="player-overlay">
   <div class="player-box">
-    <div class="player-head"><h3 id="player-title"></h3><button class="modal-close" onclick="closePlayer()"><i class="ph ph-x"></i></button></div>
-    <div class="player-frame-container" id="player-frame"></div>
+    <div class="player-head">
+      <h3 id="player-title">Mídia</h3>
+      <button class="close-btn" id="close-player"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="player-frame-container">
+      <iframe id="player-frame" src="" allowfullscreen=""></iframe>
+      <video id="player-video" controls="" playsinline="" preload="auto"></video>
+      <div class="player-loading" id="player-loading" aria-live="polite">
+        <div class="player-loading-card">
+          <div class="player-loading-ring"></div>
+          <span>Carregando…</span>
+        </div>
+      </div>
+    </div>
     <div class="player-foot">
-      <button class="btn-outline" id="player-open"><i class="ph ph-arrow-square-out"></i> Abrir original</button>
-      <button class="btn-primary" id="player-done"><i class="ph ph-check"></i> Concluir (+2 XP)</button>
+      <span style="font-size:13px;color:var(--text-muted);font-weight:500" id="player-meta" class="player-meta-link" title="Abrir original em nova aba"></span>
+      <button class="btn-primary" id="mark-btn"><i class="ph ph-check-circle"></i> Marcar como concluído</button>
+    </div>
+  </div>
+</div>
+
+<!-- TASK MODAL — passo a passo da tarefa -->
+<div class="overlay" id="task-modal">
+  <div class="task-modal-box">
+    <div class="task-modal-body">
+      <h4 id="task-modal-type">Tipo</h4>
+      <h2 id="task-modal-title">Assunto</h2>
+      <div style="margin:24px 0 12px 0;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Passo a Passo da Tarefa</div>
+      <div class="task-modal-desc" id="task-modal-desc">Descrição...</div>
+    </div>
+    <div class="task-modal-foot">
+      <button class="btn-secondary" id="close-task-modal">Fechar</button>
+      <button class="btn-primary" id="btn-buscar-aula"><i class="ph ph-magnifying-glass-plus"></i> Assistir Aulas Relacionadas</button>
     </div>
   </div>
 </div>
@@ -610,759 +805,944 @@ const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math
 function lsGet(k,def){try{const v=JSON.parse(localStorage.getItem(k));return v==null?def:v}catch(e){return def}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){toast('⚠️ Armazenamento cheio — exporte um backup','error')}}
 function toast(msg,type=''){const t=document.createElement('div');t.className='toast '+type;t.innerHTML=msg;$('toasts').appendChild(t);setTimeout(()=>{t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(()=>t.remove(),300)},2800)}
-function closeModals(){$$('.modal-overlay').forEach(o=>o.remove())}
+function closeModals(){$$('.modal-overlay:not(#mobile-sidebar-backdrop)').forEach(o=>o.remove())}
 function openModal(html){const o=document.createElement('div');o.className='modal-overlay open';o.innerHTML='<div class="modal">'+html+'</div>';o.addEventListener('click',e=>{if(e.target===o||e.target.closest('.modal-close'))o.remove()});$('modal-container').appendChild(o);return o}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModals();const p=$('player-overlay');if(p&&p.classList.contains('show'))closePlayer()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModals();const p=$('player-overlay');if(p&&p.classList.contains('show'))closePlayer();if($('task-modal').classList.contains('show'))closeTaskModal()}});
 
-/* ═══ DADOS E MAPEAMENTO DO ACERVO JSON ═══ */
+/* ═══ CONTEÚDO ═══ */
 const MODULES=[
- {id:'car',n:'Cardiologia'},{id:'nef',n:'Nefrologia'},{id:'gin',n:'Ginecologia e Obstetrícia'},
- {id:'obs',n:'Obstetrícia'},{id:'ped',n:'Pediatria'},{id:'prv',n:'Preventiva'},
- {id:'hep',n:'Hepatologia'},{id:'gas',n:'Gastrologia'},{id:'end',n:'Endócrino'},
- {id:'hem',n:'Hematologia'},{id:'inf',n:'Infectologia'},{id:'neu',n:'Neurologia'},
- {id:'ort',n:'Ortopedia'},{id:'orl',n:'Otorrino'},{id:'der',n:'Dermatologia'},
- {id:'pne',n:'Pneumologia'},{id:'cir',n:'Cirurgia'},{id:'psi',n:'Psiquiatria'},
- {id:'reu',n:'Reumatologia'},{id:'oft',n:'Oftalmologia'},{id:'leg',n:'Medicina Legal'},
- {id:'prov',n:'Provas'},{id:'casos',n:'Casos Clínicos'}
+ {id:'car',n:'Cardiologia'},{id:'nef',n:'Nefrologia'},{id:'gin',n:'Ginecologia'},{id:'obs',n:'Obstetrícia'},
+ {id:'ped',n:'Pediatria'},{id:'prv',n:'Preventiva'},{id:'hep',n:'Hepatologia'},{id:'gas',n:'Gastro'},
+ {id:'end',n:'Endócrino'},{id:'hem',n:'Hematologia'},{id:'inf',n:'Infectologia'},{id:'neu',n:'Neurologia'},
+ {id:'ort',n:'Ortopedia'},{id:'orl',n:'Otorrino'},{id:'der',n:'Dermatologia'},{id:'pne',n:'Pneumologia'},
+ {id:'cir',n:'Cirurgia'},{id:'psi',n:'Psiquiatria'},{id:'reu',n:'Reumatologia'},{id:'oft',n:'Oftalmologia'},
+ {id:'leg',n:'Medicina Legal'},{id:'prov',n:'Provas'},{id:'casos',n:'Casos Clínicos'},
+ {id:'drive',n:'☁️ Acervo Online'}
 ];
-
 const MOD=id=>MODULES.find(m=>m.id===id);
+let DRIVE=lsGet('cuscuz_med_drive',{videos:[],apostilas:[]});
+function catalog(){
+ MODULES.forEach(m=>{m.videos=[];m.apostilas=[]});
+ const seen=new Set();
+ const add=(list,type)=>list.forEach(it=>{const key=it.u||it.t;if(seen.has(key))return;seen.add(key);
+  const m=MOD(it.m)||MOD('drive');(type==='a'?m.apostilas:m.videos).push(it)});
+ add(DRIVE.videos,'v');add(DRIVE.apostilas,'a');add(ACERVO.videos,'v');add(ACERVO.apostilas,'a');
+}
+const itemsOf=m=>[...m.videos.map(v=>({type:'v',...v})),...m.apostilas.map(a=>({type:'a',...a}))];
+const itemKey=it=>it.m+':'+(it.type==='v'?'yt:'+(it.y||it.u):'pdf:'+it.u);
 
-const RAW_ACERVO = [
-  {"d":"Cardiologia","t":"Semiol","id":"1oMTNsDujm28dYu9Zh_CJogwu-91IxMdi"},
-  {"d":"Cardiologia","t":"Hipertensão_Arterial_Sistêmica___Secundária_e_","id":"1ssC4XMC4LAAyojun16zXQnuPgcD1IieN"},
-  {"d":"Cardiologia","t":"Hipert","id":"1xPQ8vXO5hIQdMPKSyVbxuh67jpM3mJxe"},
-  {"d":"Cardiologia","t":"Hipertensão_Arterial_Sistêmica___Tratamento","id":"17OUp17mp4x69Al02fn8RnFS35oIcZfOX"},
-  {"d":"Cardiologia","t":"Insuficiência_Cardíaca__Tr","id":"1AShjTDqtxtUQtmiALOK2W8crBU1o9dv-"},
-  {"d":"Cardiologia","t":"Síndro","id":"1lJ6Cc-YAbHrqM6-6B2EJ855JZexhrxRO"},
-  {"d":"Cardiologia","t":"Insuficiência_Cardíaca__Cl","id":"1IcGlXYPl0FEIQC3xG_gk5wvBMDp1Mfnp"},
-  {"d":"Cardiologia","t":"Insufi","id":"1vMpO3TE8i5zZ2Ym407rXunavlQMe6S9H"},
-  {"d":"Cardiologia","t":"Cardio","id":"1h-lY1fezHc2qw13Y8oPUZNYRKS7jtyiO"},
-  {"d":"Cardiologia","t":"Cardiopatia_Cong","id":"1JooOQuQILl98oaRxF48rs3N1YTbJxDHo"},
-  {"d":"Cardiologia","t":"Cardiopatias_Congênitas_-_Parte_III","id":"1lTVV2r7UmpQQLUAqxPsvEbqnEdg-p_HZ"},
-  {"d":"Cardiologia","t":"Cardiopatias_Congênitas_-_Parte_II","id":"1MbvPTYMnjuyNxu9M0_ZO43EWbEY9KJcM"},
-  {"d":"Ginecologia e Obstetrícia","t":"Câncer_de_Mama","id":"1bpkInc3Z2AMNloFvGJgcBUwB7uS5UvYP"},
-  {"d":"Ginecologia e Obstetrícia","t":"Rastreamento_do_Câncer_de_Mama","id":"1DPLIAijEC4RYBNNfPcJGvVgMeVjhWDxw"},
-  {"d":"Ginecologia e Obstetrícia","t":"Planej","id":"1f-zngwR3WeThcnZvX5bPAEc66ImtDSJg"},
-  {"d":"Ginecologia e Obstetrícia","t":"Doença","id":"1k7s_wabmJrPMg9E1FIdQ-klLfxR5-7RY"},
-  {"d":"Ginecologia e Obstetrícia","t":"Cimaté","id":"11c84CuUdY5pihUDA8Pkgm7QuYS2psN9p"},
-  {"d":"Ginecologia e Obstetrícia","t":"Miomat","id":"1DQ8jqjebOk3FlFeeWCJZxSek3lNHplkg"},
-  {"d":"Ginecologia e Obstetrícia","t":"Doenças_da_Vulva","id":"1oOk0jyzUWVMyT-feT4H9vgggnfy8x7yh"},
-  {"d":"Ginecologia e Obstetrícia","t":"Câncer","id":"17iAR95Fi58uRsTardordPYdzuFQUXtJi"},
-  {"d":"Ginecologia e Obstetrícia","t":"Síndro","id":"176sZmJNpPZhsX5xZvfTBCBTb4mO2hxBo"},
-  {"d":"Ginecologia e Obstetrícia","t":"Doença_Inflamató","id":"12L-iVmhQS1fbeZGzLBjdYPO9YIb1dGGr"},
-  {"d":"Ginecologia e Obstetrícia","t":"Rastre","id":"1Z9sh8N682YdwkAnPoCKCmnh2Ccd1T8lX"},
-  {"d":"Ginecologia e Obstetrícia","t":"Sangra","id":"1ZI6dTw63dablFh1jbeAHKTb9InIxWz9V"},
-  {"d":"Ginecologia e Obstetrícia","t":"Câncer_do_Endométrio","id":"18hyNgF1Jwqy2XSZuoor1AT9zlrHzyJWf"},
-  {"d":"Ginecologia e Obstetrícia","t":"Adenom","id":"1QgIy3DTgYjxisr-XwmdYaJnJ12TbZTix"},
-  {"d":"Ginecologia e Obstetrícia","t":"Tumore","id":"1mZ69Go7PND6JOA_ao1Cew3DWC_dsVAmg"},
-  {"d":"Ginecologia e Obstetrícia","t":"Câncer_de_Ovário","id":"11dn0ThF_wQnSpMyhndpmq6mPi6_TBeow"},
-  {"d":"Ginecologia e Obstetrícia","t":"Abdome","id":"19QblB2DWXovDjT4m19C-rNvdEIhJPvdx"},
-  {"d":"Climatério_e_terapia_hormonal","t":"Aula_r","id":"1Td9CYWPjCsN0lndH3uwZmoz0TiLFueLR"},
-  {"d":"Climatério_e_terapia_hormonal","t":"Terapi","id":"1QifsUjeg7ZacMF2mQ4vw2QQzd2dcY7ql"},
-  {"d":"Climatério_e_terapia_hormonal","t":"Climat","id":"1L4dLXeqJGr1OIObcMrcmm64BmvZlsnrv"},
-  {"d":"Amenorreia","t":"Amenorreia_Secun","id":"1X0tfJIy2fqZvGI3QQtSMuck8bEepA_E_"},
-  {"d":"Amenorreia","t":"Amenorreia_-_Aul","id":"1lIXJXUoGdK8JKsTVAbKvvzXYt9G5nHVV"},
-  {"d":"Amenorreia","t":"Amenor","id":"1jVunwA4WswOmj6rTLNKbLPnYszd2sUIi"},
-  {"d":"Assistência_à_vítima_de_violência_sexual","t":"Aula_R","id":"1iuvTgxRLwwVC5FYtx7owXmKg8lr1d9TU"},
-  {"d":"Assistência_à_vítima_de_violência_sexual","t":"Assist","id":"1GkwmFpiauczECoVWusXHOZjUGrAyVZ9l"},
-  {"d":"Cervicites","t":"Cervic","id":"1W9fyIYA8OqiRa94rprjMk7swZ0Ym-noI"},
-  {"d":"Anatomia_e_embriologia_do_trato_genital_feminino","t":"Embrio","id":"1ZI8OGn-Zpts_CY74s8yWzXoB1qR_bYH3"},
-  {"d":"Anatomia_e_embriologia_do_trato_genital_feminino","t":"Anatom","id":"1kiDFu-lI114KuNi1jcCI1nHrJ9XKrh1h"},
-  {"d":"Abortamento_de_repetição","t":"Aborta","id":"1pySgv3L9ieIlHzEwgDXonkb45zVrCR1o"},
-  {"d":"Abortamento_de_repetição","t":"Abortamento_de_Repetição_-_Parte_II","id":"1o8b1otOJICVP-wbhj2uy1Gh496PqbTEv"},
-  {"d":"Infecção_puerperal","t":"Infecç","id":"1bMrUZSeVgrNeglzHigbOyIqe4zQ0u64w"},
-  {"d":"Infecção_puerperal","t":"Infecção_Puerperal_-_Parte_II","id":"1YUjhJ_Sx6WH5DAnghvM7BGNZYsXJV9NW"},
-  {"d":"Gestação_múltipla","t":"Gestação_Múltipla_-_Parte_II","id":"1KScYxJPN798tsKoeleEEuCv2g0NO9pZB"},
-  {"d":"Gestação_múltipla","t":"Gestaç","id":"1D96xE2d4VNXIcjje30HEWmRDuFeHOlvx"},
-  {"d":"Aloimunização_materna_e_doença_hemolítica_perinatal","t":"Aloimu","id":"1l4Tp53okAVs3WnQOzGu8MtF30RLtGHOy"},
-  {"d":"Alteração_do_volume_de_líquido_amniótico","t":"Alteração_do_volume_de_Líquido_Amniótico_-_Parte_III","id":"1LiGX_MX4bg-jUGuShbeVK_VsqCm7qg6U"},
-  {"d":"Alteração_do_volume_de_líquido_amniótico","t":"Alteração_do_volume_de_Líquido_Amniótico_-_Par","id":"1e0iRF52iWyZk1RcGbuSq0ggpYeW5JQtF"},
-  {"d":"Alteração_do_volume_de_líquido_amniótico","t":"Altera","id":"1fvH_G5gQ2FH6ICgedq8_Bx4mdRaFeJnn"},
-  {"d":"Clínica Médica","t":"Mecanismo_de_Parto_e_Fases_Clínicas_do_Parto_-_Parte_IV","id":"1zdtAemixnej0Zdjr1gFElTsZliqpn07n"},
-  {"d":"Clínica Médica","t":"Mecanismo_de_Parto_e_Fases_Clínicas_do_Parto_-","id":"1q8W4czEoNKRhCMrzLjt7ZrOUqmHvaB64"},
-  {"d":"Clínica Médica","t":"Mecanismo_de_Parto_e_Fases_Clínicas_do_Parto_-_Parte_III","id":"1PphtA7X80ZOJmQ_jzy8LSqnIjAAh78W9"},
-  {"d":"Clínica Médica","t":"Mecani","id":"1G7bE-vIBP34N-7g6VAOuQjEDySLXwVRB"},
-  {"d":"Clínica Médica","t":"Mecanismo_de_Parto_e_Fases_Clínicas_do_Parto_-_Parte_V","id":"10Ms2QG00lE7h5VNc5z5yadkIfbF-c7cE"},
-  {"d":"Hpp_-_hemorragia_pós-parto","t":"Hemorragia_Pós-Parto_(HPP)_-_Parte_III","id":"1ydV3cckGaygFzrwMSnMkgbtl-ItMXzNe"},
-  {"d":"Hpp_-_hemorragia_pós-parto","t":"Hemorr","id":"1cr8_aAaVBgUoivy2ded3_S5O9QZyshby"},
-  {"d":"Hpp_-_hemorragia_pós-parto","t":"Hemorragia_Pós-parto_(HPP)_-_Parte_II","id":"1iMXqhGKKSNiMJ9c5UbbGH2EFIWe2KR0U"},
-  {"d":"Indução_do_parto_e_pós-datismo","t":"Indução_do_Parto__-_Parte_","id":"19obMLtUmOnes6-emxKBt3zuoUhz9cNd-"},
-  {"d":"Indução_do_parto_e_pós-datismo","t":"Induçã","id":"1vB4I7YWN5HIUHV7LD7dw2dBI6MYKWYqM"},
-  {"d":"Indução_do_parto_e_pós-datismo","t":"Gestaç","id":"1BNTz1WV19Fbz3LRaKnTz31PByFba5O8M"},
-  {"d":"Infecções_congênitas_na_gestação","t":"Infecç","id":"19TUZm8eDPFXMxBwZYNRqarhQmCq2Blwm"},
-  {"d":"Infecções_congênitas_na_gestação","t":"Infecções_Congênitas_na_Gestação_-_Parte_II","id":"1VNW31H9-_qcxsj5GUtJOMYsUbAMYUG6b"},
-  {"d":"Diabetes_mellitus_na_gestação","t":"Diabet","id":"11zXncQa6KcUVpWmIJQ3xsdfICZvLNf_b"},
-  {"d":"Diabetes_mellitus_na_gestação","t":"Diabetes_Mellitus_na_Gestação_-_Parte_III","id":"1QR4i8FK57DnYcKMc__3gOWGL8Np0ofkn"},
-  {"d":"Diabetes_mellitus_na_gestação","t":"Diabetes_Mellitus_na_Gestação_-_Parte_II","id":"1D3iLPXgEFs_rfSNd6msuIUlVJR_cnGzS"},
-  {"d":"Cirurgia","t":"Aula_Resumo_-_Ve","id":"17Rk5fnaT-GucJZ4uQoUYXxIiQPAxbiNn"},
-  {"d":"Cirurgia","t":"Aula_Resumo_-_Abdome_Agudo_Obstrutivo","id":"1C4MsHXuGo1Bqwky_1-iIWrmI7L4p0XYf"},
-  {"d":"Cirurgia","t":"Aula_resumo_-_Co","id":"1AgUYEgToO4s_-kpF_f2DBLA3biWFQ3Ke"},
-  {"d":"Cirurgia","t":"Aula_R","id":"10J5XVGZenkM7_tn1CEheqkuBRFWVw2wX"},
-  {"d":"Cirurgia","t":"Aula_Resumo_-_Tr","id":"1KoIA7MfmzLHBGx4WJUO2yMt0KJN_SAPv"},
-  {"d":"Cirurgia","t":"Cirurgia_de_Cabeça_e_Pescoço_-_Manejo_dos_Nódu","id":"1ZWA9whodQEfGkN5i2YHsRXC46oS39l7z"},
-  {"d":"Cirurgia","t":"Cirurg","id":"1nihfr_R-BCF_IMhZyaF4NqtE39aXkm7r"},
-  {"d":"Cirurgia","t":"Cirurg","id":"1CtVz-LlDHlnirLQpovaeontZLAFBVF-J"},
-  {"d":"Cirurgia","t":"Cirurgia_de_Cabeça_e_Pescoço_-_Neoplasias_Beni","id":"1cvDkkfstmNm8sknHAYRrfWMldUZeJ043"},
-  {"d":"Cirurgia","t":"Cirurg","id":"18PkRiYK5liHHezS8sNjqAPgWa6pwvLU-"},
-  {"d":"Infecções_de_vias_aéreas_superiores_-_parte_i","t":"Infecç","id":"1A4q64d0zNQQQRBDLCywCwycJqkCJRqFJ"},
-  {"d":"Infecções_de_vias_aéreas_superiores_-_parte_i","t":"Infecções_de_Vias_Aéreas_Superiores_I_-_Parte_","id":"1DjRgW0jB2rHmExPlWiNXCw3zFNPsC7aA"},
-  {"d":"Infecções_de_vias_aéreas_superiores_-_parte_iii","t":"Infecções_de_Vias_Aéreas_Superiores_III_-_Part","id":"1h8Bs7jzpRwYcGZc0sn6CJmCAhzt5TkXJ"},
-  {"d":"Infecções_de_vias_aéreas_superiores_-_parte_iii","t":"Infecç","id":"1GBYlNesNdiZoK9EER-WVxwU8i_L2CgGX"},
-  {"d":"Infecções_de_vias_aéreas_superiores_-_parte_ii","t":"Infecções_de_Vias_Aéreas_Superiores_II_-_Parte","id":"13Y2dnFP8wCFkDqPIsoJnvZSSyb5NaOxU"},
-  {"d":"Infecções_de_vias_aéreas_superiores_-_parte_ii","t":"Infecç","id":"1KoLRgNLuOjdF4Zm93cDRQ1PvXorQyiX4"},
-  {"d":"Dermatologia","t":"Dermat","id":"1UfpuNNYfRGn-9hhvWlrs-n4r27wV7lHl"},
-  {"d":"Dermatologia","t":"Hansen","id":"1PhOCKbD5YaoVwsAb4pkZhOqpYzaPHcqI"},
-  {"d":"Dermatologia","t":"Câncer","id":"1GlQ1HWE22nXVYxWaoKxNm5Is0zhyGkvK"},
-  {"d":"Hepatologia","t":"Compli","id":"1o9vQ2tYt5-rg8Lj2AVz3wrNqxHGaFa85"},
-  {"d":"Hepatologia","t":"Tumore","id":"1sP0Q4_6kQmfk4nUjukV5jmo36arMvJ5b"},
-  {"d":"Hepatologia","t":"Cirros","id":"1etWc0BvPDuW_Htrfru9xcxxkD6BTonnW"},
-  {"d":"Hepatologia","t":"Introd","id":"1ievI_VBUdpVBxQAFmVhO3o-I86Eb4wy3"},
-  {"d":"Hepatologia","t":"Outras","id":"1LnOdxpOd-ZRafJR2bN4H8nVqslopwA5z"},
-  {"d":"Hepatologia","t":"Hepati","id":"1ThjRBPfp-u69thxN7sEIHt1oz6UgpAKP"},
-  {"d":"Hepatologia","t":"Hepato","id":"1u9Wf8OAvw7ZoapPbLbJ7I5i750SeFnCS"},
-  {"d":"Síndrome_hepatorrenal_e_síndrome_hepatopulmonar","t":"Síndro","id":"19TSJttNi9PfdOS6xHx1vr_CC1EGbh8Jz"},
-  {"d":"Síndrome_hepatorrenal_e_síndrome_hepatopulmonar","t":"Síndrome_Hepator","id":"1h7LN7u_dJtSVUHxheBxh3_P4-EJZMKjZ"},
-  {"d":"Outras_causas_de_hepatopatia_crônica","t":"Aula_R","id":"1KmClYS-UONxK5mukzSomhfEweZ7EORI4"},
-  {"d":"Outras_causas_de_hepatopatia_crônica","t":"Doença","id":"1ntDLOelrXk2RKSTgQy4Tx7rvp23vkij7"},
-  {"d":"Outras_causas_de_hepatopatia_crônica","t":"Doença_Hepática_","id":"1GXz2uX4w4E-EXvfnX8hIRfxUjHLUhHOB"},
-  {"d":"Outras_causas_de_hepatopatia_crônica","t":"Hemocr","id":"1-Ggc7nWmIn9iUoAPXL-8DlgU6gt-mAg0"},
-  {"d":"Outras_causas_de_hepatopatia_crônica","t":"Hepati","id":"1pRGnzFOuoBWdhhDhuIvTyxHt3bl-38rY"},
-  {"d":"Outras_causas_de_hepatopatia_crônica","t":"Doença_Hepática_Gordurosa_","id":"13-b3cwy1M2wsdcAUJxK4GqWvqX8rv0Cu"},
-  {"d":"Introdução_à_hepatologia_e_icterícia_não_obstrutiva","t":"Fisiol","id":"1OabAxhtJ_pP3tYtalOtmkeuwOo-WWrFy"},
-  {"d":"Introdução_à_hepatologia_e_icterícia_não_obstrutiva","t":"Anatom","id":"1t9KPlqSGIoSwCqaDv3anusXkZFTH245j"},
-  {"d":"Introdução_à_hepatologia_e_icterícia_não_obstrutiva","t":"Introd","id":"1PufMYfFXrX4mOlTF8MBv9CqKyhLoekrP"},
-  {"d":"Tumores_hepáticos","t":"Tumores_Hepáticos_Malignos","id":"1ZBFHFfCHr9UfT5YmpzATjVAw_JNEjKLQ"},
-  {"d":"Tumores_hepáticos","t":"Tumore","id":"1du5KAldrAh1PDxD2YCbBwcLeSXFXZ-ww"},
-  {"d":"Tumores_hepáticos","t":"Aula_R","id":"1Tzffsm1HJ7S6Dsr2NwwXLhqGLZPnrfSH"},
-  {"d":"Tumores_hepáticos","t":"Tumores_Hepáticos_-_Parte_IV","id":"1C0gJK8oq4LkVP3o1W75Tm-bz7mTK3DeV"},
-  {"d":"Tumores_hepáticos","t":"Tumores_Hepáticos_-_Parte_II","id":"1weXmeyrNUOivHMOa7EiNoC3eZIzRucDj"},
-  {"d":"Tumores_hepáticos","t":"Tumores_Hepáticos_-_Parte_III","id":"1kraNGgFlDxzYqRU_8q_h5k32Qk1ayTFc"},
-  {"d":"Transplante_hepático_e_hepatite_fulminante","t":"Transp","id":"1EPFFIUw_eXh_LmsI_dp0691oGvNfh2Oz"},
-  {"d":"Transplante_hepático_e_hepatite_fulminante","t":"Transplante_hepático_e_Hepatite_Fulminante_-_P","id":"1iMQONkfikr5IfCvEr4ZqfcGanPQu_Mnn"},
-  {"d":"Hematologia","t":"Leucem","id":"1Vtm7zbU1m9pBpAzA6iX-qdzq0W4PGnXl"},
-  {"d":"Hematologia","t":"Anemia","id":"1eem09g1YH4sN6Ipv2AN24lmWQnsWhQrq"},
-  {"d":"Hematologia","t":"Anemias_Microcíticas","id":"1IbNcgboZ10C9W7DQTOX8traoYAQpo9Sv"},
-  {"d":"Hematologia","t":"Linfom","id":"1N2yHm-KHD3sCE_CI144X4F2zkjl1ir-1"},
-  {"d":"Preventiva","t":"Concei","id":"14oEuGFivSVQLXU4fm3yqulV1FiITn4q-"},
-  {"d":"Preventiva","t":"Proces","id":"1YKKvSWchXmd2gkiP2iEWUYhiCx8qc8bf"},
-  {"d":"Medicina_de_família_e_comunidade","t":"Medici","id":"16HT4rrk7sDsPX2Jz4-KgaRw1Thu48hr3"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_","id":"1Z3AuinNWXILyKQQoTdytCJORvzAY4Ryj"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_-_Parte_X","id":"18fF5_kNHJvGnTFB6wzKdSLCQz22kEfZq"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_-_Parte_VIII","id":"17_Pdh9XVUnBO2kcbCfDjzcjoyRRSpSAd"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_-_Parte_V","id":"1u8QniWOHRcXcBCZQdcK5w_4DWnX-Ftgj"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_-_Parte_III","id":"1Hww75635offmsmFxvaruTAp40nUnKiBk"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medida","id":"1gUGuuIPfu6vp5--JkJJMvnGI7My730lP"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_-_Parte_VII","id":"17aaPmMxVIZ3K8uQYtb-dHAY2Tkm1hLU5"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_-_Parte_IV","id":"1VhpNKJH2wfQdHQCmuLjoUbJBpnOFJ3r1"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_-_Parte_VI","id":"1K4Z8xJr8zNxKuQ2CTiH4FO_SM7Ft9gVh"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_-_Parte_XI","id":"1JEGn9ZoGNXb9AMltTZi9tkRD8-FPVkoF"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_-_Parte_IX","id":"1eYT1t9jEbmidsNFFvRd7y9jYNXNomzFC"},
-  {"d":"Medidas_de_saúde_coletiva_-_parte_i__indicadores_de_morbidade","t":"Medida","id":"1j6-Z1c1296Ss_X7-Ye2s4a0iZScDcwaQ"},
-  {"d":"Medidas_de_saúde_coletiva_-_parte_i__indicadores_de_morbidade","t":"Medidas_de_Saúde_Coletiva_","id":"1VhglbQCtt0UwV2bKY74W7_2-bNUOxMbm"},
-  {"d":"Princípios_e_diretrizes_do_sus","t":"Princí","id":"1QT0CcL-l-nIV0gLKUIHa3-2GcYyi7gqL"},
-  {"d":"Princípios_e_diretrizes_do_sus","t":"Princípios_e_Diretrizes_do_SUS_-_Parte_II","id":"1eVkV-x-wnz2klEAxu1W9-7X3y7d9eJIi"},
-  {"d":"Princípios_e_diretrizes_do_sus","t":"Princípios_e_Diretrizes_do_SUS_-_Parte_III","id":"1_LEDP8yGRc6_xu10b7LoSTaFSt7GJNsb"},
-  {"d":"Políticas_de_saúde","t":"Políticas_de_Saúde_-_Parte_III","id":"1shmJpG8eBGTvVi59BdCXY_bpZcBclXjk"},
-  {"d":"Políticas_de_saúde","t":"Políticas_de_Saúde_-_Parte_II","id":"1eJzE36e3CUf_MRvv5xpMC16fwPpce2nG"},
-  {"d":"Políticas_de_saúde","t":"Políticas_de_Saúde_-_Parte_IV","id":"1uqtdbuFjSMBbxSWXH1oM7X9wiR7gHXo2"},
-  {"d":"Políticas_de_saúde","t":"Políti","id":"1jMSrb1Z3aHkhMG7IpNNw5mprd0mc-Ajy"},
-  {"d":"Processos_de_descentralização_e_regionalização_do_sus","t":"Processos_de_Descentralização_e_Regionalização_do_SUS_-_Parte_III","id":"1G6g3LyndxYnJnkw1HJiboaktbYXhPqvC"},
-  {"d":"Processos_de_descentralização_e_regionalização_do_sus","t":"Contex","id":"1yNvq-OBaq6W9ENgaTPQsO1HF3LT2EKep"},
-  {"d":"Processos_de_descentralização_e_regionalização_do_sus","t":"Territ","id":"1l3LdvQoBP-XfiMYB1woOh---2LL-Oo6P"},
-  {"d":"Processos_de_descentralização_e_regionalização_do_sus","t":"Proces","id":"1cCpbxBrk3XQIyysaDPG5zeCvpod1MjM1"},
-  {"d":"Processos_de_descentralização_e_regionalização_do_sus","t":"Processos_de_Descentralização_e_Regionalização","id":"1i3lCcQ1oB4sqbMXAreHnA0JYKqipQwqv"},
-  {"d":"Processos_de_descentralização_e_regionalização_do_sus","t":"Normat","id":"1s_sDIJyZIKn8de9RUZB0GuTR0hRRL2x3"},
-  {"d":"História_do_sus","t":"História_do_SUS_","id":"1SOwkQmOx1exvaOZnWnX0nnNYx62ovTZ8"},
-  {"d":"História_do_sus","t":"Histór","id":"1npqbYpIRTMb6FZCUvqP1Hi8US-I8qxxz"},
-  {"d":"Atenção_primária_à_saúde_no_brasil","t":"Atençã","id":"17NHggtFFSMghgeQnrcrNU5_KpcSDaXBV"},
-  {"d":"Atenção_primária_à_saúde_no_brasil","t":"Atenção_Primária_à_Saúde_no_Brasil_-_Parte_II","id":"1L2kN-6r_TL4Str32FngnYymQlxTnEpTJ"},
-  {"d":"Atenção_primária_à_saúde_no_brasil","t":"Atenção_Primária_à_Saúde_no_Brasil_-_Parte_IV","id":"1IjGwOxgbLfhyMG7kbEf2FHrhra0iRMFg"},
-  {"d":"Atenção_primária_à_saúde_no_brasil","t":"Atenção_Primária_à_Saúde_no_Brasil_-_Parte_III","id":"1Ser5rc4p05Z1nwYpGegIIyFWFpffwm8R"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_","id":"1oTuB9dbkgntqORLVYHL_N-JLDCfUzDSz"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_-_Parte_V","id":"1gl7b7Dg-7aIsBVHqa8jBri1tBAiJAZQP"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_-_Parte_III","id":"1hGqjpjjRInX7eqjPOaTPyWTIPSF4Aqi4"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_-_Parte_IX","id":"1xTl4xXNKypr6NhLlQucU91jEuTE0mDL9"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_-_Parte_IV","id":"1sIN2_7I3DMLaWFlzCyDW90LZ6WoZj22X"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medida","id":"1elFO26hgVnAJCWMaWUn7wu0cflVjvWo2"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_-_Parte_VIII","id":"1UW0tAV0b0okjncwS_tTJJ3m04ATLs53e"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_-_Parte_X","id":"1lw8jPS1ZP4MHgmgdd_feHow1pzg6hR0R"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_-_Parte_VII","id":"1ifygmdWHLf5OlHfbvPEkdP95BkGpl33x"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_-_Parte_VI","id":"1XpQ1sOTXUuGsF8maH6i474ofPwJrZteZ"},
-  {"d":"Medidas_de_saúde_coletiva","t":"Medidas_de_Saúde_Coletiva_-_Parte_XI","id":"1n2hb2C8MClelD-NiqXwtaAU6O4NT747f"},
-  {"d":"Atenção_primária_à_saúde","t":"Atençã","id":"1WJUcH5mgZ8XbLcaGPHoVEnEr5eOCnBK5"},
-  {"d":"Estatística_médica","t":"Estatística_Médica_-_Parte_VII","id":"1J5OLs3gqp0aus1OZqAV3muk8Au9mhh-S"},
-  {"d":"Estatística_médica","t":"Estatística_Médica_-_Parte_VI","id":"1vFw4gN09_GZ0wx-wFn2hxKtJKHnP0M8G"},
-  {"d":"Estatística_médica","t":"Estatística_Médica_-_Parte_V","id":"1q1m5Wd4SKhmpGisgkRjqLGEpn__Z3Dp_"},
-  {"d":"Estatística_médica","t":"Estatística_Médica_-_Parte_IV","id":"1Z_8FoP3ZcUYxXIlRE7u7cvD4Kmj5gVjo"},
-  {"d":"Estatística_médica","t":"Estatí","id":"1Ca_K1bRjETb12hQobzlML9zVCdaLVhyo"},
-  {"d":"Estatística_médica","t":"Estatística_Médica_-_Parte_III","id":"1xJOCqs3sCayt2VzTExuIjlmRm5q0kySf"},
-  {"d":"Estatística_médica","t":"Estatística_Médica_-_Parte_II","id":"1SlKTcB9zlZzCEsHaIPhKzD5EwSegOlsJ"},
-  {"d":"Financiamento_em_saúde","t":"Financiamento_em_Saúde_-_Parte_II","id":"1QzbBdd4MrgLFNMwDtutxFMg0mAWdoudI"},
-  {"d":"Financiamento_em_saúde","t":"Financiamento_em_Saúde_-_Parte_III","id":"1ic7-ZLBjozgZRDvNSJP5kVyR5dNIlSbW"},
-  {"d":"Financiamento_em_saúde","t":"Financ","id":"1sLgPT7hr0Wm3DY8dRxGjQTKOfsLctD5V"},
-  {"d":"Financiamento_em_saúde","t":"Financiamento_em_Saúde_-_P","id":"1L2g37yva8-nO-eRZ9cbtmT_iglG0ZAh0"},
-  {"d":"Epidemias_+_epidemiologia_das_doenças_infecciosas","t":"Epidemias_+_Epidemiologia_das_Doenças_Infecciosas_-_Parte_III","id":"1xSa67l69csfzH_mpFRHMo2ysihVYtUnG"},
-  {"d":"Epidemias_+_epidemiologia_das_doenças_infecciosas","t":"Epidemias_+_Epidemiologia_das_Doenças_Infeccio","id":"11Jl6t1zOPmmdeYifQ1_bFfQkBEQfusqr"},
-  {"d":"Epidemias_+_epidemiologia_das_doenças_infecciosas","t":"Epidem","id":"1nxXnUr6l94MkyIBd0heEpZCsFt-dpTxC"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Processos_Epidêmicos_-_Parte_VIII","id":"1jQiZC4Dw510T_1XQ5ssXirM2jchjjngn"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Processos_Epidêmicos_-_Parte_IV","id":"1XbXtXhzLQ5G7z3wV1zkw5gWb9gLGbwNB"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Processos_Epidêmicos_-_Parte_VII","id":"1UZiB8GksGQ7uJgPl63NW3PIwHaAtMhRl"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Processos_Epidêmicos_-_Parte_V","id":"1iIfC2-X1R5vKQwVmabZWlF7aFMtZxoRh"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Processos_Epidêmicos_-_Parte_VI","id":"1XKwBBb7YSUjcpD5ros3B_w393JQ8ZaRV"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Aula_R","id":"10QfzyPdB0gxN-AyqQDAp3qZletxg3k5n"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Processos_Epidêmicos_-_Parte_III","id":"1eU5kq93UcjGvJbNBaE15OqPVwc1JAiaT"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Aula_Resumo_-_Pr","id":"1mN13Hq38StD3FXavlkj_OX18CqHHhzCv"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Proces","id":"1sQQmjn_9F32tvxjjX70cTFQlOmA8sE-U"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Processos_Epidêmicos_-_Parte_II","id":"1w3tHO6QQy36UCy_rd3ZsYgkinYOTSqUn"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Processos_Epidêmicos_-_Parte_IX","id":"16p5bwNYt584YCDdRru1i2TfPz3m3PMr3"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Processos_Epidêmicos_-_Parte_III","id":"1WLp44Ij2a4NZVTmJFOwxfgZQrHORiKbU"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Processos_Epidêmicos_-_Parte_VIII","id":"1KIq7b9ns8TdKPG2YP6TH0R3tbBkK7Ytg"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Processos_Epidêmicos_-_Parte_IV","id":"1U2x0pD2EqtFtykGC_LANkVbhow0vFobJ"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Processos_Epidêmicos_-_Parte_VI","id":"1G07PAHTkh6F1zH-izpKYUdK35FAfvOZs"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Processos_Epidêmicos_-_Parte_VII","id":"1ZyvYtf83lHZ-gSUeufHCYLJc16fObyzh"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Aula_Resumo_-_Pr","id":"1o-WdfSBe937PxecQDRe2e2b6z1Qe8C9X"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Processos_Epidêmicos_-_Parte_II","id":"1bqEVzpyuCM0VHClqASFcJI1Jo1h4fM4j"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Processos_Epidêmicos_-_Parte_V","id":"1A-ORVHZu7zYcY21OYlY1Shlbr3pLnDke"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Aula_R","id":"1ep6Z10wuxwKakLhhcZCkgX6xHcxWsTez"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Proces","id":"1AOcqy7Smad9A5RgGtWo_FBNcp9z80iCn"},
-  {"d":"Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas","t":"Processos_Epidêmicos_-_Parte_IX","id":"1IQpenXvAgrIVJ7oCgiNGGrnMhao7SvcY"},
-  {"d":"Processo_saúde-doença","t":"Processo_Saúde-Doença_-_Parte_VI","id":"1NTzI8RUr238XXh5ANPPUcbTOoRHo5Ynj"},
-  {"d":"Processo_saúde-doença","t":"Processo_Saúde-Doença_-_Parte_IV","id":"1bjtmNxtbegVNnWkfAzAqMXnR__rTtSpZ"},
-  {"d":"Processo_saúde-doença","t":"Processo_Saúde-Doença_-_Parte_II","id":"1WcrfD8ERQafKtiNSyYKOaW7DxvZ4NND9"},
-  {"d":"Processo_saúde-doença","t":"Processo_Saúde-Doença_-_Parte_III","id":"1RQmdMl6I5eUxrV9iLZ0kvpMz-k-oa26K"},
-  {"d":"Processo_saúde-doença","t":"Proces","id":"1DLN_b-Jx2SwqvJRZIufbo58EIM-CwwLe"},
-  {"d":"Processo_saúde-doença","t":"Processo_Saúde-Doença_-_Parte_V","id":"1eweRZ8uK4GUQZGxRURfy1cw5HuyFt22p"},
-  {"d":"Saúde_do_idoso","t":"Saúde_","id":"1e20-3uiA9aVT9bqhBJBey2JaaeyPSK4z"},
-  {"d":"Saúde_do_idoso","t":"Saúde_do_idoso_-_Parte_II","id":"1TDJEODuFcFMi6ZCcoES0inmM8-vc_CU8"},
-  {"d":"Saúde_do_idoso","t":"Saúde_do_Idoso_-_Parte_IV","id":"1Q2ahYk4JOdJWT9EgvP9Br3AqxBQvYtHz"},
-  {"d":"Saúde_do_idoso","t":"Saúde_do_idoso_-_Parte_III","id":"162NY9-DvO4dYlkPgwpFVfOJ88bq6ldR6"},
-  {"d":"Saúde_do_idoso","t":"Saúde_do_Idoso_-_Parte_V","id":"1jOCpu24NyaepeBV2zWJt6-RpHrp92rgE"},
-  {"d":"Gastrologia","t":"Altera","id":"1eu3rntwZmGziqxCJzZLJLdwPrOogwxi_"},
-  {"d":"Gastrologia","t":"Doença","id":"1Dh-4tBunCmuCvqZ1Mm9RlUJclg6Tw8kA"},
-  {"d":"Gastrologia","t":"Hemorr","id":"1ZF3rLNRRrmCdC7BywYlhEF0uZxP8gV2Z"},
-  {"d":"Gastrologia","t":"Hemorragia_Digestiva_Baixa","id":"1P66JZ2qQjwUIT1-f8iwQpmkm_O-hqUp2"},
-  {"d":"Gastrologia","t":"Neopla","id":"1Kg4AxPNlgar8irtFJ7Q6UBBxzMllImfT"},
-  {"d":"Gastrologia","t":"Pancre","id":"10oY7TtLP6XfKqXL3FRgtI8eLaEMO7jju"},
-  {"d":"Gastrologia","t":"Hemorragia_Digestiva_Alta_Varicosa","id":"1RPBzDzbN-xww-vPvMsB6q2wqCcr81z2e"},
-  {"d":"Gastrologia","t":"Neoplasias_Pancr","id":"1dw_98YXHj2ewFvJYLV6BCE0xxHTX4pFb"},
-  {"d":"Gastrologia","t":"Esofag","id":"1WOoY460PT2hAAw5umPWr7J7hqPHX1QB3"},
-  {"d":"Gastrologia","t":"Ingest","id":"1mZKgMSjPnq46qugSOajcEZuRVIOA1OKV"},
-  {"d":"Gastrologia","t":"Doença_do_Refluxo_Gastroesofágico","id":"1gf2t6p6sD07AQt2kNg3rBM_sbCstD9eA"},
-  {"d":"Gastrologia","t":"Doença","id":"1zay1go-w8lz45AxPIQTfrPuTJhW2RUQT"},
-  {"d":"Gastrologia","t":"Esôfag","id":"1b9IFiXm7hoI4r_2J41GPLBbrbV1wFEZZ"},
-  {"d":"Gastrologia","t":"Dispep","id":"1prAlaowVW5Kc9fa-9-14SNLN0tyCg-Wm"},
-  {"d":"Gastrologia","t":"Anatom","id":"1YITUx4NjUBIiQQO-nwtRT27CwWlWMUQd"},
-  {"d":"Polipose_intestinal_e_câncer_colorretal","t":"Polipo","id":"1VTGb5TJvn3TqO-8BnEXir1t7FINhV1j8"},
-  {"d":"Polipose_intestinal_e_câncer_colorretal","t":"Polipose_Intestinal_e_Câncer_Colorretal_-_Parte_IV","id":"1dBxgiLOIzC-uKq9JMi0s0uZfLxAIhe8L"},
-  {"d":"Polipose_intestinal_e_câncer_colorretal","t":"Polipose_Intestinal_e_Câncer_Colorretal_-_Parte_III","id":"1elRKDec1TSo6OtiaURKtgu9_j7fw6l1H"},
-  {"d":"Polipose_intestinal_e_câncer_colorretal","t":"Polipose_intestinal_e_câncer_colorretal_-_Part","id":"1bUqi-csecDm_M7UJ-C-kJ0Pnb4Hk4pY3"},
-  {"d":"Doença_inflamatória_intestinal","t":"Introd","id":"16T8Ve60PYnoqFbfd5r87Cg-IX6t9zB0j"},
-  {"d":"Doença_inflamatória_intestinal","t":"Manife","id":"19QJ2g-9xJ1wmVhEmivQTevkJ2F4EHb0f"},
-  {"d":"Doença_inflamatória_intestinal","t":"Índice","id":"13Oe_QRheYWfr32eHfYix94YNtFyBxdnk"},
-  {"d":"Hemorragia_digestiva_alta_varicosa","t":"Hemorr","id":"132iPtheFwHhAZOMZhbH2XOYg-e1t3phM"},
-  {"d":"Hemorragia_digestiva_alta_varicosa","t":"Aula_R","id":"1OPtS64Txk-m1qjpn97RDFk13srIIEIPN"},
-  {"d":"Disfagia,_alterações_estruturais_e_distúrbios_da_motilidade_do_esôfago","t":"Altera","id":"1wdq6eFvX8YC7g2E-RDNNuPOEfLFTazQ3"},
-  {"d":"Disfagia,_alterações_estruturais_e_distúrbios_da_motilidade_do_esôfago","t":"Aula_R","id":"1-Srf-7P8HRBXF_-Gzp6fR0seCrZzHumr"},
-  {"d":"Disfagia,_alterações_estruturais_e_distúrbios_da_motilidade_do_esôfago","t":"Alterações__Estr","id":"1N0N1Fq92_S2Sxi3mZbeEUBx6DOus83BD"},
-  {"d":"Disfagia,_alterações_estruturais_e_distúrbios_da_motilidade_do_esôfago","t":"Distúrbios_da_Motilidade_E","id":"1BUrR0aQkLjSWFDuVFUeuDt3K3Hws4jP_"},
-  {"d":"Disfagia,_alterações_estruturais_e_distúrbios_da_motilidade_do_esôfago","t":"Distúr","id":"1-88Mroadx6QHv0IH_uUEZmicdhaUsIwR"},
-  {"d":"Disfagia,_alterações_estruturais_e_distúrbios_da_motilidade_do_esôfago","t":"Fisiol","id":"1MxNL5aLBlh_G83QUMP_CR0tmBiLeS3Ty"},
-  {"d":"Disfagia,_alterações_estruturais_e_distúrbios_da_motilidade_do_esôfago","t":"Distúrbios_da_Motilidade_do_Esôfago_-_Parte_01","id":"1VrhaI1BJWElq3uuE41tIze1gGQ1w4T6F"},
-  {"d":"Anatomia_e_fisiologia_do_pâncreas_e_neoplasias_pancreáticas","t":"Anatomia_e_Fisiologia_do_Pâncreas_e_Neoplasias","id":"1YcIckIkLGkd2BpYkdM_Vz4R_cdLBgmZi"},
-  {"d":"Anatomia_e_fisiologia_do_pâncreas_e_neoplasias_pancreáticas","t":"Anatomia_e_Fisiologia_do_Pâncreas_e_Neoplasias_Pancreáticas_-_Parte_III","id":"1PaF42UeXeiQ6DRUnlqx5W0QWLScgJDZm"},
-  {"d":"Anatomia_e_fisiologia_do_pâncreas_e_neoplasias_pancreáticas","t":"Anatom","id":"1e9u8fnjA4yPwTWxhUYAMW1d258QnmwGd"},
-  {"d":"Anatomia_e_fisiologia_do_pâncreas_e_neoplasias_pancreáticas","t":"Aula_R","id":"1jF57y5oE1rVGwiV_TOjwF1L3TGNBfxk7"},
-  {"d":"Anatomia_e_fisiologia_do_pâncreas_e_neoplasias_pancreáticas","t":"Aula_Resumo_-_Anatomia_e_Fisiologia_do_Pâncrea","id":"1OLDhhVl8cN75KTZPb5pe-ZCFGRXlWIRU"},
-  {"d":"Doença_ulcerosa_péptica,_inibidores_de_bomba_de_prótons_(ibp)_e_helicobacter_pylori","t":"Doença","id":"14Q7-ecS003HX5Bv_Zjr7g2YnZMDJbMeP"},
-  {"d":"Doença_ulcerosa_péptica,_inibidores_de_bomba_de_prótons_(ibp)_e_helicobacter_pylori","t":"Aula_R","id":"1bX8VrEgQkSkzNrTPxfw_54dMMTzezsWg"},
-  {"d":"Doença_ulcerosa_péptica,_inibidores_de_bomba_de_prótons_(ibp)_e_helicobacter_pylori","t":"Helico","id":"163rDQCaOIpIneLe-mLh5jVOcVR3brBmS"},
-  {"d":"Doença_ulcerosa_péptica,_inibidores_de_bomba_de_prótons_(ibp)_e_helicobacter_pylori","t":"Tratam","id":"1_-hEhD5x1-0wmJ2oeiWUqv5qYGdOY5u5"},
-  {"d":"Doença_ulcerosa_péptica,_inibidores_de_bomba_de_prótons_(ibp)_e_helicobacter_pylori","t":"Inibid","id":"12KSs7x4A48z7v36k85Uf_28A6sRPutSZ"},
-  {"d":"Hemorragia_digestiva_baixa","t":"Aula_R","id":"15zwy9vGHzQcEOvofQHiTfo91dDR0a0Yu"},
-  {"d":"Hemorragia_digestiva_baixa","t":"Hemorr","id":"1d7_mw8XhyaQzi5RYNFa1etAPa4UdkiCp"},
-  {"d":"Hemorragia_digestiva_alta_não_varicosa","t":"Hemorragia_Digestiva_Alta_Não_Varicosa_-_Parte","id":"1yl0s8vAHIs_aTXrnkFzNxoTJ2cFtjVFs"},
-  {"d":"Hemorragia_digestiva_alta_não_varicosa","t":"Hemorr","id":"121PSO9cQm4u88RZeBKlc27PL28I-bU2q"},
-  {"d":"Hemorragia_digestiva_alta_não_varicosa","t":"Aula_R","id":"1hG76oXDwx5FECmRC3O9t8QjeQovCawdY"},
-  {"d":"Anatomia_e_fisiologia_do_cólon_e_síndrome_do_intestino_irritável","t":"Anatom","id":"1cr0Hnjz6-1kMmEJQBq9UlW68bp11H-8E"},
-  {"d":"Anatomia_e_fisiologia_do_cólon_e_síndrome_do_intestino_irritável","t":"Anatomia_do_Intestino_e_Síndrome_do_Intestino_","id":"1CeP_miBkKam1GFs7dJc6K0iDbQZ8LToY"},
-  {"d":"Introdução_ao_diabetes_mellitus","t":"Introd","id":"1XpbTBaiClDGqwCZVmTFXJ29f6mkeK7Zu"},
-  {"d":"Introdução_ao_diabetes_mellitus","t":"Diabet","id":"12WOk-raXFy2QfAP9-JkWGvPohEtjK0LO"},
-  {"d":"Metabolismo_ósseo_e_mineral_-_princípios_e_fisiologia","t":"Metabo","id":"1eZj7N9euD-IUOedrvPAJm4X-0lKXeqNg"},
-  {"d":"Metabolismo_ósseo_e_mineral_-_princípios_e_fisiologia","t":"Metabolismo_Ósseo_e_Mineral_-_Princípios_e_Fis","id":"15p1gDndxXzJ3ZfPbmf5ExhY0i1Vovcap"},
-  {"d":"Metabolismo_ósseo_e_mineral_-_osteoporose_e_doença_óssea_de_paget","t":"Osteoporose_e_Doença_Óssea_de_Paget_-_Parte_III","id":"1IPNM6DiEnvCjBK0VuPZf4FTFaA-4-iwa"},
-  {"d":"Metabolismo_ósseo_e_mineral_-_osteoporose_e_doença_óssea_de_paget","t":"Osteoporose_e_Doença_Óssea_de_Paget_-_Parte_II","id":"1oycKDBXVCzZ9DRiiDn8qoiQd07mKoewm"},
-  {"d":"Metabolismo_ósseo_e_mineral_-_osteoporose_e_doença_óssea_de_paget","t":"Osteop","id":"1Mt7F5N7BUPSIJGKnmNBrSZWRuTW5e7f_"},
-  {"d":"Neurologia","t":"Aciden","id":"1RfzWnw3GBhzezphWRd_20DXkO8LCNDRV"},
-  {"d":"Neurologia","t":"Doença","id":"1FcuglpFHDJyS88PQnjCaY-5yDQzcQ0dF"},
-  {"d":"Neurologia","t":"Epilep","id":"1acBs759aTwMwQsNWc7YrwIih6m78oTyb"},
-  {"d":"Neurologia","t":"Coma_e","id":"1fmHhjJYl7SDTVgWF95qnPjoOSGI-9nlL"},
-  {"d":"Neurologia","t":"Demênc","id":"19nRT11LoYcVKe7bRixpwPTEZ9hK8iTg7"},
-  {"d":"Neurologia","t":"Anatom","id":"11iOKaiPUT66ibtQZoQvJdevswfV7vqPA"},
-  {"d":"Neurologia","t":"Cefale","id":"1n0WH-EGnlTy3hFyrkTTa57gZqlciBS6H"},
-  {"d":"Neurologia","t":"Tumores_Neuroendócrinos_Pa","id":"1tMmzwzzMjELxvBeB4uGqnBXEc1QdLJpk"},
-  {"d":"Neurologia","t":"Tumore","id":"1S1W55d5X8Gg1CnAc19818su0LxRXoXj_"},
-  {"d":"Neurologia","t":"Otoneurologia,_Vertigens_e_Audiologia_-_Parte_","id":"1ohnK1arwgAOJ-K3rPaKryWHO0vltrFxm"},
-  {"d":"Neurologia","t":"Otoneu","id":"16pWNaupPhh9TrWb-NRjGc7APL2WfUGG3"},
-  {"d":"Acidentes_vasculares_cerebrais","t":"Aula_R","id":"1MrTQqOgk5AEFDYrLCJ2_34B_IUuQhwS6"},
-  {"d":"Acidentes_vasculares_cerebrais","t":"Aciden","id":"1m6vBbuKz3HZlqqRDyaDJRljvkYyRGd8q"},
-  {"d":"Cefaleias","t":"Aula_R","id":"1-upTfLtEVrszON9lz8baduSiB_g-HgsW"},
-  {"d":"Cefaleias","t":"Cefale","id":"1mQAY6LhYPxOdyeNBwflK0lIGxWTQtKF1"},
-  {"d":"Neurologia","t":"Aula_R","id":"1pP8MuWDXGHoI1M1pDYNuD3qBZFyn-PAG"},
-  {"d":"Neurologia","t":"Anatomia,_Fisiologia_e_Semiologia_Neurológica_","id":"1dCIoad67v1quFzBxaFj9hOsXBwBjexwF"},
-  {"d":"Neurologia","t":"Anatom","id":"1vT8JRbwL7byLrpWVRXMEDgDfWzVhDWLe"},
-  {"d":"Coma_e_alterações_da_consciência","t":"Coma_e_Alterações_da_Consciência_-_Parte_II","id":"1jpVzVn1UsXFTsXZtWz6UmDFtqJPSQteG"},
-  {"d":"Coma_e_alterações_da_consciência","t":"Coma_e_Alterações_da_Consciência_-_Parte_IV","id":"1mFJp2jQwEwo3ajFVlnqMuGcqRPLuFdtt"},
-  {"d":"Coma_e_alterações_da_consciência","t":"Coma_e_Alterações_da_Consciência_-_Parte_III","id":"1KmMedPtEI5mxY4hGpHE0qToFwR0ZljWE"},
-  {"d":"Coma_e_alterações_da_consciência","t":"Coma_e","id":"1jWogrvj3jGZsQt5ZUXbao-VzfAHotBSV"},
-  {"d":"Coma_e_alterações_da_consciência","t":"Aula_R","id":"1TquoIYuS86UDWNTbFMwkcs-ReIewdWYW"},
-  {"d":"Neurologia","t":"Desenv","id":"1LAlOia6ocUJBMGOUkaZuGfu84gUNmnpt"},
-  {"d":"Neurologia","t":"Desenvolvimento_Neuropsicomotor_(DNPM)_-_Parte_III","id":"1dWGcItjiEzLDr1DPqsy3XFOUJ6Q4mrZj"},
-  {"d":"Neurologia","t":"Aula_R","id":"1iFhpHAw7b3HvEmUVjb4YSHP374jHoHn3"},
-  {"d":"Neurologia","t":"Desenvolvimento_Neuropsicomotor_(DNPM)_-_Parte","id":"1nGovfFpXyhZk1dYLLCT4Dw2d9BCGs03V"},
-  {"d":"Nefrologia","t":"Distúrbios_Ácido","id":"1fxU7ZOnHbTlNZEsZEm5i4SdBLVu3jfOA"},
-  {"d":"Nefrologia","t":"Doença_Renal_Crô","id":"1Ic_wVPNYv55IZbeUi5vjYbUPqBKI72gr"},
-  {"d":"Nefrologia","t":"Disnat","id":"1ppYKVnHLs4JWEJbiCVvfvM1qbHpWnngd"},
-  {"d":"Nefrologia","t":"Doença","id":"1Pg_tBZp5ILzi7w3kQ81vcY7yTWI-ql3J"},
-  {"d":"Nefrologia","t":"Doença_Renal_Crônica_(DRC)_-_Parte_II","id":"1UOfQz0xP_fZ4JZv9JH3zzIxTcWlkMzJd"},
-  {"d":"Nefrologia","t":"Lesão_","id":"1_1SbbDynTmu1LXEr0CRepaKd_GGbXn4W"},
-  {"d":"Nefrologia","t":"Nefrol","id":"1Zt4-y1m5R2nX6BELWBnwLWt9k-NE-8GF"},
-  {"d":"Nefrologia","t":"Anális","id":"13lousO77iFQtMDYUIr1Vi5tgV8inskBo"},
-  {"d":"Nefrologia","t":"ITU_(I","id":"1hyfCWDCS4A5n4AY086cCIm1yBoCyOQ8l"},
-  {"d":"Nefrologia","t":"Distúr","id":"1BWJqKemeOxD5cKz1tDGrYAbtbOXa7aa_"},
-  {"d":"Nefrologia","t":"Nefrolitíase_-_Parte_III","id":"176aW5qQ-zrKj36OFy0x3F3k7XQuQtl75"},
-  {"d":"Nefrologia","t":"Nefrolitíase_-_Parte_IV","id":"1oG0KgcqPUCAltYssL_9LoMwV_qWyhi6x"},
-  {"d":"Nefrologia","t":"Aula_R","id":"1_jN5YnaZ9KJeo-7UdQBLHHcLjRx-ROZP"},
-  {"d":"Nefrologia","t":"Nefrolitíase_-_Parte_V","id":"1ajl2q8B3yKvlcudjZuNve4FYQIfBwo_G"},
-  {"d":"Nefrologia","t":"Nefrolitíase_-_Parte_VII","id":"13iXWj2IAKwUKbWjbeGbhGNOHXLwlux31"},
-  {"d":"Nefrologia","t":"Nefrol","id":"11PWf0du8pxiMXpaxiiHJsXTPmEZPwumq"},
-  {"d":"Nefrologia","t":"Nefrolitíase_-_Parte_II","id":"1FsDYu0WxuSbERD0GnGgoye7EyVevK996"},
-  {"d":"Nefrologia","t":"Nefrolitíase_-_Parte_VI","id":"1ixSKtrdga9kxfr5cJO7zkXOykPIReRsO"},
-  {"d":"Lesão_renal_aguda_(lra)","t":"Injúria_Renal_Aguda__Intro","id":"1YzTW13uEObUxJ8OO1td_QGgBNUJuFYnF"},
-  {"d":"Lesão_renal_aguda_(lra)","t":"Injúri","id":"1kvMFkAAsvlIvBta2uN6V8AKslHwHtx61"},
-  {"d":"Lesão_renal_aguda_(lra)","t":"Injúria_Renal_Aguda__Parte_I","id":"1XUocRaXy7otVd_DfiCFkBJ6-dqkndk5H"},
-  {"d":"Lesão_renal_aguda_(lra)","t":"Injúria_Renal_Aguda__Parte","id":"1x7NoEYCHiUAM_8fLgPTP1BjxJ2RXCEZ5"},
-  {"d":"Lesão_renal_aguda_(lra)","t":"Aula_R","id":"1bQYGFmFa-hB2HBO64cg3FCn5N0n61E44"},
-  {"d":"Doença_renal_crônica_(drc)_-_parte_i","t":"Aula_R","id":"1gDCEnJh0cMMFTG6H1_dVu3ZhE3xBWVMr"},
-  {"d":"Doença_renal_crônica_(drc)_-_parte_i","t":"Doença_Renal_Crônica__Etio","id":"1bWskL5CNkJzr8yXT4ySM04YXcTtop_I_"},
-  {"d":"Doença_renal_crônica_(drc)_-_parte_i","t":"Doença","id":"1wKeOzRJNVZbrKHvmZzSjA0kcqE0l4-60"},
-  {"d":"Doença_renal_crônica_(drc)_-_parte_i","t":"Filtra","id":"1V91tizTj77hXUzl7sBRCi7bKVvRplAg0"},
-  {"d":"Túbulo-interstício_renal","t":"Tubulo","id":"1hOJmlpRjs76k_09nyO-FDlDRkWAMorRg"},
-  {"d":"Túbulo-interstício_renal","t":"Fisiol","id":"1fWFrMKHXz_qCPGZmtpYo2OpbQ6W3z2VM"},
-  {"d":"Túbulo-interstício_renal","t":"Nefrit","id":"1rivHJr6nQCs5F-1z_MQvR2kloyDKbx3F"},
-  {"d":"Itu_(infecção_do_trato_urinário)","t":"ITU_(Infecção_do_Trato_Urinário)_-_Parte_III","id":"16UV-kzBhjWr5UYRRDn13rnvXC5D9qwEJ"},
-  {"d":"Itu_(infecção_do_trato_urinário)","t":"ITU_(I","id":"1O8Slg3hT-JBd-R5Kuutmwg40C2pulBNf"},
-  {"d":"Itu_(infecção_do_trato_urinário)","t":"ITU_(Infecção_do_Trato_Urinário)_-_Parte_II","id":"1blUZ47Em6j2HnGPmSJID_WHWJWTU9l-X"},
-  {"d":"Itu_(infecção_do_trato_urinário)","t":"Aula_R","id":"1tKauBMnOHJcvU-HKUVsbOIN3Ue3ECSoh"},
-  {"d":"Doença_renal_crônica_(drc)_-_parte_ii","t":"Aula_R","id":"12BtgVVPi3pclBLOjOq0VfmV4vWYrfS1K"},
-  {"d":"Doença_renal_crônica_(drc)_-_parte_ii","t":"Terapi","id":"1MzTNzq9njalH8sbazh61fZ9ZNmQZBEVT"},
-  {"d":"Doença_renal_crônica_(drc)_-_parte_ii","t":"Doença","id":"1QDmePiu1cDuaMZAK1jiItKgf24fW3nOx"},
-  {"d":"Doença_renal_crônica_(drc)_-_parte_ii","t":"Tratam","id":"1w5UQF0M54EhXMDSNuB_Y61q0bZsO7QhD"},
-  {"d":"Ombro_e_joelho_pediátrico","t":"Ombro_","id":"1oGzsms-y7wqtYwcSFcsv97dDKHszozo6"},
-  {"d":"Oncologia_ortopédica_e_osteomielite","t":"Oncologia_Ortopédica_-_Parte_II","id":"1NXkTDg9bHycJffSMnfMJuvZ2m4v8Gk-v"},
-  {"d":"Oncologia_ortopédica_e_osteomielite","t":"Oncologia_Ortopédica_e_Ost","id":"1D9oWSgznHf4Dx1dr2_svl3ImxjvYAofa"},
-  {"d":"Oncologia_ortopédica_e_osteomielite","t":"Oncolo","id":"1KSnsF6r2JnLRGG3eliwJVMI8Vf449ypC"},
-  {"d":"Oncologia_ortopédica_e_osteomielite","t":"Oncologia_Ortopédica_-_Parte_III","id":"1I13TJIZCHQazWZwfLFv9w1FIXAzrAuGm"},
-  {"d":"Politrauma_ortopédico","t":"Politr","id":"1QGKA1CA4JXuBftSJ8KaTjiRN8DNB_LMq"},
-  {"d":"Politrauma_ortopédico","t":"Politrauma_Ortopédico_-_Pa","id":"1C2-iY3FwLO8LYSDVqE9xHAqK4NdFN22M"},
-  {"d":"Politrauma_ortopédico","t":"Politrauma_Ortopédico_-_Parte_II","id":"1nlmi0x_0rHDWJD79ADPG9EEmhQn6m2fr"},
-  {"d":"Politrauma_ortopédico","t":"Politrauma_Ortopédico_-_Parte_IV","id":"1sFDRG_dIs6suIm5dxuYuAH_VikqRroiq"},
-  {"d":"Politrauma_ortopédico","t":"Politrauma_Ortopédico_-_Parte_III","id":"15-BpocpUeXFKmFddh2raj-zFmsIDsh1n"},
-  {"d":"Conceitos_básicos_de_anatomia_e_semiologia","t":"Concei","id":"1wCBgZ253Rtn3EF2WF8wQFoozGUump3uC"},
-  {"d":"Conceitos_básicos_de_anatomia_e_semiologia","t":"Conceitos_Básicos_de_Anatomia_e_Semiologia_-_A","id":"10ZsXdlCcJO5x_V41wfYhDLi0NmYmNb9t"},
-  {"d":"Complicações_do_trauma_ortopédico","t":"Compli","id":"1tC9G-PQ9YruNlelFKTRwzDd10iRV-vTg"},
-  {"d":"Complicações_do_trauma_ortopédico","t":"Complicações_do_Trauma_Ortopédico_-_Parte_II","id":"1ntgHngkZlve25c45QMg_P_IUOc0FZf_N"},
-  {"d":"Complicações_do_trauma_ortopédico","t":"Complicações_do_Trauma_Ortopédico_-_Parte_I","id":"1yWuoHg8mHSf41BuFfpCEZsiX4_5f6_DB"},
-  {"d":"Desenvolvimento_ortopédico_da_criança","t":"Desenv","id":"11qzpRHQutby-U7RL2-KdBgz6tgA5sH7S"},
-  {"d":"Desenvolvimento_ortopédico_da_criança","t":"Desenvolvimento_Ortopédico_de_Criança_-_Aula_R","id":"1Lcb9PA-Bu0dfR966x4UXUbDFf8h1LdPk"},
-  {"d":"Coluna_pediátrica","t":"Coluna_Pediátrica","id":"1x9xXPKqcu2X5oKPJngORKgAmkqhgHoMF"},
-  {"d":"Coluna_pediátrica","t":"Coluna","id":"1dp6RZuAT7N8xSIsDSAQsxeJeiCDAUibB"},
-  {"d":"Doenças_de_partes_moles","t":"Doença","id":"1B37fECYgORy-VFRfoHviN7lcqxtOJjUO"},
-  {"d":"Doenças_de_partes_moles","t":"Doenças_de_Partes_Moles_-_","id":"1mUFX4vgy8LAwQ7f1tmbRDUbou5ZdigEi"},
-  {"d":"Conceitos_básicos_do_trauma_ortopédico","t":"Conceitos_Básicos_do_Trauma_Ortopédico_-_Parte","id":"1Ast9PBNqVp63wrTfkOZDMfCxQi_bBo4U"},
-  {"d":"Conceitos_básicos_do_trauma_ortopédico","t":"Concei","id":"1l_pDZRzSO5KsNAz7x2v5MqbDU3nRWqSd"},
-  {"d":"Conceitos_básicos_do_trauma_ortopédico","t":"Conceitos_Básicos_do_Trauma_Ortopédico_-_Parte_II","id":"1j8JYJql0hg9XfhfaB2vH8loL5Juw6614"},
-  {"d":"Doenças_da_mão_e_síndromes_compressivas","t":"Doenças_da_Mão_e_Síndromes_Compressivas_-_Aula","id":"1kqX0L814DyNr83PS0IgM0ninIlrBuu3s"},
-  {"d":"Doenças_da_mão_e_síndromes_compressivas","t":"Doença","id":"1_MonT-Me72s0a8JOQtE3MlxwUwOfewbH"},
-  {"d":"Doenças_da_coluna_vertebral","t":"Doenças_da_Coluna_Vertebral_-_Parte_I","id":"173Bkk5HmNqSx-kcYLr87mdNFDSxwf3LA"},
-  {"d":"Doenças_da_coluna_vertebral","t":"Doenças_da_Coluna_Vertebral_-_Parte_II","id":"180Wi3ylTMs3-rhWsyOkFj56jjnrifevW"},
-  {"d":"Doenças_da_coluna_vertebral","t":"Doença","id":"1rPS1t18Frhc80VUXQkVZ86Atuz9mmEz_"},
-  {"d":"Quadril_pediátrico","t":"Quadri","id":"18RmBB0uQDJCIM3dO84gfGfA1zoJxOx6U"},
-  {"d":"Quadril_pediátrico","t":"Quadril_Pediátrico_-_Parte_II","id":"1mumSdt9FWzk9scghIvZy5oIRhcwtxqbF"},
-  {"d":"Quadril_pediátrico","t":"Quadril_Pediátrico_-_Parte","id":"1Uo9pGXGaZLlKz08KZFJe1YTyt8CDvZnR"},
-  {"d":"Pediatria","t":"Artrit","id":"12SBljaxV-SmHkb1nwoSuJ3jtGcfb9L1v"},
-  {"d":"Pediatria","t":"Hipert","id":"17FF-6q3TWp3zHTlp2uiD65M7PbZIac8o"},
-  {"d":"Pediatria","t":"Bronqu","id":"1GyJYi3oQDdWLA1KLAkw-G5Cjdlu5SkGV"},
-  {"d":"Pediatria","t":"Desnut","id":"1LB8um3CjSJpUnGjI_nnRmoxs7N_eGeRv"},
-  {"d":"Pediatria","t":"Febre_","id":"1exD5C7IufuuCacOG7C-3wN4wDlbdYEr7"},
-  {"d":"Pediatria","t":"Obesid","id":"1tIB9HtjdzG4xgWhC8Hw72l9k6Dpd66Dv"},
-  {"d":"Pediatria","t":"Fibros","id":"1hVLF14m9sDsg2BvezgShrB10qcLNWBpx"},
-  {"d":"Pediatria","t":"Coquel","id":"15A7FHVbPuYAn7PRxHRY9yBwQpGlTjVYv"},
-  {"d":"Pediatria","t":"Asma_e","id":"1tXxlcyHG3ojyUvAIdkg0ln2sPtR2gktM"},
-  {"d":"Pediatria","t":"Infecções_Congên","id":"15H6IGmUjFEHw4sV59UkkBopJZXYqwpvF"},
-  {"d":"Pediatria","t":"Tuberc","id":"1wwZOi6793EFTnTnni6mvbpbApLkRYuBm"},
-  {"d":"Pediatria","t":"Infecç","id":"1FjWi1tmGbXQYvGEJs8MRxRZRyWJrJZmS"},
-  {"d":"Pediatria","t":"Choque","id":"1vKAbjC0VwOMsLJt30OWeTbOTPaYzxFm0"},
-  {"d":"Pediatria","t":"Desenv","id":"1R8QHXJu-G6epoXHPxeIH5ev35s1V2jry"},
-  {"d":"Pediatria","t":"Cresci","id":"1lANsexTgJVJ_h4hf_5j3rpaxoLtPHkxu"},
-  {"d":"Pediatria","t":"Reflux","id":"1TW5uXPvCeITwXJIoZ8A-GOEV4-Aoy8BP"},
-  {"d":"Pediatria","t":"Puberd","id":"18ltv-FmqVOYAC9j8a1Fyn42UkFWafkC6"},
-  {"d":"Pediatria","t":"Pneumo","id":"1E20QSQNNCcadmYnb3mex7pTi7WZrA9l7"},
-  {"d":"Pediatria","t":"Cefale","id":"1SxIb_35d1BRhbM6H8pR8DIeHKK660pFW"},
-  {"d":"Pediatria","t":"Infecções_Congênitas_-_Parte_II","id":"1iLndUsIBcanwHAnNbAEwXx6IfjxqVMpY"},
-  {"d":"Pediatria","t":"Vitami","id":"1X5CIdBjObEn6jl-t9oZ-8r2nVRT8QR5D"},
-  {"d":"Pediatria","t":"Doença","id":"1-P6xh6UuNFaRNbL1h1OEwciqDobO3esS"},
-  {"d":"Pediatria","t":"SMSL_e","id":"1QA-7zRBoAPoDmyoRLm82NtlsXV4fE9Il"},
-  {"d":"Pediatria","t":"Urticá","id":"1PknG1Dbt1ubYLS6uJA3vbLTBEWeG8nQ1"},
-  {"d":"Pediatria","t":"Aleita","id":"1eFL2sNmq7FdkfbwMHtOfHWM1eLLWaMNd"},
-  {"d":"Pediatria","t":"Doença","id":"1FE76dRLT7B1tDfXQvRJFi4KDWZBC3MKc"},
-  {"d":"Pediatria","t":"Aula_R","id":"1HXUboFqbbhJbKhKhp2pZDhBAvN9wF9t6"},
-  {"d":"Pediatria","t":"Choque_em_Pediatria_-_Parte_II","id":"1zpLJY7_2tJ9BdFpWX8cORusndqkKaRJW"},
-  {"d":"Pediatria","t":"Choque","id":"1fGXcHFtcVJQpIy3A5r5Fl8mo_JnKLkJi"},
-  {"d":"Pediatria","t":"Aula_R","id":"1_6kRBqRn8VLf0nla5p97K9wflhZNRyfD"},
-  {"d":"Pediatria","t":"Infecç","id":"1UY3FTmMxy7d1G3OnMHxFOvxONtMKOtYP"},
-  {"d":"Pediatria","t":"Infecção_de_Trato_Urinário_em_Pediatria_(ITU)_","id":"1HA3eUk83ejRIXGRg7a1CjK1pBVLwOkf5"},
-  {"d":"Anafilaxia_e_urticária","t":"Aula_R","id":"1R9LkCyNnAenqeIS_5ewcKEbZCgqsinZC"},
-  {"d":"Anafilaxia_e_urticária","t":"Urticá","id":"1aY1mck9FohuTdjAPR_dvHwvG218V-__v"},
-  {"d":"Anafilaxia_e_urticária","t":"Anafil","id":"1m_-mFfyDYHgNZC7bF5VCE5I7yeQQTnHr"},
-  {"d":"Aleitamento_materno","t":"Aula_R","id":"1e_vEIM6if3i3m-VNEnHWzEWu_zHwYxlK"},
-  {"d":"Aleitamento_materno","t":"Aleita","id":"17NkzCncFYFkRdLrCxniBZt1zTil_1Ic1"},
-  {"d":"Doenças_exantemáticas","t":"Aula_R","id":"1bxuJbJFS0rv7kJFsDh8zKc-1ZBmLF7_Z"},
-  {"d":"Doenças_exantemáticas","t":"Doença","id":"1-vs3Qzg27_JFJgOdMAAQEx_w9ubdkeTH"},
-  {"d":"Doenças_exantemáticas","t":"Doenças_Exantemáticas_-_Parte_II","id":"1w38P3rg9_s3NYqFyo7xCJqv-ef4gXAQs"},
-  {"d":"Cefaleias_na_infância","t":"Cefale","id":"1gJ9xAcHbXoXUfMzUxSP0FG5HSTwch_uR"},
-  {"d":"Cefaleias_na_infância","t":"Cefaleias_na_Infância_-_Parte_II","id":"1bR_Qygjog0sB1OolE2dk4CQkiEDW1mRf"},
-  {"d":"Cefaleias_na_infância","t":"Cefaleias_na_Infância_-_Pa","id":"11nx_wZxa5q5QcWr-6CIptpiQubfkdeLv"},
-  {"d":"Deficiências_vitamínicas_e_profilaxias","t":"Defici","id":"1wY6DdJLIi-pbDZdW8245lfq3XoYeT964"},
-  {"d":"Deficiências_vitamínicas_e_profilaxias","t":"Deficiências_Vitamínicas_e_Profilaxias_-_Parte_III","id":"1Ql2kmt2Vs3J6BiGeuCjxYqIKrzPtfBY1"},
-  {"d":"Deficiências_vitamínicas_e_profilaxias","t":"Deficiências_Vitamínicas_e_Profilaxias_-_Parte_II","id":"1wSCixuGN0p3TKyj5POgkivKLZxrUfgVC"},
-  {"d":"Deficiências_vitamínicas_e_profilaxias","t":"Deficiências_Vitamínicas_e_Profilaxias_-_Parte","id":"1AZV7Rv1uxoRsGtG-3Y7CZOhM6PAimoeK"},
-  {"d":"Coqueluche","t":"Aula_R","id":"1IIxprFrGwrAaSBgpcweJOeLmcumOMTCB"},
-  {"d":"Coqueluche","t":"Coquel","id":"1he7GQ9Wha6bnGXKwKpaxXDQw0nBesX0Y"},
-  {"d":"Convulsão_febril","t":"Convul","id":"1iuipPUN4KAtJU9CVwJ7dQqenqqvM7dfW"},
-  {"d":"Doença_de_kawasaki","t":"Doença_de_Kawasaki_-_Parte_II","id":"1FSrb5T7PA4TX2ajkdKes-_L-7GyLhJ51"},
-  {"d":"Doença_de_kawasaki","t":"Doença","id":"10OYuYH8bQZ8smNv92lnkVlzlwhiKglGO"},
-  {"d":"Doença_de_kawasaki","t":"Doença_de_Kawasaki_-_Parte","id":"13bRU0g9O9jL7z9nTFVrt0gnkzaIlNsmP"},
-  {"d":"Distúrbios_metabólicos_do_neonato","t":"Distúr","id":"1vidEYf0vMkcE4V1EO2IhYcom_U3ELZz2"},
-  {"d":"Distúrbios_metabólicos_do_neonato","t":"Distúrbios_Metabólicos_do_Neonato_-_Parte_II","id":"1Nr2GFtadP6Ha7AbEtsNqCxZhpFHLmqDt"},
-  {"d":"Desnutrição_na_infância","t":"Desnutrição_na_Infância_-_Parte_III","id":"10DdpNjYZyH2g0a01K_WN1bYeSyWwCWPG"},
-  {"d":"Desnutrição_na_infância","t":"Desnutrição_na_Infância_-_Parte_II","id":"14HIbNZBQZfEoS4bXolC0Fx8WXVtoCjs2"},
-  {"d":"Desnutrição_na_infância","t":"Aula_R","id":"1yUti6paNSWxZ3jPe1Mu1o1XAvTNPmpm-"},
-  {"d":"Desnutrição_na_infância","t":"Desnut","id":"1Bz0RIQpJDq-Wmlf_ABXAWy4tBcusqa_i"},
-  {"d":"Constipação_intestinal","t":"Consti","id":"1tdbKKC3GHXGMf8fQ-fvQcsF2fuU1r7Pm"},
-  {"d":"Constipação_intestinal","t":"Constipação_Intestinal_-_Parte_II","id":"1ZO1_2oxQYpDi3M8SiSaGtmqRFXw6iPf7"},
-  {"d":"Cuidados_neonatais","t":"Cuidados_Neonatais_-_Parte_II","id":"1q-AMYD0ktonfBOXt1xrKAvL9aBYunHaq"},
-  {"d":"Cuidados_neonatais","t":"Cuidad","id":"1HhACt8mN8OyQM3_tYy6JBxzNqp515cev"},
-  {"d":"Asma","t":"Asma","id":"1yxRfKy4PV_VxRTofDnziEyJR1qh3NQaj"},
-  {"d":"Asma","t":"Aula_R","id":"1y61nUq8Q_L-UGZ4z1cOPSEvpeOErYKRK"},
-  {"d":"Bronquiolite","t":"Bronqu","id":"176Lc_XZSleGFMO4y_XnLBk47bQKfMgwn"},
-  {"d":"Bronquiolite","t":"Aula_R","id":"11kqvqZY-n1nVOFY63UDT6WFZ1Wt1Ocd1"},
-  {"d":"Bronquiolite","t":"Bronquiolite_-_Parte_II","id":"1wttNKLFYIcmzlg6YxXcyr8PNF_GMfU2n"},
-  {"d":"Alergia_alimentar","t":"Alergia_alimentar_Resumo","id":"1Kotys0L6t-PUhWaEIsV0HryrZK2ZNOvz"},
-  {"d":"Alergia_alimentar","t":"Alergia_Alimentar_-_Parte_II","id":"1g5ytqOE7VZ70Nkh3VKAjqPP60FeobOwx"},
-  {"d":"Alergia_alimentar","t":"Alergi","id":"1pRN7tlYrNFzhcngCAcsdzet_A2vh66WF"},
-  {"d":"Crescimento","t":"Crescimento_-_Parte_II","id":"165_t549tpYXnmtweTV5VU-6_HhOA99CW"},
-  {"d":"Crescimento","t":"Cresci","id":"1Kh9x9kub_4nqshABULWWNmTiul5r7hjq"},
-  {"d":"Crescimento","t":"Aula_R","id":"1k5tYOrMj1_3pP_9KEIL6TYV7w8LmrLeF"},
-  {"d":"Artrite_idiopática_juvenil_(aij)","t":"_Artri","id":"1LOHN5nTDTN8tyRqr1KCE-1m8hvyOlOsX"},
-  {"d":"Artrite_idiopática_juvenil_(aij)","t":"Aula_R","id":"1wQaPxM514BOb2Mm9THkH3nu1y8qnunZ1"},
-  {"d":"Brue___smsl_(brief_resolved_unexplained_events___síndrome_da_morte_súbita_do_lactente)","t":"BRUE_e_SMSL_-_Parte_II","id":"1c5s0Fwc945bY4fdiT4BYWDRTQfsSe9r2"},
-  {"d":"Brue___smsl_(brief_resolved_unexplained_events___síndrome_da_morte_súbita_do_lactente)","t":"Aula_R","id":"1gnu_6ntzHAf4e38m9__CQmtritvxTgo7"},
-  {"d":"Brue___smsl_(brief_resolved_unexplained_events___síndrome_da_morte_súbita_do_lactente)","t":"BRUE_e","id":"17rzbPhZS-SNV67Ei_SyQXuSt8fm_rHKP"},
-  {"d":"Obesidade_infantil_e_na_adolescência","t":"Aula_R","id":"1ySaFC70dIDCdhND9JyB77GAwucW4Nwoq"},
-  {"d":"Obesidade_infantil_e_na_adolescência","t":"Obesid","id":"1TogSHHmK4K6VxgUKKS3mVXKWKnkTm0RI"},
-  {"d":"Obesidade_infantil_e_na_adolescência","t":"Obesidade_Infantil_e_na_Adolescência_-_Parte_I","id":"1KZlA8l6Xy4T0If_6lurYM4RT3LbnwaGO"},
-  {"d":"Obesidade_infantil_e_na_adolescência","t":"Obesidade_Infantil_e_na_Adolescência_-_Parte_III","id":"1eokIaYId_WEL0iKk6PBaQh9RRu1Yp5IO"},
-  {"d":"Infecções_congênitas","t":"Infecç","id":"1X0W5g-AGnQLQopBP9yY7hRCawA_9aJ5t"},
-  {"d":"Infecções_congênitas","t":"Infecções_Congênitas_-_Parte_II","id":"1osyAlwio5ERN_igj1pWz9LDJjbPhj5KU"},
-  {"d":"Hipertensão_arterial_na_criança_e_adolescente","t":"Aula_R","id":"1KnngH3KfYFjUuSmXvwq3KXtNha6j_3Nw"},
-  {"d":"Hipertensão_arterial_na_criança_e_adolescente","t":"Hipert","id":"1QYcX8sNTLvf2Jj24cQ9HZpEBfubeTu8z"},
-  {"d":"Hipotireoidismo_congênito","t":"Hipoti","id":"106_Br4y8MAmACgElDdjFXWf_zT82jqXF"},
-  {"d":"Imunizações","t":"Imuniz","id":"1NDCoHrCEe0JfBqXsvfzRiyRskDn68H6j"},
-  {"d":"Icterícia_e_sepse_neonatal","t":"Icterí","id":"1_q2558Pg7v5AWDmma4kdghSvq6AAell1"},
-  {"d":"Icterícia_e_sepse_neonatal","t":"Sepse_","id":"1ixWLK1W7ujYZlJAZqKWoO7LDD13JO2Cg"},
-  {"d":"Icterícia_e_sepse_neonatal","t":"Icterícia_Neonatal_-_Parte_II","id":"1y9_I5aqIaDTQDvNNDLXGcbdGN4IucBvY"},
-  {"d":"Icterícia_e_sepse_neonatal","t":"Aula_r","id":"1c7PfJgf9Jzdy7Ui9vJZ4IIKjpld5v94r"},
-  {"d":"Pneumologia","t":"Aula_R","id":"17aND_pPzme_I7zR4j1xeCi7Z14hndwM-"},
-  {"d":"Pneumologia","t":"Pneumo","id":"13TU_XQmA6LL-3mFgXQDm2eUiIH2eDEpz"},
-  {"d":"Pneumologia","t":"Pneumonias_na_Infância_-_Parte_II","id":"1XRVyEf_N1EycJU9Io7hbaGz4MpOiWWaH"},
-  {"d":"Endocardite_bacteriana_-_endocardite_infecciosa","t":"Endocardite_infecciosa_-_Parte_II","id":"1w5RiR4I4EKWU4-qXN2hABn064O2R_2GV"},
-  {"d":"Endocardite_bacteriana_-_endocardite_infecciosa","t":"Endoca","id":"1h2W2c7OQ9q-MkK4uvGR6Nvh0m6QSnHJ6"},
-  {"d":"Covid","t":"Covid_","id":"1pKJx-OMBUG20E1ojDyExX4fQjMq3SrE1"},
-  {"d":"Hepatoesplenomegalias_infecciosas","t":"Febre_","id":"1VmZ8x6PGUqLT2zGQvYWlShTd-MPmxR8c"},
-  {"d":"Hepatoesplenomegalias_infecciosas","t":"Leishmaniose_Visceral_-_Parte_III","id":"1bUkZXZ6s6IfYNx36W9U8KZZn_tjqiYtu"},
-  {"d":"Hepatoesplenomegalias_infecciosas","t":"Esquistossomose_Mansônica_","id":"1lAr4KZtSkcYfklbBr2SitpSQyicl8Ciy"},
-  {"d":"Hepatoesplenomegalias_infecciosas","t":"Leishm","id":"1rr2raHU4usQUOVBWXKCyG1PUZFGnyUM2"},
-  {"d":"Hepatoesplenomegalias_infecciosas","t":"Doença_de_Chagas_-_Parte_III","id":"1zRjEnfq0uunvGgw3SPvgpTkU8HzoXzMJ"},
-  {"d":"Hepatoesplenomegalias_infecciosas","t":"Doença","id":"1Iq8X-fbQravfnnKtxPGxrAttFYHdgiIi"},
-  {"d":"Hepatoesplenomegalias_infecciosas","t":"Leishmaniose_Visceral_-_Parte_II","id":"1Wjvq7KPZegoHHY83fFf6XE-oAH8jRbk5"},
-  {"d":"Hepatoesplenomegalias_infecciosas","t":"Doença_de_Chagas_-_Parte_II","id":"1AjHS-yESbbElfoqh9AdU-iRw6Exwip-0"},
-  {"d":"Hepatoesplenomegalias_infecciosas","t":"Esquis","id":"1ULhPjJZpoJuE9whmcb097HxjmCnxvdw7"},
-  {"d":"Meningites_(infecções_do_sistema_nervoso_central)","t":"Meningites_e_Meningoencefalites_-_Parte_VIII","id":"1f2aZ7P31M_2aAQLh0GdZQzkkPx_Ar8dq"},
-  {"d":"Meningites_(infecções_do_sistema_nervoso_central)","t":"Meningites_e_Meningoencefalites_-_Parte_II","id":"1BgAvY0bdvyPeCJJR3KdERNs23R5C1lOd"},
-  {"d":"Meningites_(infecções_do_sistema_nervoso_central)","t":"Meningites_e_Meningoencefalites_-_Parte_III","id":"1YdsRdPzgzmcQyBzdGCO2L3IYJu4HukTC"},
-  {"d":"Meningites_(infecções_do_sistema_nervoso_central)","t":"Meningites_e_Meningoencefalites_-_Parte_VI","id":"17nj7ezlIiM-TGctNq0CbEJyUuOoeyxip"},
-  {"d":"Meningites_(infecções_do_sistema_nervoso_central)","t":"Mening","id":"1Kvixv50DWMw-vXr5I2xmt1f8rtYv8xfg"},
-  {"d":"Meningites_(infecções_do_sistema_nervoso_central)","t":"Meningites_e_Meningoencefalites_-_Parte_V","id":"1ey47M0tRiTM4EAMWEVbiXTLEex3HarWH"},
-  {"d":"Meningites_(infecções_do_sistema_nervoso_central)","t":"Meningites_e_Meningoencefalites_-_Parte_IV","id":"1e4PCKLtOqF_kGNx3S6y9bD7qwj1RAT75"},
-  {"d":"Meningites_(infecções_do_sistema_nervoso_central)","t":"Meningites_e_Meningoencefalites_-_Parte_VII","id":"1SqVwwoOFJKL_oGOw7ni2WyEqd-RD-9X3"},
-  {"d":"Influenza","t":"Influenza_-_Parte_I","id":"1jgHDFrICuA-K1EUS8ND6jXCmS3W4_oWF"},
-  {"d":"Influenza","t":"Influenza_-_Parte_II","id":"1MP_3i9GMAMuGOopdqWWz3QFaXd5s3s8r"},
-  {"d":"Influenza","t":"Influe","id":"1Xs_nipOhlaOQd3y2MLDMBMb8FNscl"}
-];
+/* ═══ ESTADO ═══ */
+const LS='cuscuz_med_v1';
+const DEFDB={plan:null,done:{},skipped:{},exams:{},holidays:{},qweek:{},events:{},habits:{},xp:0,badges:[],streak:0,streakLast:null,prep:{routine:{},sessions:{},checklist:[],metaHit:{}}};
+let DB=Object.assign(JSON.parse(JSON.stringify(DEFDB)),lsGet(LS,{}));
+DB.prep=Object.assign({routine:{},sessions:{},checklist:[],metaHit:{}},DB.prep||{});
+DB.events=DB.events||{};DB.habits=DB.habits||{};
+let DONE=new Set(lsGet('acv_done',[])),FAV=new Set(lsGet('acv_fav',[])),WRONG=new Set(lsGet('acv_wrong',[]));
+let QUIZS=lsGet('acv_quiz',{}),SIMS=lsGet('acv_sims',[]),DECKS=lsGet('acv_decks',[]);
+let RESUMOS=lsGet('acv_resumos',{}),FCS=lsGet('acv_fc',[]),FCSRS=lsGet('acv_fc_srs',{});
+let FILTER='all',SUBJ=null,CUR_MOD=null,SYNC_USER=null;
+let calFilter=new Set(),CALM=new Date();CALM.setDate(1);
+const EVC={loja:'#b8c0cc',pessoal:'#e85b7a',facu:'#7c6af0',saude:'#34c97a'};
+const saveCloud=debounce(pushCloud,2500);
+function saveDB(sync=true){lsSet(LS,DB);if(sync)saveCloud()}
+const addDay=dk=>{const s=new Set(lsGet('acv_days',[]));s.add(dk);lsSet('acv_days',[...s])};
 
-const MOD_MAP = {
-  'Cardiologia': 'car', 'Ginecologia e Obstetrícia': 'gin', 'Climatério_e_terapia_hormonal': 'gin', 'Amenorreia': 'gin',
-  'Assistência_à_vítima_de_violência_sexual': 'gin', 'Cervicites': 'gin', 'Anatomia_e_embriologia_do_trato_genital_feminino': 'gin',
-  'Abortamento_de_repetição': 'obs', 'Infecção_puerperal': 'obs', 'Gestação_múltipla': 'obs', 'Aloimunização_materna_e_doença_hemolítica_perinatal': 'obs',
-  'Alteração_do_volume_de_líquido_amniótico': 'obs', 'Clínica Médica': 'casos', 'Hpp_-_hemorragia_pós-parto': 'obs',
-  'Indução_do_parto_e_pós-datismo': 'obs', 'Infecções_congênitas_na_gestação': 'obs', 'Diabetes_mellitus_na_gestação': 'obs',
-  'Cirurgia': 'cir', 'Infecções_de_vias_aéreas_superiores_-_parte_i': 'orl', 'Infecções_de_vias_aéreas_superiores_-_parte_ii': 'orl',
-  'Infecções_de_vias_aéreas_superiores_-_parte_iii': 'orl', 'Dermatologia': 'der', 'Hepatologia': 'hep',
-  'Síndrome_hepatorrenal_e_síndrome_hepatopulmonar': 'hep', 'Outras_causas_de_hepatopatia_crônica': 'hep', 'Introdução_à_hepatologia_e_icterícia_não_obstrutiva': 'hep',
-  'Tumores_hepáticos': 'hep', 'Transplante_hepático_e_hepatite_fulminante': 'hep', 'Hematologia': 'hem',
-  'Preventiva': 'prv', 'Medicina_de_família_e_comunidade': 'prv', 'Medidas_de_saúde_coletiva': 'prv', 'Medidas_de_saúde_coletiva_-_parte_i__indicadores_de_morbidade': 'prv',
-  'Princípios_e_diretrizes_do_sus': 'prv', 'Políticas_de_saúde': 'prv', 'Processos_de_descentralização_e_regionalização_do_sus': 'prv',
-  'História_do_sus': 'prv', 'Atenção_primária_à_saúde_no_brasil': 'prv', 'Atenção_primária_à_saúde': 'prv', 'Estatística_médica': 'prv',
-  'Financiamento_em_saúde': 'prv', 'Epidemias_+_epidemiologia_das_doenças_infecciosas': 'prv', 'Processos_epidêmicos_e_epidemiologia_das_doenças_infecciosas': 'prv',
-  'Processo_saúde-doença': 'prv', 'Saúde_do_idoso': 'prv', 'Gastrologia': 'gas', 'Polipose_intestinal_e_câncer_colorretal': 'gas',
-  'Doença_inflamatória_intestinal': 'gas', 'Hemorragia_digestiva_alta_varicosa': 'gas', 'Disfagia,_alterações_estruturais_e_distúrbios_da_motilidade_do_esôfago': 'gas',
-  'Anatomia_e_fisiologia_do_pâncreas_e_neoplasias_pancreáticas': 'gas', 'Doença_ulcerosa_péptica,_inibidores_de_bomba_de_prótons_(ibp)_e_helicobacter_pylori': 'gas',
-  'Hemorragia_digestiva_baixa': 'gas', 'Hemorragia_digestiva_alta_não_varicosa': 'gas', 'Anatomia_e_fisiologia_do_cólon_e_síndrome_do_intestino_irritável': 'gas',
-  'Introdução_ao_diabetes_mellitus': 'end', 'Metabolismo_ósseo_e_mineral_-_princípios_e_fisiologia': 'end', 'Metabolismo_ósseo_e_mineral_-_osteoporose_e_doença_óssea_de_paget': 'end',
-  'Neurologia': 'neu', 'Acidentes_vasculares_cerebrais': 'neu', 'Cefaleias': 'neu', 'Coma_e_alterações_da_consciência': 'neu',
-  'Nefrologia': 'nef', 'Lesão_renal_aguda_(lra)': 'nef', 'Doença_renal_crônica_(drc)_-_parte_i': 'nef', 'Doença_renal_crônica_(drc)_-_parte_ii': 'nef',
-  'Túbulo-interstício_renal': 'nef', 'Itu_(infecção_do_trato_urinário)': 'nef', 'Ombro_e_joelho_pediátrico': 'ort',
-  'Oncologia_ortopédica_e_osteomielite': 'ort', 'Politrauma_ortopédico': 'ort', 'Conceitos_básicos_de_anatomia_e_semiologia': 'ort',
-  'Complicações_do_trauma_ortopédico': 'ort', 'Desenvolvimento_ortopédico_da_criança': 'ort', 'Coluna_pediátrica': 'ort',
-  'Doenças_de_partes_moles': 'ort', 'Conceitos_básicos_do_trauma_ortopédico': 'ort', 'Doenças_da_mão_e_síndromes_compressivas': 'ort',
-  'Doenças_da_coluna_vertebral': 'ort', 'Quadril_pediátrico': 'ort', 'Pediatria': 'ped', 'Anafilaxia_e_urticária': 'ped',
-  'Aleitamento_materno': 'ped', 'Doenças_exantemáticas': 'ped', 'Cefaleias_na_infância': 'ped', 'Deficiências_vitamínicas_e_profilaxias': 'ped',
-  'Coqueluche': 'ped', 'Convulsão_febril': 'ped', 'Doença_de_kawasaki': 'ped', 'Distúrbios_metabólicos_do_neonato': 'ped',
-  'Desnutrição_na_infância': 'ped', 'Constipação_intestinal': 'ped', 'Cuidados_neonatais': 'ped', 'Asma': 'ped',
-  'Bronquiolite': 'ped', 'Alergia_alimentar': 'ped', 'Crescimento': 'ped', 'Artrite_idiopática_juvenil_(aij)': 'ped',
-  'Brue___smsl_(brief_resolved_unexplained_events___síndrome_da_morte_súbita_do_lactente)': 'ped', 'Obesidade_infantil_e_na_adolescência': 'ped',
-  'Infecções_congênitas': 'ped', 'Hipertensão_arterial_na_criança_e_adolescente': 'ped', 'Hipotireoidismo_congênito': 'ped',
-  'Imunizações': 'ped', 'Icterícia_e_sepse_neonatal': 'ped', 'Pneumologia': 'pne', 'Endocardite_bacteriana_-_endocardite_infecciosa': 'inf',
-  'Covid': 'inf', 'Hepatoesplenomegalias_infecciosas': 'inf', 'Meningites_(infecções_do_sistema_nervoso_central)': 'inf', 'Influenza': 'inf'
-};
+/* ═══ TEMA ═══ */
+function applyTheme(){document.documentElement.dataset.theme=lsGet('cuscuz_theme','dark')}
+function toggleTheme(){const t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;lsSet('cuscuz_theme',t)}
 
-function processRawAcervo() {
-  RAW_ACERVO.forEach(item => {
-    const modId = MOD_MAP[item.d] || 'casos';
-    const m = MOD(modId);
-    if(m) {
-      let title = item.t.replace(/_/g, ' ').trim();
-      if(title.length < 5 && item.t.length < item.d.length) title += '...';
-      m.videos.push({ m: modId, t: title, u: 'https://drive.google.com/file/d/' + item.id + '/view' });
-    }
+/* ═══ MÚSICA LOBBY PES 2013 ═══ */
+let ytPlayer;
+let isMusicPlaying = false;
+window.onYouTubeIframeAPIReady = function() {
+  ytPlayer = new YT.Player('yt-player-container', {
+    height: '0', width: '0',
+    videoId: 'CfZe9qy8YAs', // Savoir Adore - Dreamers (PES 2013)
+    playerVars: { autoplay: 0, controls: 0, loop: 1, playlist: 'CfZe9qy8YAs' }
   });
+};
+function toggleLobbyMusic() {
+  if(!ytPlayer || !ytPlayer.playVideo) return;
+  if(isMusicPlaying) { 
+      ytPlayer.pauseVideo(); 
+      $('music-icon').className = 'ph ph-speaker-slash'; 
+      if($('main-music-icon')) $('main-music-icon').className = 'ph ph-speaker-slash';
+  } else { 
+      ytPlayer.playVideo(); 
+      $('music-icon').className = 'ph ph-speaker-high'; 
+      if($('main-music-icon')) $('main-music-icon').className = 'ph ph-speaker-high';
+  }
+  isMusicPlaying = !isMusicPlaying;
 }
 
-/* ═══ GOOGLE DRIVE API SYNC (OAUTH) ═══ */
-const G_CLIENT_ID = "693665289108-qnt143hdbajhgitcufj8g97f9o73q261.apps.googleusercontent.com"; 
-const G_API_KEY = "AIzaSyA6aoGd1Yxj0Yn9JjzAABwQGOTkj7xEAVQ";
-const G_FOLDER_ID = "1pVd7V_pfyM4Vw20yfw45jBmNFqtKTHK7";
-const G_DISCOVERY_DOC = "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest";
-const G_SCOPES = "https://www.googleapis.com/auth/drive.file";
-
-let tokenClient, gapiInited = false, gisInited = false;
-let driveFileId = localStorage.getItem('cuscuz_drive_file_id');
-let CLOUD_ON = false;
-
-function gapiLoaded() {
-    gapi.load('client', () => {
-        gapi.client.init({ apiKey: G_API_KEY, discoveryDocs: [G_DISCOVERY_DOC] })
-        .then(() => { gapiInited = true; })
-        .catch(e => console.error("Erro no GAPI", e));
-    });
+/* ═══ NAVEGAÇÃO & LOBBY ═══ */
+function toggleSidebar() {
+  const sb = document.querySelector('.sidebar');
+  const bd = $('mobile-sidebar-backdrop');
+  sb.classList.toggle('open');
+  if (sb.classList.contains('open')) bd.classList.add('open'); else bd.classList.remove('open');
+}
+function goToLobby(){
+  $('app-main').style.display='none'; $('lobby-screen').style.display='flex';
+  if(ytPlayer && ytPlayer.playVideo && !isMusicPlaying) toggleLobbyMusic();
+}
+function enterApp(viewId){
+  $('lobby-screen').style.display='none'; $('app-main').style.display='grid';
+  // Inicia a música caso o usuário não tenha passado pelo lobby adequadamente
+  if(ytPlayer && ytPlayer.playVideo && !isMusicPlaying) {
+      toggleLobbyMusic();
+  }
+  if(viewId) go(viewId);
 }
 
-function gisLoaded() {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: G_CLIENT_ID,
-        scope: G_SCOPES,
-        callback: (tokenResponse) => {
-            if (tokenResponse && tokenResponse.access_token) {
-                CLOUD_ON = true;
-                localStorage.setItem('medplan_logged', '1');
-                checkSyncFile();
-            }
-        }
-    });
-    gisInited = true;
-}
+function go(id){$$('.view-section').forEach(v=>v.classList.remove('active'));$(id).classList.add('active');
+ $$('.nav-item[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===id));
+ document.querySelector('.sidebar').classList.remove('open');$('mobile-sidebar-backdrop').classList.remove('open');
+ document.querySelector('.main').scrollTop=0;
+ ({'view-inicio':renderHome,'view-calendario':renderCalendar,'view-cronograma':renderSchedule,'view-semana':renderWeek,
+   'view-preparatorio':renderPrep,'view-acervo':renderAcervo,'view-treino':renderDecks,'view-simulados':renderSim}[id]||(()=>{}))()}
+function refreshAll(){renderHome();renderCalendar();renderSchedule();renderWeek();renderPrep();renderAcervo();renderDecks();renderSim();renderDash();updateBadges();
+ const n=DRIVE.videos.length+DRIVE.apostilas.length+ACERVO.videos.length+ACERVO.apostilas.length;if(n)$('drive-btn-label').textContent='Acervo ('+n+')'}
+function refreshLight(){renderDash();renderCalendar();renderSchedule();renderWeek();renderHome();updateBadges()}
 
-function doLoginGoogle() {
-    if (!gapiInited || !gisInited) {
-        toast('A aguardar a Google API...', 'error');
-        return;
-    }
-    if (gapi.client.getToken() === null) {
-        tokenClient.requestAccessToken({prompt: 'consent'});
-    } else {
-        tokenClient.requestAccessToken({prompt: ''});
-    }
-}
+/* ═══ LOGIN / FIREBASE / AUTO SYNC ═══ */
+const firebaseConfig={apiKey:"AIzaSyA6aoGd1Yxj0Yn9JjzAABwQGOTkj7xEAVQ",authDomain:"estudoflow-409d4.firebaseapp.com",databaseURL:"https://estudoflow-409d4-default-rtdb.firebaseio.com",projectId:"estudoflow-409d4",storageBucket:"estudoflow-409d4.firebasestorage.app",messagingSenderId:"693665289108",appId:"1:693665289108:web:bc9b93f6018690a405b581"};
+let FBDB=null,CLOUD_ON=false;
+const safeUser=s=>String(s||'').toLowerCase().replace(/[^a-z0-9_-]/g,'')||'user';
+const hsh=s=>{let x=5381;for(const c of s)x=(x*33+c.charCodeAt(0))>>>0;return x.toString(36)};
+function setDot(st){const d=$('cloud-dot');if(d)d.style.background=st==='ok'?'var(--green)':st==='off'?'var(--text-disabled)':'var(--amber)'}
 
-function setDot(st){
-    const d = $('cloud-dot');
-    if(d) d.style.background = st==='ok'?'var(--green)':st==='off'?'var(--text-disabled)':'var(--amber)';
-}
-
-function checkSyncFile() {
-    setDot('sync');
-    $('login-screen').innerHTML = '<div style="color:var(--teal);font-weight:700;text-align:center">A sincronizar com o Google Drive...</div>';
-    gapi.client.drive.files.list({
-        q: `name='cuscuz_med_data.json' and '${G_FOLDER_ID}' in parents and trashed=false`,
-        spaces: 'drive',
-        fields: 'files(id)'
-    }).then(res => {
-        const files = res.result.files;
-        if (files && files.length > 0) {
-            driveFileId = files[0].id;
-            localStorage.setItem('cuscuz_drive_file_id', driveFileId);
-            loadFromDrive();
-        } else {
-            createDriveFile(JSON.stringify(payload()));
-        }
-    }).catch(err => {
-        console.error("Erro ao procurar ficheiro no Drive", err);
-        toast('Erro ao aceder ao Drive.', 'error');
-        setDot('off');
-        startApp();
-    });
-}
-
-function loadFromDrive() {
-    gapi.client.drive.files.get({ fileId: driveFileId, alt: 'media' })
-    .then(res => {
-        const data = res.result;
-        if (data && typeof data === 'object') {
-            if (confirm('Foram encontrados dados no seu Google Drive.\n\n[OK] Restaurar dados da nuvem\n[Cancelar] Manter dados locais e sobrescrever a nuvem')) {
-                applyCloud(data);
-                location.reload();
-            } else {
-                pushCloud();
-                startApp();
-            }
-        } else {
-            startApp();
-        }
-    }).catch(err => {
-        console.error("Erro ao transferir dados do Drive", err);
-        startApp();
-    });
-}
-
-function createDriveFile(content) {
-    const boundary = '-------314159265358979323846';
-    const delimiter = "\r\n--" + boundary + "\r\n";
-    const close_delim = "\r\n--" + boundary + "--";
-    const metadata = { name: 'cuscuz_med_data.json', mimeType: 'application/json', parents: [G_FOLDER_ID] };
-    const multipartRequestBody = delimiter + 'Content-Type: application/json\r\n\r\n' + JSON.stringify(metadata) + delimiter + 'Content-Type: application/json\r\n\r\n' + content + close_delim;
-
-    const request = gapi.client.request({
-        path: '/upload/drive/v3/files',
-        method: 'POST',
-        params: { uploadType: 'multipart' },
-        headers: { 'Content-Type': 'multipart/related; boundary="' + boundary + '"' },
-        body: multipartRequestBody
-    });
-    request.execute(file => {
-        if (file.id) {
-            driveFileId = file.id;
-            localStorage.setItem('cuscuz_drive_file_id', driveFileId);
-            setDot('ok');
-        } else setDot('off');
-        startApp();
-    });
-}
-
-function pushCloud() {
-    if (!CLOUD_ON || !driveFileId || !gapi.client.getToken()) return;
-    setDot('sync');
-    const content = JSON.stringify(payload());
-    const request = gapi.client.request({
-        path: '/upload/drive/v3/files/' + driveFileId,
-        method: 'PATCH',
-        params: { uploadType: 'media' },
-        body: content
-    });
-    request.execute(file => {
-        if(file && file.id) setDot('ok');
-        else setDot('off');
-    });
-}
-
-function payload(){
-    return{
-        v: 2,
-        app: 'cuscuz-med',
-        db: DB,
-        done: [...DONE],
-        fav: [...FAV],
-        quiz: QUIZS,
-        last: lsGet('acv_last', null),
-        days: lsGet('acv_days', []),
-        sims: SIMS,
-        decks: DECKS,
-        wrong: [...WRONG],
-        resumos: RESUMOS,
-        fc: FCS,
-        fcsrs: FCSRS,
-        drive: DRIVE 
-    };
-}
-
-function applyCloud(cl){
-    lsSet(LS, Object.assign(JSON.parse(JSON.stringify(DEFDB)), cl.db || {}));
-    lsSet('acv_done', cl.done || []);
-    lsSet('acv_fav', cl.fav || []);
-    lsSet('acv_quiz', cl.quiz || {});
-    lsSet('acv_last', cl.last || null);
-    lsSet('acv_days', cl.days || []);
-    lsSet('acv_sims', cl.sims || []);
-    lsSet('acv_decks', cl.decks || []);
-    lsSet('acv_wrong', cl.wrong || []);
-    lsSet('acv_resumos', cl.resumos || {});
-    lsSet('acv_fc', cl.fc || []);
-    lsSet('acv_fc_srs', cl.fcsrs || {});
-    if(cl.drive) {
-        DRIVE = cl.drive;
-        lsSet('cuscuz_med_drive', DRIVE);
-    }
-}
-
-function logout(){
-    if(confirm('Pretende sair da conta e voltar ao ecrã inicial?')) {
-        localStorage.removeItem('medplan_logged');
-        if (gapiInited && gapi.client.getToken()) {
-            google.accounts.oauth2.revoke(gapi.client.getToken().access_token);
-            gapi.client.setToken('');
-        }
-        location.reload();
-    }
-}
+function doLogin(){const u=cleanStr($('login-user').value.trim()),p=$('login-pass').value;
+ if(!u||!p){$('login-error').style.display='block';return}
+ const users=lsGet('cuscuz_users',{});
+ if(users[u]&&users[u]!==hsh(p)){$('login-error').style.display='block';return}
+ users[u]=hsh(p);lsSet('cuscuz_users',users);
+ SYNC_USER=u;localStorage.setItem('medplan_logged','1');localStorage.setItem('medplan_user',u);
+ $('login-error').style.display='none';startApp()}
+function logout(){if(confirm('Sair? Os dados continuam salvos neste dispositivo.')){localStorage.removeItem('medplan_logged');location.reload()}}
+function payload(){return{db:DB,done:[...DONE],fav:[...FAV],quiz:QUIZS,last:lsGet('acv_last',null),days:lsGet('acv_days',[]),sims:SIMS,decks:DECKS,wrong:[...WRONG],resumos:RESUMOS,fc:FCS,fcsrs:FCSRS}}
+function pushCloud(){if(!CLOUD_ON||!SYNC_USER)return;setDot('sync');
+ FBDB.ref('users/'+safeUser(SYNC_USER)+'/state').set(payload()).then(()=>setDot('ok')).catch(()=>setDot('off'))}
+function applyCloud(cl){lsSet(LS,Object.assign(JSON.parse(JSON.stringify(DEFDB)),cl.db||{}));
+ lsSet('acv_done',cl.done||[]);lsSet('acv_fav',cl.fav||[]);lsSet('acv_quiz',cl.quiz||{});lsSet('acv_last',cl.last||null);
+ lsSet('acv_days',cl.days||[]);lsSet('acv_sims',cl.sims||[]);lsSet('acv_decks',cl.decks||[]);lsSet('acv_wrong',cl.wrong||[]);
+ lsSet('acv_resumos',cl.resumos||{});lsSet('acv_fc',cl.fc||[]);lsSet('acv_fc_srs',cl.fcsrs||{})}
 
 function startApp(){
-    $('login-screen').style.display = 'none';$('app-main').style.display = 'grid';
-    catalog(); 
-    refreshAll();
-    setDot(CLOUD_ON ? 'ok' : 'off');
-    toast('Bem-vindo ao Cuscuz-MED!', 'success');
+ $('login-screen').style.display='none'; 
+ goToLobby(); // Vai pro lobby primeiro para tocar a música
+ catalog();refreshAll();setDot(CLOUD_ON?'ok':'off');
+ autoSyncDrive(); // Aciona sincronização em background
+ loadAcervoData().then(ok=>{if(ok)toast('📚 Acervo online: '+(ACERVO.videos.length+ACERVO.apostilas.length)+' itens','success')});
+ if(CLOUD_ON&&SYNC_USER){FBDB.ref('users/'+safeUser(SYNC_USER)+'/state').once('value').then(s=>{const cl=s.val();if(!cl)return;
+  const cloudXp=cl.db&&cl.db.xp,changed=cloudXp!==DB.xp||(cl.done||[]).length!==DONE.size;
+  if(changed&&confirm('Dados encontrados na nuvem para "'+SYNC_USER+'".\nOK = restaurar da nuvem · Cancelar = manter local e sobrescrever nuvem')){
+   applyCloud(cl);location.reload()}else if(changed)pushCloud()}).catch(()=>setDot('off'))}}
+
+/* ═══ XP / BADGES ═══ */
+const level=()=>Math.floor(DB.xp/100)+1;
+const BADGES=[
+ {id:'start',i:'🌱',n:'Primeiro passo',c:()=>DB.xp>=5},
+ {id:'xp100',i:'💯',n:'100 XP',c:()=>DB.xp>=100},
+ {id:'xp500',i:'🔥',n:'500 XP',c:()=>DB.xp>=500},
+ {id:'lv5',i:'⭐',n:'Nível 5',c:()=>level()>=5},
+ {id:'st3',i:'⚡',n:'Sequência de 3 dias',c:()=>DB.streak>=3},
+ {id:'st7',i:'🌪️',n:'Sequência de 7 dias',c:()=>DB.streak>=7},
+ {id:'v1',i:'🎬',n:'1ª videoaula',c:()=>[...DONE].some(k=>k.includes(':yt:'))},
+ {id:'v10',i:'🎥',n:'10 videoaulas',c:()=>[...DONE].filter(k=>k.includes(':yt:')).length>=10},
+ {id:'q1',i:'✏️',n:'1º quiz respondido',c:()=>Object.keys(QUIZS).length>0},
+ {id:'q80',i:'🧠',n:'80% num deck (10+ q)',c:()=>Object.values(QUIZS).some(s=>s.t>=10&&s.s/s.t>=.8)},
+ {id:'sim',i:'⏱️',n:'1º simulado',c:()=>SIMS.length>0},
+ {id:'meta',i:'🎯',n:'Bateu a meta do dia',c:()=>Object.keys(DB.prep.metaHit).length>0},
+ {id:'meio',i:'🩺',n:'Meio Médico — 50% do acervo',c:()=>{const t=MODULES.reduce((a,m)=>a+itemsOf(m).length,0);return t>0&&DONE.size>=t/2}},
+ {id:'emp',i:'💍',n:'Empreendedor — loja + estudo no mesmo dia',c:()=>Object.keys(DB.events).some(dk=>(DB.events[dk]||[]).some(e=>e.c==='loja')&&Object.keys(DB.done).some(k=>k.split('#')[0]===dk))},
+ {id:'tr10',i:'🏋️',n:'10 treinos registrados',c:()=>Object.values(DB.habits).filter(h=>h&&h.treino).length>=10}];
+function addXP(n,why){if(n<=0)return;DB.xp+=n;saveDB();toast('+'+n+' XP · '+esc(why),'xp');checkBadges();renderDash()}
+function touchStreak(){const t=todayKey();if(DB.streakLast===t)return;DB.streak=(DB.streakLast===addD(t,-1))?DB.streak+1:1;DB.streakLast=t;saveDB();checkBadges()}
+function checkBadges(){BADGES.forEach(b=>{if(!DB.badges.includes(b.id)&&b.c()){DB.badges.push(b.id);saveDB(false);
+ $('reward-emoji').textContent=b.i;$('reward-title').textContent='Badge desbloqueada!';$('reward-sub').textContent=b.n;
+ $('reward-xp').textContent='XP total: '+DB.xp;$('reward-overlay').classList.add('open');confetti()}})}
+function confetti(){const c=$('confetti-canvas'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;
+ const cols=['#f5a623','#34c97a','#7c6af0','#e85b7a','#00c8a8'];
+ const P=Array.from({length:90},()=>({x:Math.random()*c.width,y:-20-Math.random()*c.height*.3,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,s:4+Math.random()*5,r:Math.random()*6.28,col:cols[Math.floor(Math.random()*5)]}));
+ let f=0;(function loop(){f++;x.clearRect(0,0,c.width,c.height);
+  P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=.1;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.col;x.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);x.restore()});
+  f<180?requestAnimationFrame(loop):x.clearRect(0,0,c.width,c.height)})()}
+
+/* ═══ PLANO ═══ */
+function openPlanModal(){
+ const chips=MODULES.map(m=>'<span class="chip" data-pm="'+m.id+'" onclick="this.classList.toggle(\'active\')">'+m.n+'</span>').join('');
+ openModal('<div class="modal-title">⚡ Gerar plano de estudos<button class="modal-close"><i class="ph ph-x"></i></button></div>'
+ +'<div class="form-group"><label class="form-label">Nome da prova</label><input id="pl-name" placeholder="Ex: ENARE"></div>'
+ +'<div class="form-row"><div class="form-group"><label class="form-label">Início</label><input id="pl-start" type="date" value="'+todayKey()+'"></div>'
+ +'<div class="form-group"><label class="form-label">Data da prova</label><input id="pl-date" type="date"></div></div>'
+ +'<div class="form-group"><label class="form-label">Matérias</label><div class="chips">'+chips+'</div></div>'
+ +'<div class="form-group"><label class="form-label">Intensidade</label><select id="pl-int"><option value="1">Leve — 1 tópico/dia</option><option value="2" selected>Normal — 2 tópicos/dia</option><option value="3">Intenso — 3 tópicos/dia</option></select></div>'
+ +'<div class="form-actions"><button class="btn-outline" onclick="closeModals()">Cancelar</button><button class="btn-primary" onclick="generatePlan()">Gerar plano</button></div>')}
+function generatePlan(){
+ const name=cleanStr($('pl-name').value.trim()),start=$('pl-start').value,end=$('pl-date').value,int=+$('pl-int').value;
+ const subs=$$('.chip[data-pm].active').map(c=>c.dataset.pm);
+ if(!name||!start||!end||!subs.length){toast('Preencha todos os campos e escolha matérias','error');return}
+ if(end<=start){toast('A prova deve ser depois do início','error');return}
+ if(DB.plan&&DB.plan.items&&DB.plan.items.length&&!confirm('Isso substitui o plano atual. Continuar?'))return;
+ const per=subs.map(id=>({id,items:itemsOf(MOD(id)).map(i=>i.t)}));
+ const days=[];let d=start;while(d<end){days.push(d);d=addD(d,1)}
+ const items=[];let idx=0;
+ days.forEach(day=>{for(let k=0;k<int;k++){
+  let pick=null;for(let r=0;r<per.length&&!pick;r++){const p=per[(idx+r)%per.length];if(p.items.length)pick=p}
+  if(pick){items.push({d:day,s:pick.id,t:pick.items.shift()});idx=(idx+1)%per.length}
+  else{const s=subs[idx%subs.length];items.push({d:day,s,t:'Revisão — '+MOD(s).n});idx++}}});
+ DB.plan={exam:{d:end,name},items};DB.exams[end]={name};DB.done={};DB.skipped={};
+ saveDB();closeModals();toast('Plano gerado: '+items.length+' tópicos até a prova','success');confetti();checkBadges();refreshAll()}
+function planOn(dk){if(!DB.plan)return[];return DB.plan.items.map((it,ix)=>({ix,...it})).filter(i=>i.d===dk)}
+function setItem(dk,ix,field){const k=dk+'#'+ix;
+ if(field==='done'){if(DB.done[k])delete DB.done[k];else{DB.done[k]=1;addXP(5,'tópico concluído');touchStreak();addDay(dk);checkMeta()}}
+ else{DB.skipped[k]?delete DB.skipped[k]:DB.skipped[k]=1}
+ saveDB();refreshLight();if(document.querySelector('.modal-overlay:not(#mobile-sidebar-backdrop)')){closeModals();openDay(dk)}}
+function addExam(dk){const n=cleanStr(prompt('Nome da prova:')||'');if(!n)return;DB.exams[dk]={name:n};saveDB();closeModals();openDay(dk);refreshLight()}
+function delExam(dk){delete DB.exams[dk];saveDB();closeModals();openDay(dk);refreshLight()}
+function toggleHoliday(dk){DB.holidays[dk]?delete DB.holidays[dk]:DB.holidays[dk]=1;saveDB();closeModals();openDay(dk);refreshLight()}
+function toggleCalFilter(s){calFilter.has(s)?calFilter.delete(s):calFilter.add(s);renderCalendar()}
+function changeMonth(n){CALM.setMonth(CALM.getMonth()+n);renderCalendar()}
+function goToday(){CALM=new Date();CALM.setDate(1);renderCalendar()}
+
+/* ═══ CALENDÁRIO HÍBRIDO ═══ */
+function renderCalendar(){
+ const y=CALM.getFullYear(),mo=CALM.getMonth();
+ $('month-label').textContent=CALM.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+ const subs=[...new Set((DB.plan?DB.plan.items:[]).map(i=>i.s))];
+ $('subject-chips').innerHTML=subs.map(s=>'<span class="chip'+(calFilter.has(s)?' active':'')+'" onclick="toggleCalFilter(\''+s+'\')">'+esc(MOD(s)?MOD(s).n:s)+'</span>').join('');
+ const start=(new Date(y,mo,1).getDay()+6)%7,dim=new Date(y,mo+1,0).getDate(),t=todayKey();
+ let html='';for(let i=0;i<start;i++)html+='<div class="day other"></div>';
+ for(let d=1;d<=dim;d++){
+  const dk=y+'-'+String(mo+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+  const items=planOn(dk).filter(i=>!calFilter.size||calFilter.has(i.s));
+  const evs=DB.events[dk]||[],hb=DB.habits[dk]||{};
+  const ex=DB.exams[dk],ho=DB.holidays[dk];
+  let cls='day'+(dk===t?' today':'')+(ho?' holiday':'')+(ex?' exam':'')+(!ex&&!ho&&items.length?' study':'');
+  const label=ex?esc(ex.name):(ho?'Feriado':'');
+  const allDone=items.length&&items.every(i=>DB.done[dk+'#'+i.ix]);
+  const chips=[...items.slice(0,3).map(i=>'<span class="day-chip'+(DB.done[dk+'#'+i.ix]?' done':'')+'">'+esc(i.t)+'</span>'),
+   ...evs.map(e=>'<span class="day-chip" style="background:'+EVC[e.c]+';color:#0b0d11">'+esc(e.t)+'</span>')].slice(0,3).join('');
+  html+='<div class="'+cls+'" onclick="openDay(\''+dk+'\')"><div class="day-bar"></div><div class="dnum">'+d+'</div>'
+  +(label?'<div class="day-label">'+label+'</div>':'')+'<div class="day-chips">'+chips+'</div>'
+  +((hb.treino||hb.macros)?'<div class="hab-ico">'+(hb.treino?'🏋️':'')+(hb.macros?'🍽️':'')+'</div>':'')
+  +(allDone?'<div class="day-check"><i class="ph ph-check-bold"></i></div>':'')+'</div>'}
+ $('cal-grid').innerHTML=html}
+function openDay(dk){
+ const items=planOn(dk),ex=DB.exams[dk],evs=DB.events[dk]||[],hb=DB.habits[dk]||{},p=dk.split('-');
+ let body=ex?'<div class="week-item"><span class="sdot" style="background:var(--amber)"></span><b>📝 '+esc(ex.name)+'</b><button class="btn-outline btn-sm" style="margin-left:auto" onclick="delExam(\''+dk+'\')">Remover</button></div>':'';
+ body+=evs.map((e,i)=>'<div class="week-item"><span class="sdot" style="background:'+EVC[e.c]+'"></span><span class="week-item-topic">'+esc(e.t)+'</span><span class="fc-meta">'+esc(e.c)+'</span><button class="btn-icon" style="width:28px;height:28px" onclick="delEvent(\''+dk+'\','+i+')"><i class="ph ph-x"></i></button></div>').join('');
+ body+=items.length?items.map(i=>{const k=dk+'#'+i.ix,done=DB.done[k];
+  return '<div class="week-item"><span class="week-item-code">'+fmtBR(dk)+'</span><span class="sdot" style="background:var(--violet)"></span><span class="week-item-topic'+(done?' completed':'')+'">'+esc(i.t)+'</span>'
+  +'<button class="check-btn'+(done?' checked':'')+'" onclick="setItem(\''+dk+'\','+i.ix+',\'done\')"><i class="ph ph-check-bold"></i></button>'
+  +'<button class="skip-btn" title="Pular" onclick="setItem(\''+dk+'\','+i.ix+',\'skip\')"><i class="ph ph-skip-forward"></i></button></div>'}).join('')
+ :(evs.length?'':'<div style="color:var(--text-muted);font-size:13px">Nada planejado para este dia.</div>');
+ body+='<div class="form-actions" style="justify-content:flex-start;flex-wrap:wrap">'
+ +'<button class="btn-outline" onclick="addEvent(\''+dk+'\')">🏷️ Evento</button>'
+ +'<button class="btn-outline" onclick="toggleHabit(\''+dk+'\',\'treino\')">🏋️ '+(hb.treino?'Treino ✓':'Treino')+'</button>'
+ +'<button class="btn-outline" onclick="toggleHabit(\''+dk+'\',\'macros\')">🍽️ '+(hb.macros?'Macros ✓':'Macros')+'</button>'
+ +'<button class="btn-outline" onclick="addExam(\''+dk+'\')">📝 Prova</button>'
+ +'<button class="btn-outline" onclick="toggleHoliday(\''+dk+'\')">🏖️ '+(DB.holidays[dk]?'Remover feriado':'Feriado')+'</button></div>';
+ openModal('<div class="modal-title">📅 '+p[2]+'/'+p[1]+'/'+p[0]+'<button class="modal-close"><i class="ph ph-x"></i></button></div>'+body)}
+function addEvent(dk){openModal('<div class="modal-title">🏷️ Evento — '+fmtBR(dk)+'<button class="modal-close"><i class="ph ph-x"></i></button></div>'
+ +'<div class="form-group"><label class="form-label">Descrição</label><input id="ev-txt" placeholder="Ex: Lançamento do catálogo · envio de pacotes"></div>'
+ +'<div class="form-group"><label class="form-label">Categoria</label><div class="chips" id="ev-colors">'
+ +Object.keys(EVC).map((k,i)=>'<span class="chip'+(i===0?' active':'')+'" data-evc="'+k+'" onclick="[...this.parentNode.children].forEach(c=>c.classList.remove(\'active\'));this.classList.add(\'active\')">'+k+'</span>').join('')
+ +'</div></div><div class="form-actions"><button class="btn-outline" onclick="closeModals()">Cancelar</button><button class="btn-primary" onclick="saveEvent(\''+dk+'\')">Salvar</button></div>')}
+function saveEvent(dk){const t=cleanStr($('ev-txt').value.trim());if(!t){toast('Descreva o evento','error');return}
+ const chip=document.querySelector('#ev-colors .chip.active');const c=chip?chip.dataset.evc:'loja';
+ (DB.events[dk]=DB.events[dk]||[]).push({t,c});saveDB();closeModals();openDay(dk);renderCalendar();toast('Evento adicionado','success')}
+function delEvent(dk,i){DB.events[dk].splice(i,1);if(!DB.events[dk].length)delete DB.events[dk];saveDB();closeModals();openDay(dk);renderCalendar()}
+function toggleHabit(dk,w){const h=DB.habits[dk]||(DB.habits[dk]={});const was=!!h[w];h[w]=!h[w];
+ if(!was&&h[w])addXP(w==='treino'?2:1,w==='treino'?'treino registrado 💪':'macros em dia 🍽️');
+ saveDB();closeModals();openDay(dk);renderCalendar();checkBadges()}
+
+/* ═══ CRONOGRAMA / SEMANA ═══ */
+const itemRow=i=>{const k=i.d+'#'+i.ix,done=DB.done[k],skip=DB.skipped[k];
+ return '<div class="week-item"><span class="week-item-code">'+fmtBR(i.d)+'</span><span class="sdot" style="background:'+(skip?'var(--text-muted)':DB.exams[i.d]?'var(--amber)':'var(--violet)')+'"></span><span class="week-item-topic'+(done?' completed':'')+'">'+esc(i.t)+'</span>'
+ +'<button class="check-btn'+(done?' checked':'')+'" onclick="setItem(\''+i.d+'\','+i.ix+',\'done\')"><i class="ph ph-check-bold"></i></button>'
+ +'<button class="skip-btn" onclick="setItem(\''+i.d+'\','+i.ix+',\'skip\')"><i class="ph ph-skip-forward"></i></button></div>'};
+function renderSchedule(){
+ const el=$('schedule-view');
+ if(!DB.plan||!DB.plan.items.length){el.innerHTML='<div style="color:var(--text-muted);padding:40px 0">Nenhum plano ativo. Clique em <b>⚡ Planejar</b> no topo para gerar um cronograma.</div>';return}
+ const weeks={};DB.plan.items.forEach((it,ix)=>{const wk=weekKey(it.d);(weeks[wk]=weeks[wk]||[]).push({ix,...it})});
+ const tot=DB.plan.items.length,dn=DB.plan.items.filter(i=>DB.done[i.d+'#'+i.ix]).length;
+ el.innerHTML='<div class="week-target"><b>📌 '+esc(DB.plan.exam.name)+'</b><span style="color:var(--text-muted);font-family:var(--font-mono);font-size:12px">prova: '+fmtBR(DB.plan.exam.d)+' · '+Math.max(0,diffDays(todayKey(),DB.plan.exam.d))+' dias · '+dn+'/'+tot+' concluídos</span>'
+ +'<div class="progress-bar" style="flex:1;min-width:120px"><div class="progress-fill" style="width:'+pct(dn,tot)+'%"></div></div></div>'
+ +Object.keys(weeks).sort().map((wk,wi)=>{const arr=weeks[wk],d=arr.filter(i=>DB.done[i.d+'#'+i.ix]).length;
+  return '<div class="week-card"><div class="week-hdr" onclick="const b=this.nextElementSibling;b.style.display=b.style.display===\'none\'?\'block\':\'none\'">'
+  +'<span class="week-num">S'+(wi+1)+'</span><span class="week-dates">'+fmtBR(wk)+' – '+fmtBR(addD(wk,6))+'</span>'
+  +'<span class="week-progress">'+d+'/'+arr.length+'</span></div>'
+  +'<div style="display:'+(weekKey(todayKey())===wk?'block':'none')+'">'+arr.map(itemRow).join('')+'</div></div>'}).join('')}
+function renderWeek(){
+ const wk=weekKey(todayKey());
+ const items=DB.plan?DB.plan.items.map((it,ix)=>({ix,...it})).filter(i=>weekKey(i.d)===wk):[];
+ const q=DB.qweek[wk]||{goal:100,done:0,hit:false};
+ const dn=items.filter(i=>DB.done[i.d+'#'+i.ix]).length;
+ $('week-view').innerHTML='<div class="week-target"><div style="flex:1"><div class="dash-title">Meta de questões da semana</div>'
+ +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><input class="week-q-input" id="wk-goal" type="number" min="0" value="'+q.goal+'">'
+ +'<button class="btn-outline btn-sm" onclick="saveWkGoal()">salvar meta</button>'
+ +'<button class="btn-outline btn-sm" onclick="addWkQ(10)">+10 questões</button>'
+ +'<button class="btn-outline btn-sm" onclick="addWkQ(25)">+25</button>'
+ +'<b style="font-family:var(--font-mono)">'+q.done+' / '+q.goal+'</b></div>'
+ +'<div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:'+pct(q.done,q.goal)+'%"></div></div></div></div>'
+ +'<div class="week-card"><div class="week-hdr" style="cursor:default"><span class="week-num">Semana atual</span>'
+ +'<span class="week-dates">'+fmtBR(wk)+' – '+fmtBR(addD(wk,6))+'</span><span class="week-progress">'+dn+'/'+items.length+' tópicos</span></div>'
+ +(items.length?items.map(itemRow).join(''):'<div class="week-item" style="color:var(--text-muted)">Semana sem tópicos planejados.</div>')+'</div>'}
+function saveWkGoal(){const wk=weekKey(todayKey());const q=DB.qweek[wk]||{done:0,hit:false};q.goal=Math.max(0,+$('wk-goal').value||0);DB.qweek[wk]=q;saveDB();renderWeek()}
+function addWkQ(n){const wk=weekKey(todayKey());const q=DB.qweek[wk]||{goal:100,done:0,hit:false};q.done+=n;
+ if(!q.hit&&q.goal>0&&q.done>=q.goal){q.hit=true;addXP(15,'meta de questões!');confetti()}
+ DB.qweek[wk]=q;saveDB();touchStreak();renderWeek()}
+
+/* ═══ PREPARATÓRIO ═══ */
+const DOWS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+let PT={running:false,t0:null,acc:0,tick:null,pomo:null};
+const elapsed=()=>PT.acc+(PT.running?Math.floor((Date.now()-PT.t0)/1000):0);
+function prepTimerToggle(){
+ if(!PT.running){PT.running=true;PT.t0=Date.now();$('prep-timer-btn').innerHTML='<i class="ph ph-pause"></i> Pausar';$('prep-timer').classList.add('running');PT.tick=setInterval(updPT,1000)}
+ else{PT.acc=elapsed();PT.running=false;$('prep-timer-btn').innerHTML='<i class="ph ph-play"></i> Retomar';$('prep-timer').classList.remove('running');clearInterval(PT.tick)}
+ updPT()}
+function updPT(){const s=elapsed();
+ $('prep-timer').textContent=[Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(n=>String(n).padStart(2,'0')).join(':');
+ if(PT.pomo)pomoTick(s)}
+function prepTimerStop(){
+ const min=Math.floor(elapsed()/60);
+ clearInterval(PT.tick);PT={running:false,t0:null,acc:0,tick:null,pomo:PT.pomo};
+ $('prep-timer').classList.remove('running');$('prep-timer-btn').innerHTML='<i class="ph ph-play"></i> Iniciar';$('prep-timer').textContent='00:00:00';
+ if(min>=1){const t=todayKey();DB.prep.sessions[t]=(DB.prep.sessions[t]||0)+min;saveDB();
+  addXP(min>=25?3:1,min+' min de estudo');touchStreak();checkMeta();renderPrep()}}
+function prepPomoToggle(on){$('prep-pomo-config').style.display=on?'flex':'none';$('prep-pomo-phase').style.display=on?'block':'none';
+ if(on){PT.pomo={phase:'focus',cycles:0,base:elapsed(),len:(+($('prep-pomo-focus').value)||25)*60};updPT()}else PT.pomo=null}
+function prepPomoCfg(){if(PT.pomo){PT.pomo.len=(PT.pomo.phase==='focus'?(+($('prep-pomo-focus').value)||25):(+($('prep-pomo-brk').value)||5))*60;PT.pomo.base=elapsed()}}
+function pomoTick(total){const p=PT.pomo,left=Math.max(0,p.len-(total-p.base));
+ $('prep-pomo-chip').textContent=(p.phase==='focus'?'🍅 Foco':'☕ Pausa')+' · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0');
+ $('prep-pomo-chip').className='chip '+(p.phase==='focus'?'pomo-chip-focus':'pomo-chip-break');
+ $('prep-pomo-cycles').textContent=p.cycles+' ciclos';
+ if(left<=0){
+  if(p.phase==='focus'){p.phase='break';p.len=(+($('prep-pomo-brk').value)||5)*60;toast('Pausa! Levante e beba água 💧','success')}
+  else{p.phase='focus';p.cycles++;p.len=(+($('prep-pomo-focus').value)||25)*60;toast('De volta ao foco 🍅','success');addXP(2,'ciclo pomodoro')}
+  p.base=total}}
+function setRoutine(d,v){DB.prep.routine[d]=Math.max(0,Math.min(960,+v||0));saveDB(false);renderPrep()}
+function prepSaveRoutine(){saveDB();toast('Rotina salva','success');renderPrep()}
+function checkMeta(){const t=todayKey(),goal=DB.prep.routine[new Date().getDay()]||0;
+ if(goal>0&&(DB.prep.sessions[t]||0)>=goal&&!DB.prep.metaHit[t]){DB.prep.metaHit[t]=1;addXP(20,'meta do dia batida! 🎯');confetti();checkBadges()}}
+function prepAddItem(){const v=cleanStr($('prep-new-item').value.trim());if(!v)return;DB.prep.checklist.push({t:v,on:false});$('prep-new-item').value='';saveDB();renderPrep()}
+function prepToggleItem(i){DB.prep.checklist[i].on=!DB.prep.checklist[i].on;saveDB(false);renderPrep()}
+function prepDelItem(i){DB.prep.checklist.splice(i,1);saveDB(false);renderPrep()}
+function renderPrep(){
+ const t=todayKey(),dow=new Date().getDay();$('prep-dow').textContent=DOWS[dow];
+ $('prep-routine').innerHTML=[1,2,3,4,5,6,0].map(d=>'<div class="routine-row"><span>'+DOWS[d]+'</span><input type="number" min="0" max="960" value="'+(DB.prep.routine[d]||0)+'" onchange="setRoutine('+d+',this.value)"><span style="font-size:11px;color:var(--text-muted)">min</span></div>').join('');
+ const goal=DB.prep.routine[dow]||0,done=DB.prep.sessions[t]||0;
+ $('prep-meta-txt').textContent=done+'/'+goal+' min';
+ $('prep-meta-fill').style.width=(goal?pct(done,goal):0)+'%';
+ const days=[];for(let i=6;i>=0;i--)days.push(addD(t,-i));
+ const max=Math.max(30,...days.map(d=>DB.prep.sessions[d]||0));
+ $('prep-hist').innerHTML=days.map(d=>{const v=DB.prep.sessions[d]||0;
+  return '<div class="prep-hist-col"><span style="font-size:9px;font-family:var(--font-mono);color:var(--text-muted)">'+(v||'')+'</span><div class="prep-hist-bar" style="height:'+Math.max(2,(v/max)*70)+'px"></div><div class="prep-hist-lbl">'+DOWS[parseD(d).getDay()]+'</div></div>'}).join('');
+ const total=Object.values(DB.prep.sessions).reduce((a,b)=>a+b,0);
+ const avg=Math.round(days.reduce((a,d)=>a+(DB.prep.sessions[d]||0),0)/7);
+ const hh=m=>Math.floor(m/60)+'h'+(m%60?m%60+'m':'');
+ $('prep-total').textContent=hh(total);$('prep-avg').textContent=hh(avg);
+ let rf='<div style="color:var(--text-muted);font-size:13px">Nenhuma prova definida — use ⚡ Planejar.</div>';
+ if(DB.plan&&DB.plan.exam){const dd=diffDays(t,DB.plan.exam.d),tot=DB.plan.items.length,dn=DB.plan.items.filter(i=>DB.done[i.d+'#'+i.ix]).length;
+  rf='<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">'+(dd>=0?'<b style="color:var(--rose);font-size:22px;font-family:var(--font-serif)">'+dd+'</b> dias para <b>'+esc(DB.plan.exam.name)+'</b>':'Prova realizada ✅')+'</div>'
+  +'<div class="prep-meta-bar"><div class="prep-meta-fill" style="width:'+pct(dn,tot)+'%"></div></div>'
+  +'<div class="prep-meta-label"><span>Plano concluído</span><span>'+dn+'/'+tot+'</span></div>'}
+ $('prep-finalline').innerHTML=rf;
+ $('prep-checklist').innerHTML=(DB.prep.checklist||[]).map((c,i)=>'<div class="check-item'+(c.on?' on':'')+'" onclick="prepToggleItem('+i+')"><span class="check-btn'+(c.on?' checked':'')+'"><i class="ph ph-check-bold"></i></span><span style="flex:1">'+esc(c.t)+'</span><i class="ph ph-x" style="color:var(--text-muted)" onclick="event.stopPropagation();prepDelItem('+i+')"></i></div>').join('')
+ ||'<div style="font-size:12px;color:var(--text-muted)">Nada aqui ainda.</div>'}
+
+/* ═══ ACERVO E INTEGRAÇÃO GOOGLE DRIVE ═══ */
+const HARDCODED_DRIVE_CONFIG = {
+  apiKey: 'AIzaSyA6aoGd1Yxj0Yn9JjzAABwQGOTkj7xEAVQ',
+  folderId: '1pVd7V_pfyM4Vw20yfw45jBmNFqtKTHK7'
+};
+
+async function autoSyncDrive() {
+  const cfg = HARDCODED_DRIVE_CONFIG;
+  if(!cfg.apiKey || !cfg.folderId) return;
+  try {
+    const query = encodeURIComponent(`'${cfg.folderId}' in parents and trashed=false`);
+    const url = `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,mimeType,webViewLink)&pageSize=1000&key=${cfg.apiKey}`;
+    const response = await fetch(url);
+    if (!response.ok) return;
+    const data = await response.json();
+    const files = data.files;
+    if (!files || files.length === 0) return;
+    
+    const newVideos = [], newPdfs = [];
+    files.forEach(f => {
+     const modId = guessModule(f.name);
+     const cleanName = f.name.replace(/\.[^/.]+$/, "");
+     if(f.mimeType.includes('video')) newVideos.push({ m: modId, t: cleanName, u: f.webViewLink });
+     else if(f.mimeType.includes('pdf')) newPdfs.push({ m: modId, t: cleanName, u: f.webViewLink });
+    });
+
+    DRIVE = { videos: newVideos, apostilas: newPdfs };
+    lsSet('cuscuz_med_drive', DRIVE);
+    catalog(); refreshAll();
+    toast('☁️ Drive sincronizado automaticamente!', 'success');
+  } catch (err) { 
+    console.error("Drive Auto-sync Error:", err); 
+  }
 }
 
-/* ═══ INIT E INJEÇÃO ═══ */
+function openDriveModal(){
+ openModal('<div class="modal-title"><i class="ph ph-cloud"></i> Acervo & Drive<button class="modal-close"><i class="ph ph-x"></i></button></div>'
+ +'<div style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-bottom:12px">O acervo online (<b>acervo-index.php</b> / <b>acervo-manifest.json</b>) é lido automaticamente ao entrar e atualizado a cada 10s. O Google Drive sincroniza em segundo plano. Abrindo o arquivo direto do computador (file://), use a <b>pasta local</b>.</div>'
+ +'<div class="form-actions" style="margin-top:10px">'
+ +'<button class="btn-outline" onclick="requestLocalFolder()"><i class="ph ph-folder-open"></i> Pasta local</button>'
+ +'<button class="btn-outline" onclick="clearDrive()">Limpar Drive</button>'
+ +'<button class="btn-primary" onclick="autoSyncDrive();loadAcervoData({force:true});closeModals()">Forçar sincronização</button></div>');
+}
+function guessModule(filename) {
+ const name = filename.toLowerCase();
+ for(let m of MODULES) {
+  if(m.id !== 'drive' && m.id !== 'casos' && m.id !== 'prov') {
+   if(name.includes(m.n.toLowerCase().substring(0, 4))) return m.id;
+  }
+ }
+ return 'drive';
+}
+function clearDrive(){DRIVE={videos:[],apostilas:[]};lsSet('cuscuz_med_drive',DRIVE);catalog();closeModals();refreshAll();toast('Conteúdo do Drive removido')}
+
+/* ═══ ACERVO ONLINE (acervo-index.php / acervo-manifest.json) + PASTA LOCAL ═══ */
+const ACERVO_ENDPOINTS=['./acervo-index.php','./acervo-manifest.json'];
+const VIDEO_EXTENSIONS=new Set(['mp4','webm','mov','m4v','mkv','avi']);
+const MATERIAL_EXTENSIONS=new Set(['pdf']);
+const VIDEO_FILE_RE=/\.(mp4|webm|mov|m4v|mkv|avi)(?:\?|#|$)/i;
+let ACERVO=lsGet('cuscuz_med_acervo_cache',{videos:[],apostilas:[]});
+let acervoLoaded=false,lastAcervoSig='',localObjectUrls=[];
+const ytId=u=>{const m=String(u||'').match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);return m?m[1]:null};
+
+// Fallback para abrir o HTML direto do computador: o usuário escolhe a pasta
+// do acervo e os arquivos locais viram blob URLs (sem enviar nada pra rede).
+const localFolderInput=document.createElement('input');
+localFolderInput.type='file';localFolderInput.multiple=true;
+localFolderInput.setAttribute('webkitdirectory','');localFolderInput.hidden=true;
+document.body.appendChild(localFolderInput);
+
+function normalizeAcervoItem(item,type,index){
+ const title=String(item?.t??item?.title??item?.name??'').trim();
+ const src=String(item?.src??item?.url??item?.path??'').trim();
+ if(!title||!src)return null;
+ return{d:String(item?.d??item?.discipline??item?.folder??'Cursos').trim()||'Cursos',
+  t:title,id:String(item?.id??'local:'+src+':'+index),src,type,
+  provider:String(item?.provider??item?.courseName??item?.d??'Outros'),area:String(item?.area??'Geral')};
+}
+const acervoToDrive=n=>{const y=ytId(n.src);const o={m:guessModule(n.d+' '+n.t),t:n.t,u:n.src};if(y)o.y=y;return o};
+function applyAcervoList(videos,materials,silent){
+ const conv=arr=>arr.map((it,ix)=>{const n=normalizeAcervoItem(it,'x',ix);return n?acervoToDrive(n):null}).filter(Boolean);
+ ACERVO={videos:conv(videos),apostilas:conv(materials)};
+ acervoLoaded=true;
+ const cacheable=x=>x.filter(it=>!String(it.u||'').startsWith('blob:')); // blob: não sobrevive ao reload
+ lsSet('cuscuz_med_acervo_cache',{videos:cacheable(ACERVO.videos),apostilas:cacheable(ACERVO.apostilas)});
+ catalog();refreshAll();
+ if(!silent)toast('📚 Acervo atualizado ('+(ACERVO.videos.length+ACERVO.apostilas.length)+' itens)','success');
+}
+function parseAcervoPayload(payload){
+ if(!payload||typeof payload!=='object')return null;
+ if(Array.isArray(payload)){
+  const isV=i=>String(i?.type??i?.kind??'').toLowerCase()==='video';
+  const isM=i=>['pdf','material','apostila'].includes(String(i?.type??i?.kind??'').toLowerCase());
+  return{videos:payload.filter(isV),materials:payload.filter(isM)};
+ }
+ const videos=payload.videos??payload.videoaulas??[];
+ const materials=payload.materials??payload.apostilas??payload.pdfs??[];
+ if(!Array.isArray(videos)&&!Array.isArray(materials))return null;
+ return{videos:Array.isArray(videos)?videos:[],materials:Array.isArray(materials)?materials:[]};
+}
+async function fetchAcervoPayload(){
+ if(location.protocol==='file:')return null;
+ for(const endpoint of ACERVO_ENDPOINTS){
+  try{const sep=endpoint.includes('?')?'&':'?';
+   const r=await fetch(endpoint+sep+'v='+Date.now(),{cache:'no-store'});
+   if(!r.ok)continue;
+   const payload=await r.json();
+   const parsed=parseAcervoPayload(payload);
+   if(parsed)return parsed;
+  }catch(e){console.debug('acervo: não foi possível carregar '+endpoint,e)}
+ }
+ return null;
+}
+async function loadAcervoData({force=false}={}){
+ if(acervoLoaded&&!force)return true;
+ const parsed=await fetchAcervoPayload();
+ if(!parsed)return false;
+ applyAcervoList(parsed.videos,parsed.materials,true);
+ lastAcervoSig=JSON.stringify(parsed);
+ return true;
+}
+async function refreshAcervoData(){
+ if(location.protocol==='file:'||document.visibilityState!=='visible')return false;
+ const parsed=await fetchAcervoPayload();
+ if(!parsed)return false;
+ const sig=JSON.stringify(parsed);
+ if(sig===lastAcervoSig)return true;
+ lastAcervoSig=sig;
+ applyAcervoList(parsed.videos,parsed.materials,true);
+ return true;
+}
+// Mantém o catálogo sincronizado enquanto a página estiver aberta
+if(location.protocol!=='file:')setInterval(refreshAcervoData,10000);
+function buildLocalPayload(fileList){
+ localObjectUrls.forEach(url=>URL.revokeObjectURL(url));localObjectUrls=[];
+ const videos=[],materials=[];
+ Array.from(fileList).forEach(file=>{
+  const ext=String(file.name).toLowerCase().split('.').pop();
+  const isVideo=VIDEO_EXTENSIONS.has(ext),isMaterial=MATERIAL_EXTENSIONS.has(ext);
+  if(!isVideo&&!isMaterial)return;
+  const pathParts=(file.webkitRelativePath||file.name).split(/[\\/]/).filter(Boolean);
+  const folderParts=pathParts.slice(0,-1);
+  const discipline=folderParts.length>1?folderParts.slice(1).join(' / '):'Cursos';
+  const src=URL.createObjectURL(file);localObjectUrls.push(src);
+  (isVideo?videos:materials).push({d:discipline,t:file.name.replace(/\.[^.]+$/,''),src});
+ });
+ return{videos,materials};
+}
+function requestLocalFolder(){
+ return new Promise(resolve=>{
+  localFolderInput.value='';
+  localFolderInput.onchange=()=>{
+   const p=buildLocalPayload(localFolderInput.files);
+   closeModals();applyAcervoList(p.videos,p.materials,false);
+   lastAcervoSig='local:'+Date.now();
+   resolve(true);
+  };
+  localFolderInput.click();
+ });
+}
+
+/* ═══ PLAYER — loading / botões ═══ */
+let playerLoadingTimer=null;
+function showPLoading(on){const l=$('player-loading');if(!l)return;
+ if(on){l.classList.add('show');clearTimeout(playerLoadingTimer);playerLoadingTimer=setTimeout(()=>l.classList.remove('show'),8000)}
+ else{clearTimeout(playerLoadingTimer);l.classList.remove('show')}}
+$('close-player').onclick=closePlayer;
+
+/* ═══ TASK MODAL ═══ */
+function openTaskModal(type,title,desc){
+ $('task-modal-type').textContent=type||'Tarefa';
+ $('task-modal-title').textContent=title||'';
+ $('task-modal-desc').textContent=desc||'';
+ $('task-modal').classList.add('show');
+}
+function closeTaskModal(){$('task-modal').classList.remove('show')}
+$('close-task-modal').onclick=closeTaskModal;
+$('task-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeTaskModal()});
+$('btn-buscar-aula').onclick=e=>{
+ e.stopPropagation(); // sem isso o listener global de clique dispara srHide() e apaga a busca
+ const q=$('task-modal-title').textContent||'';
+ closeTaskModal();go('view-inicio');
+ const s=$('global-search');s.value=q;doSearch(q);
+};
+
+function moduleCard(m){const its=itemsOf(m),dn=its.filter(i=>DONE.has(itemKey(i))).length;
+ return '<div class="module-card" onclick="openModule(\''+m.id+'\')">'
+ +'<div class="card-cover cover-'+m.id+'">'+esc(m.n)+'</div>'
+ +'<div class="card-info"><h3>'+esc(m.n)+'</h3><div class="card-metrics">'
+ +'<div><span class="metric-value">'+m.videos.length+'</span><span class="metric-label"><i class="ph ph-video"></i> vídeos</span></div>'
+ +'<div><span class="metric-value">'+m.apostilas.length+'</span><span class="metric-label"><i class="ph ph-file-pdf"></i> PDFs</span></div></div></div>'
+ +'<div class="progress-bar"><div class="progress-fill" style="width:'+pct(dn,its.length)+'%"></div></div></div>'}
+function renderAcervo(){
+ const list=$('acervo-list-screen'),det=$('module-detail-view');
+ if(CUR_MOD){list.style.display='none';det.style.display='block';$('module-title').textContent=CUR_MOD.n;
+  const row=(it,idx)=>{const k=itemKey(it),done=DONE.has(k),fav=FAV.has(k);
+   const thumb=it.type==='v'
+    ?(it.y?'<img class="vid-thumb" loading="lazy" alt="" src="https://i.ytimg.com/vi/'+esc(it.y)+'/mqdefault.jpg">':'<span class="content-icon" style="color:var(--teal)"><i class="ph ph-film-strip"></i></span>')
+    :'<span class="content-icon icon-pdf"><i class="ph ph-file-pdf"></i></span>';
+   return '<div class="content-item'+(done?' watched':'')+'" onclick="openItem(\''+CUR_MOD.id+'\',\''+it.type+'\','+idx+')">'
+   +'<div class="content-info">'+thumb+'<span class="content-title">'+esc(it.t)+'</span></div>'
+   +'<i class="ph ph-star fav-btn'+(fav?' fav-on':'')+'" onclick="event.stopPropagation();toggleFav(\''+CUR_MOD.id+'\',\''+it.type+'\','+idx+')"></i>'
+   +'<span class="check-icon"><i class="ph ph-check-bold"></i></span></div>'};
+  $('videos-container').innerHTML=CUR_MOD.videos.map((v,i)=>row({...v,type:'v'},i)).join('')||'<div style="color:var(--text-muted);font-size:13px">Nenhum vídeo ainda — sincronize o acervo online ou o Drive.</div>';
+  $('apostilas-container').innerHTML=CUR_MOD.apostilas.map((a,i)=>row({...a,type:'a'},i)).join('')||'<div style="color:var(--text-muted);font-size:13px">Nenhum material ainda — sincronize o acervo online ou o Drive.</div>';
+  const rs=RESUMOS[CUR_MOD.id]||[],rc=$('resumos-container');
+  if(rc)rc.innerHTML=rs.length?rs.map((r,i)=>'<div class="resumo-item"><b>'+esc(r.t)+'</b><span class="fc-meta">'+r.d+'</span><div class="resumo-wrap">'+esc(r.c)+'</div><div style="margin-top:8px"><button class="btn-outline btn-sm" onclick="delResumo('+i+')">Excluir</button></div></div>').join('')
+   :'<div style="color:var(--text-muted);font-size:13px">Nada aqui ainda — cole o output do NotebookLM'+(CUR_MOD.id==='casos'?' ou registre o caso (anamnese, diagnóstico, conduta)':'')+'.</div>';
+  
+  const qContainer=$('questoes-container');
+  if(qContainer){
+    const subjQs = bankAll().filter(q => q.s === CUR_MOD.id);
+    if(subjQs.length > 0) {
+      const sc = QUIZS[CUR_MOD.id];
+      const scoreStr = sc && sc.t ? `<span class="quiz-deck-score" style="margin-left:8px;vertical-align:middle">melhor: ${Math.round(100*sc.s/sc.t)}%</span>` : '';
+      qContainer.innerHTML = `<div class="resume-card" style="margin:0;width:100%;background:linear-gradient(135deg, var(--bg-surface), var(--teal-dim));border-color:var(--teal)">
+          <div style="display:flex;flex-direction:column;gap:6px">
+              <div class="dash-title" style="color:var(--teal);margin:0">Vamos treinar?</div>
+              <b>Questões de ${esc(CUR_MOD.n)}</b>
+              <div style="font-size:12px;color:var(--text-muted)">${subjQs.length} questões disponíveis no banco ${scoreStr}</div>
+          </div>
+          <button class="btn-primary" onclick="go('view-treino'); setTimeout(()=>startQuiz('${CUR_MOD.id}'),100)"><i class="ph ph-play"></i> Iniciar Quiz</button>
+      </div>`;
+    } else {
+      qContainer.innerHTML = `<div class="content-item" style="opacity:0.6" onclick="go('view-treino'); setTimeout(openImport, 100)">
+          <div class="content-info"><i class="ph ph-upload-simple" style="font-size:24px;color:var(--text-muted)"></i> <span class="content-title">Nenhuma questão cadastrada para esta matéria. Clique aqui para importar.</span></div>
+      </div>`;
+    }
+  }
+  return}
+ list.style.display='block';det.style.display='none';
+ $('all-modules-container').innerHTML=MODULES.filter(m=>(!SUBJ||m.id===SUBJ)&&(m.id!=='drive'||itemsOf(m).length>0)).map(moduleCard).join('')
+ ||'<div style="padding:0 20px 40px;color:var(--text-muted)">Nenhum módulo para este filtro.</div>'}
+function openModule(id){CUR_MOD=MOD(id);renderAcervo()}
+function backAcervo(){CUR_MOD=null;renderAcervo()}
+function openResumoModal(){if(!CUR_MOD)return;
+ openModal('<div class="modal-title">📝 Novo resumo — '+esc(CUR_MOD.n)+'<button class="modal-close"><i class="ph ph-x"></i></button></div>'
+ +'<div class="form-group"><label class="form-label">Título</label><input id="rs-title" placeholder="Ex: IC — resumo do bloco"></div>'
+ +'<div class="form-group"><label class="form-label">Conteúdo</label><textarea class="imp-textarea" id="rs-body" style="min-height:220px" placeholder="Cole aqui o resumo do NotebookLM, mnemônicos ou o caso clínico..."></textarea></div>'
+ +'<div class="form-actions"><button class="btn-outline" onclick="closeModals()">Cancelar</button><button class="btn-primary" onclick="saveResumo()">Salvar</button></div>')}
+function saveResumo(){const t=cleanStr($('rs-title').value.trim()),c=cleanStr($('rs-body').value.trim());
+ if(!t||!c){toast('Preencha título e conteúdo','error');return}
+ (RESUMOS[CUR_MOD.id]=RESUMOS[CUR_MOD.id]||[]).unshift({t,c,d:todayKey()});
+ lsSet('acv_resumos',RESUMOS);saveCloud();closeModals();renderAcervo();addXP(3,'resumo arquivado');toast('Resumo salvo','success')}
+function delResumo(i){RESUMOS[CUR_MOD.id].splice(i,1);lsSet('acv_resumos',RESUMOS);saveCloud();renderAcervo()}
+function openItem(mid,type,idx){const m=MOD(mid);if(!m)return;const it=type==='v'?m.videos[idx]:m.apostilas[idx];if(!it)return;
+ lsSet('acv_last',{m:mid,type,idx});renderHome();
+ $('player-overlay').classList.add('show');$('player-title').textContent=it.t;
+ const fr=$('player-frame'),vd=$('player-video');
+ vd.oncanplay=vd.onerror=null;vd.pause();vd.removeAttribute('src');vd.load();
+ vd.style.display='none';fr.style.display='';
+ $('player-meta').textContent=m.n+(type==='v'?' · Videoaula':' · Material')+' ↗';
+ $('player-meta').onclick=()=>window.open(it.y?'https://youtu.be/'+it.y:(it.u||'#'),'_blank');
+ fr.onload=()=>showPLoading(false);
+ if(type==='v'&&it.y){showPLoading(true);fr.src='https://www.youtube.com/embed/'+it.y}
+ else if(type==='v'&&VIDEO_FILE_RE.test(it.u||'')){
+  fr.style.display='none';vd.style.display='block';showPLoading(true);
+  vd.oncanplay=()=>showPLoading(false);
+  vd.onerror=()=>{showPLoading(false);toast('Não foi possível carregar o vídeo','error')};
+  vd.src=it.u;vd.play().catch(()=>{});
+ }else{
+  let u=String(it.u||'');const gd=u.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+  if(gd)u='https://drive.google.com/file/d/'+gd[1]+'/preview';
+  else if(/drive\.google\.com/.test(u))u=u.replace(/\/view.*/,'/preview');
+  showPLoading(true);fr.src=u;
+ }
+ $('mark-btn').innerHTML='<i class="ph ph-check-circle"></i> Marcar como concluído';
+ $('mark-btn').onclick=()=>{const k=itemKey(it);
+  if(!DONE.has(k)){DONE.add(k);lsSet('acv_done',[...DONE]);addXP(2,type==='v'?'video assistido':'material lido');touchStreak();checkBadges()}
+  $('mark-btn').innerHTML='✅ Concluído';toast('Marcado como concluído','success')}}
+function closePlayer(){
+ $('player-overlay').classList.remove('show');
+ const fr=$('player-frame'),vd=$('player-video');
+ fr.onload=null;fr.src='about:blank';
+ vd.oncanplay=vd.onerror=null;vd.pause();vd.removeAttribute('src');vd.load();
+ vd.style.display='none';fr.style.display='';
+ showPLoading(false);renderAcervo();renderHome();updateBadges()}
+function toggleFav(mid,type,idx){const m=MOD(mid),it=type==='v'?m.videos[idx]:m.apostilas[idx],k=itemKey(it);
+ FAV.has(k)?FAV.delete(k):FAV.add(k);lsSet('acv_fav',[...FAV]);saveCloud();renderAcervo()}
+function openFavorites(){
+ let body='';
+ MODULES.forEach(m=>itemsOf(m).forEach(it=>{if(FAV.has(itemKey(it))){
+  const idx=it.type==='v'?m.videos.indexOf(it):m.apostilas.indexOf(it);
+  body+='<div class="content-item" onclick="closeModals();openItem(\''+m.id+'\',\''+it.type+'\','+idx+')">'
+  +'<div class="content-info"><span class="content-icon '+(it.type==='v'?'icon-video':'icon-pdf')+'"><i class="ph '+(it.type==='v'?'ph-play-circle':'ph-file-pdf')+'"></i></span>'
+  +'<span class="content-title">'+esc(it.t)+'</span></div><span style="font-size:11px;color:var(--text-muted)">'+esc(m.n)+'</span></div>'}}));
+ openModal('<div class="modal-title">⭐ Favoritos<button class="modal-close"><i class="ph ph-x"></i></button></div>'
+ +(body||'<div style="color:var(--text-muted);font-size:13px">Nenhum favorito ainda.</div>'))}
+
+/* ═══ TREINO: QUESTÕES (+ modo erradas) ═══ */
+const bankAll=()=>DECKS.flatMap(d=>d.qs.map(q=>({...q,s:d.subj})));
+function renderDecks(){
+ const all=bankAll(),byS={};all.forEach(q=>byS[q.s]=(byS[q.s]||0)+1);
+ $('bank-count').textContent=all.length+' questões';
+ $('bank-stats').innerHTML=Object.keys(byS).length?Object.entries(byS).map(([s,n])=>'<span class="chip">'+esc(MOD(s)?MOD(s).n:s)+': '+n+'</span>').join(''):'Nenhuma questão ainda. Clique em <b>Importar</b> para começar.';
+ const fd=$('fc-due');if(fd)fd.textContent=fcDue(buildFCList()).length;
+ $('decks-grid').innerHTML=(all.length?'<div class="quiz-deck-card" onclick="startQuiz(null)"><i class="ph ph-squares-four quiz-deck-icon"></i><div class="quiz-deck-title">Todos os assuntos</div><div class="quiz-deck-meta">'+all.length+' questões</div></div>':'')
+ +MODULES.filter(m=>!SUBJ||m.id===SUBJ).map(m=>{const n=byS[m.id]||0,sc=QUIZS[m.id];
+  if(m.id==='drive') return '';
+  return '<div class="quiz-deck-card" style="'+(n?'':'opacity:.45')+'" onclick="'+(n?"startQuiz('"+m.id+"')":"openImport()")+'">'
+  +'<i class="ph ph-cards quiz-deck-icon"></i><div class="quiz-deck-title">'+esc(m.n)+'</div>'
+  +'<div class="quiz-deck-meta">'+(n?n+' questões':'vazio — importar')+'</div>'
+  +(sc&&n&&sc.t?'<span class="quiz-deck-score">melhor: '+Math.round(100*sc.s/sc.t)+'%</span>':'')+'</div>'}).join('')}
+let QR=null;
+function startQuiz(subj){
+ let qs=bankAll().filter(q=>!subj||q.s===subj);if(!qs.length)return;
+ QR={qs:shuffle(qs).slice(0,50),i:0,subj,ans:[],correct:0,wrongMode:false};
+ $('quiz-list-screen').style.display='none';$('quiz-runner-screen').style.display='block';renderQuiz()}
+function startWrongQuiz(){
+ const qs=bankAll().filter(q=>WRONG.has(q.q));
+ if(!qs.length){toast('Nenhuma questão errada guardada 🎉','success');return}
+ QR={qs:shuffle(qs),i:0,subj:null,ans:[],correct:0,wrongMode:true};
+ $('quiz-list-screen').style.display='none';$('quiz-runner-screen').style.display='block';renderQuiz()}
+function renderQuiz(){
+ const r=QR;if(r.i>=r.qs.length)return finishQuiz();
+ const q=r.qs[r.i];
+ $('quiz-runner').innerHTML='<div><div class="quiz-progress-label"><span>Questão '+(r.i+1)+' de '+r.qs.length+'</span><span>'+r.correct+' acertos</span></div>'
+ +'<div class="quiz-progress-track"><div class="quiz-progress-fill" style="width:'+pct(r.i,r.qs.length)+'%"></div></div></div>'
+ +'<div class="quiz-question-card"><div class="quiz-question-text">'+esc(q.q)+'</div><div class="quiz-options">'
+ +q.opts.map((o,i)=>'<button class="quiz-option" onclick="answerQ('+i+')"><span class="quiz-option-letter">'+'ABCDE'[i]+'</span>'+esc(o)+'</button>').join('')
+ +'</div><div class="quiz-explanation" id="q-exp">'+esc(q.exp||'')+'</div></div>'
+ +'<div class="quiz-nav-row"><button class="btn-outline" onclick="quitQuiz()">Sair</button><button class="btn-primary" id="q-next" style="visibility:hidden" onclick="nextQ()">Próxima →</button></div>'}
+function answerQ(i){const r=QR,q=r.qs[r.i],btns=$$('#quiz-runner .quiz-option');
+ if(btns[0].classList.contains('locked'))return;
+ btns.forEach((b,j)=>{b.classList.add('locked');if(j===q.ans)b.classList.add('correct');else if(j===i)b.classList.add('wrong')});
+ r.ans.push(i);
+ if(i===q.ans){r.correct++;addXP(5,'acerto!');
+  if(WRONG.has(q.q)){WRONG.delete(q.q);lsSet('acv_wrong',[...WRONG]);updateWrongBtn()}}
+ else if(!WRONG.has(q.q)){WRONG.add(q.q);lsSet('acv_wrong',[...WRONG]);updateWrongBtn()}
+ $('q-exp').classList.add('show');$('q-next').style.visibility='visible';touchStreak()}
+function nextQ(){QR.i++;renderQuiz()}
+function finishQuiz(){const r=QR;
+ if(!r.wrongMode){const key=r.subj||'all',prev=QUIZS[key]||{s:0,t:0};
+  QUIZS[key]={s:prev.s+r.correct,t:prev.t+r.qs.length};lsSet('acv_quiz',QUIZS);checkBadges()}
+ const zero=r.wrongMode&&r.correct===r.qs.length;
+ if(zero)confetti();
+ $('quiz-runner').innerHTML='<div class="quiz-result-card"><i class="ph '+(zero?'ph-party-popper':'ph-trophy')+'" style="font-size:40px;color:var(--amber)"></i>'
+ +'<div class="quiz-result-score">'+pct(r.correct,r.qs.length)+'%</div>'
+ +'<div style="color:var(--text-secondary)">'+(zero?'🎉 Você zerou as erradas!':r.correct+' de '+r.qs.length+' corretas')+'</div>'
+ +'<div style="display:flex;flex-direction:column;gap:8px;width:100%;margin-top:14px;max-height:300px;overflow-y:auto">'
+ +r.qs.map((q,i)=>'<div class="quiz-review-item '+(r.ans[i]===q.ans?'ok':'fail')+'"><i class="ph '+(r.ans[i]===q.ans?'ph-check-circle':'ph-x-circle')+'"></i><span>'+esc(q.q.slice(0,80))+'</span></div>').join('')+'</div>'
+ +'<div style="display:flex;gap:8px;margin-top:16px"><button class="btn-outline" onclick="quitQuiz()">Voltar</button>'
+ +(r.wrongMode?'<button class="btn-primary" onclick="startWrongQuiz()">Revisar de novo</button>'
+  :'<button class="btn-primary" onclick="startQuiz('+(r.subj?"'"+r.subj+"'":'null')+')">Repetir</button>')+'</div></div>';
+ updateWrongBtn()}
+function quitQuiz(){QR=null;$('quiz-runner-screen').style.display='none';$('quiz-list-screen').style.display='block';renderDecks();updateBadges();updateWrongBtn()}
+function updateWrongBtn(){const el=$('wrong-count');if(el)el.textContent=WRONG.size}
+function openImport(){
+ openModal('<div class="modal-title"><i class="ph ph-upload-simple"></i> Importar questões<button class="modal-close"><i class="ph ph-x"></i></button></div>'
+ +'<div class="form-group"><label class="form-label">Matéria</label><select id="imp-subj">'+MODULES.filter(m=>m.id!=='drive').map(m=>'<option value="'+m.id+'">'+m.n+'</option>').join('')+'</select></div>'
+ +'<div class="form-group"><label class="form-label">Cole as questões (texto ou JSON)</label><textarea class="imp-textarea" id="imp-txt" placeholder="P: enunciado\na) opção 1\nb) opção 2\nc) opção 3\nd) opção 4\nR: a\nE: comentário"></textarea></div>'
+ +'<div style="font-size:11px;color:var(--text-muted)">Separe questões por linha em branco. JSON: [{"q":"","opts":["","","",""],"ans":0,"exp":""}]</div>'
+ +'<div class="form-actions"><button class="btn-outline" onclick="previewImport()">Verificar</button><button class="btn-primary" onclick="saveImport()">Importar</button></div>')}
+function parseQs(txt){txt=String(txt||'').trim();
+ if(txt[0]==='['){try{return JSON.parse(txt).filter(q=>q.q&&q.opts&&q.opts.length>=2)}catch(e){return[]}}
+ const out=[];
+ txt.split(/\n\s*\n/).forEach(b=>{let q='',opts=[],ans=-1,exp='';
+  b.split('\n').map(l=>l.trim()).filter(Boolean).forEach(l=>{
+   if(/^p[:\-]/i.test(l))q=l.replace(/^p[:\-]\s*/i,'');
+   else if(/^[a-e][\)\.\-]\s/i.test(l))opts.push(l.replace(/^[a-e][\)\.\-]\s*/i,''));
+   else if(/^r[:\-]/i.test(l))ans='abcde'.indexOf((l.replace(/^r[:\-]\s*/i,'')[0]||'').toLowerCase());
+   else if(/^e[:\-]/i.test(l))exp=l.replace(/^e[:\-]\s*/i,'');
+   else if(q&&!opts.length)q+=' '+l});
+  if(q&&opts.length>=2&&ans>=0)out.push({q,opts,ans,exp})});
+ return out}
+function previewImport(){const qs=parseQs($('imp-txt').value);toast(qs.length+' questões válidas encontradas',qs.length?'success':'error')}
+function saveImport(){const qs=deepClean(parseQs($('imp-txt').value));
+ if(!qs.length){toast('Nada para importar — verifique o formato','error');return}
+ const s=$('imp-subj').value;DECKS.push({id:'d'+Date.now(),subj:s,name:MOD(s).n,qs});lsSet('acv_decks',DECKS);
+ closeModals();renderDecks();checkBadges();addXP(Math.min(qs.length,20),'banco ampliado');
+ toast(qs.length+' questões importadas em '+MOD(s).n,'success')}
+
+/* ═══ FLASHCARDS + SRS ═══ */
+function buildFCList(){
+ const out=[];
+ DECKS.forEach(d=>d.qs.forEach(q=>{
+  const back=(q.opts&&q.opts[q.ans]!=null?'R: '+q.opts[q.ans]:'')+(q.exp?'\n'+q.exp:'');
+  out.push({f:q.q,b:back||'—',s:d.subj})}));
+ FCS.forEach(c=>out.push({f:c.f,b:c.b,s:c.s||'x'}));
+ return out}
+const fcKey=c=>'fc:'+hsh((c.f||'')+'::'+(c.b||''));
+function fcState(k){return FCSRS[k]||(FCSRS[k]={d:todayKey(),iv:0,e:2.5})}
+function fcDue(list){const t=todayKey();return list.filter(c=>fcState(fcKey(c)).d<=t)}
+function saveFC(){lsSet('acv_fc',FCS);lsSet('acv_fc_srs',FCSRS);saveCloud()}
+let FCR=null;
+function startFC(){const list=fcDue(buildFCList());
+ if(!list.length){toast('Nada para revisar hoje 🎉','success');return}
+ FCR={list:shuffle(list),i:0,shown:false};
+ $('quiz-list-screen').style.display='none';$('quiz-runner-screen').style.display='block';renderFC()}
+function renderFC(){const r=FCR;if(!r||r.i>=r.list.length)return finishFC();
+ const c=r.list[r.i],st=fcState(fcKey(c));
+ $('quiz-runner').innerHTML='<div><div class="quiz-progress-label"><span>Card '+(r.i+1)+' / '+r.list.length+'</span><span>revisão espaçada</span></div>'
+ +'<div class="quiz-progress-track"><div class="quiz-progress-fill" style="width:'+pct(r.i,r.list.length)+'%"></div></div></div>'
+ +'<div class="quiz-question-card"><div class="fc-meta">'+esc(MOD(c.s)?MOD(c.s).n:'Card personalizado')+' · voltar em: '+st.iv+'d · facilidade: '+st.e.toFixed(2)+'</div>'
+ +'<div class="quiz-question-text">'+esc(c.f)+'</div>'
+ +(r.shown?'<div class="quiz-explanation show" style="white-space:pre-wrap">'+esc(c.b)+'</div>'
+   +'<div class="srs-btns"><button class="fc-btn" style="color:var(--rose)" onclick="gradeFC(0)">Errei</button>'
+   +'<button class="fc-btn" style="color:var(--amber)" onclick="gradeFC(1)">Difícil</button>'
+   +'<button class="fc-btn" style="color:var(--green)" onclick="gradeFC(2)">Boa</button>'
+   +'<button class="fc-btn" style="color:var(--teal)" onclick="gradeFC(3)">Fácil</button></div>'
+  :'<button class="btn-primary" style="margin-top:14px" onclick="FCR.shown=true;renderFC()"><i class="ph ph-eye"></i> Mostrar resposta</button>')
+ +'</div><div class="quiz-nav-row"><button class="btn-outline" onclick="quitFC()">Sair</button></div>'}
+function gradeFC(g){const r=FCR,c=r.list[r.i],st=fcState(fcKey(c));r.i++;
+ if(g===0){st.iv=0;st.e=Math.max(1.3,st.e-.2);st.d=todayKey();r.list.push(c)}
+ else if(g===1){st.iv=Math.max(1,Math.round((st.iv||1)*1.2));st.e=Math.max(1.3,st.e-.15)}
+ else if(g===2){st.iv=st.iv<1?1:Math.round(st.iv*st.e)}
+ else{st.iv=st.iv<1?2:Math.round(st.iv*st.e*1.3);st.e=Math.min(3.2,st.e+.05)}
+ if(g>0){st.iv=Math.min(st.iv,365);st.d=addD(todayKey(),st.iv)}
+ addXP(g===3?2:1,'revisão espaçada');touchStreak();saveFC();renderFC()}
+function finishFC(){const n=FCR?FCR.list.length:0;FCR=null;confetti();
+ $('quiz-runner').innerHTML='<div class="quiz-result-card"><i class="ph ph-stack" style="font-size:40px;color:var(--teal)"></i>'
+ +'<div class="quiz-result-score">Sessão concluída</div>'
+ +'<div style="color:var(--text-secondary)">'+n+' cards revisados</div>'
+ +'<div style="color:var(--text-muted);font-size:12px">Os errados voltam hoje/amanhã · os fáceis demoram mais</div>'
+ +'<button class="btn-primary" style="margin-top:16px" onclick="quitFC()">Voltar ao Treino</button></div>'}
+function quitFC(){FCR=null;$('quiz-runner-screen').style.display='none';$('quiz-list-screen').style.display='block';renderDecks()}
+function openFCModal(){openModal('<div class="modal-title"><i class="ph ph-plus"></i> Novo flashcard<button class="modal-close"><i class="ph ph-x"></i></button></div>'
+ +'<div class="form-group"><label class="form-label">Frente (pergunta)</label><textarea class="imp-textarea" id="fc-front" style="min-height:80px"></textarea></div>'
+ +'<div class="form-group"><label class="form-label">Verso (resposta)</label><textarea class="imp-textarea" id="fc-back" style="min-height:80px"></textarea></div>'
+ +'<div class="form-actions"><button class="btn-outline" onclick="closeModals()">Cancelar</button><button class="btn-primary" onclick="saveFCNew()">Salvar</button></div>')}
+function saveFCNew(){const f=cleanStr($('fc-front').value.trim()),b=cleanStr($('fc-back').value.trim());
+ if(!f||!b){toast('Preencha frente e verso','error');return}
+ FCS.push({f,b,s:'x'});saveFC();closeModals();renderDecks();toast('Card criado — aparece na revisão de hoje','success')}
+function exportAnki(){const rows=buildFCList().map(c=>[c.f.replace(/\s+/g,' ').trim(),c.b.replace(/\s+/g,' ').trim(),MOD(c.s)?MOD(c.s).n:'geral']);
+ if(!rows.length){toast('Nenhum card para exportar','error');return}
+ const tsv='\uFEFF'+rows.map(r=>r.map(x=>x.replace(/\t/g,' ')).join('\t')).join('\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([tsv],{type:'text/tab-separated-values'}));
+ a.download='cuscuz-med-anki.txt';a.click();
+ toast(rows.length+' cards — no Anki: Arquivo › Importar (separador Tab)','success')}
+
+/* ═══ SIMULADOS ═══ */
+let SR=null,SRTIMER=null;
+function renderSim(){
+ const qs=bankAll();
+ $('sim-config').innerHTML='<div><b style="font-size:15px">⏱️ Montar simulado</b><div style="font-size:12px;color:var(--text-muted)">Banco atual: '+qs.length+' questões</div></div>'
+ +'<div><label class="sim-label">Matérias (nenhuma = todas)</label><div class="chips" id="sim-subs">'
+ +MODULES.filter(m=>m.id!=='drive').map(m=>'<span class="chip" data-sim="'+m.id+'" onclick="this.classList.toggle(\'active\')">'+m.n+'</span>').join('')+'</div></div>'
+ +'<div class="form-row"><div><label class="sim-label">Quantidade</label><select class="sim-select" id="sim-n"><option>10</option><option selected>20</option><option>30</option><option value="all">Todas</option></select></div>'
+ +'<div><label class="sim-label">Minutos</label><input class="sim-select" id="sim-min" type="number" placeholder="auto (2/questão)"></div></div>'
+ +'<button class="btn-primary" style="align-self:flex-start" onclick="startSim()">Iniciar simulado</button>';
+ $('sim-history').innerHTML=SIMS.length?[...SIMS].reverse().map(s=>'<div class="sim-history-item"><span>'+s.d+' · '+esc(s.name||'Simulado')+'</span><span><b style="color:var(--teal)">'+s.pct+'%</b> <span style="color:var(--text-muted)">('+s.s+'/'+s.n+')</span></span></div>').join('')
+ :'<div style="color:var(--text-muted);font-size:13px">Nenhum simulado feito ainda.</div>'}
+function startSim(){
+ const subs=$$('#sim-subs .chip.active').map(c=>c.dataset.sim);
+ let qs=bankAll().filter(q=>!subs.length||subs.includes(q.s));
+ if(!qs.length){toast('Sem questões no banco — importe primeiro','error');return}
+ const nSel=$('sim-n').value,n=nSel==='all'?qs.length:+nSel;
+ qs=shuffle(qs).slice(0,n);
+ const min=+$('sim-min').value||Math.max(5,n*2);
+ SR={qs,i:0,ans:Array(n).fill(-1),min,left:min*60,name:'Sim '+todayKey()};
+ $('sim-config-screen').style.display='none';$('sim-runner-screen').style.display='block';
+ renderSimQ();startSimTimer()}
+function startSimTimer(){clearInterval(SRTIMER);
+ SRTIMER=setInterval(()=>{if(!SR){clearInterval(SRTIMER);return}
+  SR.left--;const el=$('sim-timer');if(!el)return;
+  el.textContent=Math.floor(SR.left/60)+':'+String(SR.left%60).padStart(2,'0');
+  el.className='sim-timer'+(SR.left<60?' danger':SR.left<SR.min*12?' warn':'');
+  const f=$('sim-time-fill');if(f)f.style.width=(SR.left/(SR.min*60)*100)+'%';
+  if(SR.left<=0){clearInterval(SRTIMER);toast('⏰ Tempo esgotado!','error');finishSim()}},1000)}
+function renderSimQ(){
+ const r=SR,q=r.qs[r.i];
+ $('sim-runner').innerHTML='<div><div class="quiz-progress-label"><span>Questão '+(r.i+1)+' / '+r.qs.length+'</span>'
+ +'<span class="sim-timer" id="sim-timer">'+Math.floor(r.left/60)+':'+String(r.left%60).padStart(2,'0')+'</span></div>'
+ +'<div class="sim-time-track"><div class="sim-time-fill" id="sim-time-fill" style="width:'+(r.left/(r.min*60)*100)+'%"></div></div></div>'
+ +'<div class="quiz-question-card"><div class="quiz-question-text">'+esc(q.q)+'</div><div class="quiz-options">'
+ +q.opts.map((o,i)=>'<button class="quiz-option'+(r.ans[r.i]===i?' correct':'')+'" onclick="simAnswer('+i+')"><span class="quiz-option-letter">'+'ABCDE'[i]+'</span>'+esc(o)+'</button>').join('')
+ +'</div></div><div class="sim-gabarito">'
+ +r.qs.map((_,i)=>'<div class="sim-nav-cell'+(r.ans[i]>=0?' ans':'')+(i===r.i?' cur':'')+'" onclick="simGo('+i+')">'+(i+1)+'</div>').join('')
+ +'</div><div class="quiz-nav-row"><button class="btn-outline" onclick="if(confirm(\'Abandonar o simulado?\')){clearInterval(SRTIMER);quitSim()}">Sair</button>'
+ +'<button class="btn-primary" onclick="if(confirm(\'Corrigir agora?\'))finishSim()">Finalizar</button></div>'}
+function simAnswer(i){SR.ans[SR.i]=i;renderSimQ()}
+function simGo(i){SR.i=i;renderSimQ()}
+function finishSim(){clearInterval(SRTIMER);const r=SR;
+ const s=r.qs.reduce((a,q,i)=>a+(r.ans[i]===q.ans?1:0),0);
+ SIMS.push({d:todayKey(),n:r.qs.length,s,pct:pct(s,r.qs.length),name:r.name});lsSet('acv_sims',SIMS);
+ addXP(s*3,'simulado');touchStreak();checkBadges();
+ $('sim-runner').innerHTML='<div class="quiz-result-card"><i class="ph ph-seal-check" style="font-size:40px;color:var(--teal)"></i>'
+ +'<div class="quiz-result-score">'+pct(s,r.qs.length)+'%</div>'
+ +'<div style="color:var(--text-secondary)">'+s+' de '+r.qs.length+' · salvo no histórico</div>'
+ +'<div style="display:flex;flex-direction:column;gap:8px;width:100%;margin-top:14px;max-height:300px;overflow-y:auto">'
+ +r.qs.map((q,i)=>'<div class="quiz-review-item '+(r.ans[i]===q.ans?'ok':'fail')+'"><i class="ph '+(r.ans[i]===q.ans?'ph-check-circle':'ph-x-circle')+'"></i><span>'+esc(q.q.slice(0,80))+' <b style="color:var(--green)">→ '+'ABCDE'[q.ans]+'</b></span></div>').join('')+'</div>'
+ +'<button class="btn-primary" style="margin-top:16px" onclick="quitSim()">Voltar</button></div>'}
+function quitSim(){SR=null;$('sim-runner-screen').style.display='none';$('sim-config-screen').style.display='block';renderSim()}
+
+/* ═══ HOME / DASH / FILTROS ═══ */
+const USING_DEMO=false; // true só quando houver conteúdo de exemplo embutido
+function stat(i,l,v){return '<div class="quiz-deck-card" style="cursor:default;gap:4px"><span style="font-size:22px">'+i+'</span><span class="metric-value">'+v+'</span><span class="metric-label">'+l+'</span></div>'}
+function renderHome(){
+ $('demo-banner').style.display=USING_DEMO?'block':'none';
+ if(USING_DEMO)$('demo-banner').innerHTML='📦 <b>Modo demonstração:</b> conteúdo de exemplo. O Drive será sincronizado automaticamente se as chaves estiverem configuradas.';
+ const last=lsGet('acv_last',null);
+ $('resume-card').innerHTML=(last&&MOD(last.m))?(()=>{const m=MOD(last.m),it=last.type==='v'?m.videos[last.idx]:m.apostilas[last.idx];
+  return it?'<div class="resume-card"><div><div class="dash-title">Continuar de onde parou</div><b>'+esc(it.t)+'</b> <span style="color:var(--text-muted);font-size:12px">· '+esc(m.n)+'</span></div><button class="btn-primary" onclick="openItem(\''+last.m+'\',\''+last.type+'\','+last.idx+')"><i class="ph ph-play"></i> Continuar</button></div>':''})():'';
+ $('modules-recent').innerHTML=MODULES.filter(m=>itemsOf(m).length).slice(0,4).map(moduleCard).join('')||'<div style="padding:0 20px;color:var(--text-muted)">Nenhum conteúdo carregado.</div>';
+ const vids=[...DONE].filter(k=>k.includes(':yt:')||k.includes('drive.google')).length,pdfs=[...DONE].length-vids;
+ const qtot=Object.values(QUIZS).reduce((a,s)=>a+(s.t||0),0);
+ const studyMin=Object.values(DB.prep.sessions).reduce((a,b)=>a+b,0);
+ $('dash-stats').innerHTML='<div class="cards-grid" style="padding:0;gap:12px">'
+ +stat('🎬','Videoaulas',vids)+stat('📄','Materiais',pdfs)+stat('✏️','Questões',qtot)
+ +stat('⏱️','Horas de estudo',Math.floor(studyMin/60))+stat('⚡','XP',DB.xp)+stat('🔥','Sequência',DB.streak+' dias')+'</div>'}
+function renderDash(){
+ const d=$('dashboard'),items=DB.plan?DB.plan.items:[],dn=items.filter(i=>DB.done[i.d+'#'+i.ix]).length;
+ const total=MODULES.reduce((a,m)=>a+itemsOf(m).length,0);
+ const overall=items.length?pct(dn,items.length):pct([...DONE].length,total);
+ const C=2*Math.PI*57;
+ let examCard='<div style="font-size:12px;color:var(--text-muted)">Sem prova definida — use ⚡ Planejar</div>';
+ if(DB.plan&&DB.plan.exam){const dd=diffDays(todayKey(),DB.plan.exam.d);
+  const ur=dd>=60?['relaxed','tranquilo']:dd>=30?['normal','normal']:dd>=14?['urgent','faltando pouco']:dd>=0?['critical','reta final']:['relaxed','concluída'];
+  examCard='<div class="exam-card-header"><span class="exam-name">'+esc(DB.plan.exam.name)+'</span><span class="exam-urgency urgency-'+ur[0]+'">'+ur[1]+'</span></div>'
+  +'<div style="display:flex;gap:18px"><div><div class="exam-stat-val">'+Math.max(0,dd)+'</div><div class="exam-stat-label">dias</div></div>'
+  +'<div><div class="exam-stat-val">'+pct(dn,items.length)+'%</div><div class="exam-stat-label">plano</div></div></div>'}
+ const byS={};items.forEach(i=>{(byS[i.s]=byS[i.s]||[0,0])[1]++;if(DB.done[i.d+'#'+i.ix])byS[i.s][0]++});
+ const subj=Object.entries(byS).map(([s,v])=>'<div class="subj-row"><span class="subj-name">'+esc(MOD(s)?MOD(s).n:s)+'</span><div class="subj-bar"><div class="subj-bar-fill" style="width:'+pct(v[0],v[1])+'%;background:var(--teal)"></div></div><span class="subj-pct">'+pct(v[0],v[1])+'%</span></div>').join('')
+ ||'<div style="font-size:12px;color:var(--text-muted)">—</div>';
+ const lv=level();
+ d.innerHTML='<div class="dash-section"><div class="dash-title">Progresso</div>'
+ +'<div class="progress-ring-wrap"><div class="progress-ring"><svg viewBox="0 0 130 130"><circle class="ring-bg" cx="65" cy="65" r="57"/><circle class="ring-fg" cx="65" cy="65" r="57" stroke-dasharray="'+C+'" stroke-dashoffset="'+(C*(1-overall/100)).toFixed(1)+'"/></svg>'
+ +'<div class="ring-text"><span class="ring-pct">'+overall+'%</span><span class="ring-sub">'+(items.length?'do plano':'do acervo')+'</span></div></div></div></div>'
+ +'<div class="dash-section"><div class="dash-title">Prova</div><div class="exam-card">'+examCard+'</div></div>'
+ +'<div class="dash-section"><div class="dash-title">Matérias</div>'+subj+'</div>'
+ +'<div class="dash-section"><div class="dash-title">Gamificação</div>'
+ +'<div class="game-level"><span class="game-level-num">LV '+lv+'</span><div class="game-xp-bar"><div class="game-xp-fill" style="width:'+(DB.xp%100)+'%"></div></div><span class="game-xp-text">'+(DB.xp%100)+'/100</span></div>'
+ +'<div class="game-streak">🔥 Sequência: <b>'+DB.streak+'</b> dia(s) · faltam <b>'+(100-DB.xp%100)+'</b> XP p/ LV '+(lv+1)+'</div>'
+ +'<div class="game-badges">'+BADGES.map(b=>'<span class="game-badge'+(DB.badges.includes(b.id)?'':' locked')+'">'
+  +(b.img?'<img src="'+esc(b.img)+'" style="width:24px;height:24px;border-radius:6px;object-fit:cover" alt="">':b.i)
+  +'<span class="game-badge-tip">'+esc(b.n)+'</span></span>').join('')+'</div></div>'}
+function setFilter(f){FILTER=f;$$('.nav-item[data-filter]').forEach(n=>n.classList.toggle('active',n.dataset.filter===f));renderAcervo()}
+function clearSubject(){SUBJ=null;CUR_MOD=null;$$('#subject-nav .nav-item').forEach(n=>n.classList.remove('active'));renderAcervo()}
+function buildSubjectNav(){$('subject-nav').innerHTML=MODULES.filter(m=>m.id!=='drive').map(m=>'<div class="nav-item" data-subj="'+m.id+'" onclick="pickSubject(\''+m.id+'\',this)"><i class="ph ph-bookmark"></i>'+m.n+'<span class="nav-badge" id="sn-'+m.id+'">0</span></div>').join('')}
+function pickSubject(s,el){SUBJ=s;CUR_MOD=null;$$('#subject-nav .nav-item').forEach(n=>n.classList.toggle('active',n===el));renderAcervo()}
+function updateBadges(){let tot=0,dn=0;
+ MODULES.forEach(m=>{const its=itemsOf(m),d=its.filter(i=>DONE.has(itemKey(i))).length;tot+=its.length;dn+=d;
+  const b=$('sn-'+m.id);if(b)b.textContent=its.length?d+'/'+its.length:'0'});
+ $('badge-total').textContent=tot;$('badge-done').textContent=dn;$('badge-pending').textContent=tot-dn}
+
+/* ═══ BUSCA GLOBAL ═══ */
+const searchDebounced=debounce(doSearch,180);
+function doSearch(q){
+ const box=$('search-results');if(!box)return;
+ const t=normAcc(q).trim();
+ if(t.length<2){box.style.display='none';box.innerHTML='';return}
+ const mods=[],items=[],res=[];
+ MODULES.forEach(m=>{
+  if(mods.length<6&&normAcc(m.n).includes(t))mods.push(m);
+  m.videos.forEach((v,i)=>{if(items.length<12&&normAcc(v.t).includes(t))items.push({mid:m.id,n:m.n,type:'v',idx:i,t:v.t})});
+  m.apostilas.forEach((a,i)=>{if(items.length<12&&normAcc(a.t).includes(t))items.push({mid:m.id,n:m.n,type:'a',idx:i,t:a.t})});
+  (RESUMOS[m.id]||[]).forEach(r=>{if(res.length<6&&(normAcc(r.t).includes(t)||normAcc(r.c).includes(t)))res.push({mid:m.id,n:m.n,t:r.t})});
+ });
+ let html='';
+ if(mods.length)html+='<div class="sr-grupo">Módulos</div>'+mods.map(m=>'<div class="sr-item" onclick="srGoModule(\''+m.id+'\')"><i class="ph ph-squares-four"></i>'+esc(m.n)+'</div>').join('');
+ if(items.length)html+='<div class="sr-grupo">Aulas e PDFs</div>'+items.map(x=>'<div class="sr-item" onclick="srOpenItem(\''+x.mid+'\',\''+x.type+'\','+x.idx+')"><i class="ph '+(x.type==='v'?'ph-play-circle':'ph-file-pdf')+'"></i>'+esc(x.t)+'<span class="sr-mod">'+esc(x.n)+'</span></div>').join('');
+ if(res.length)html+='<div class="sr-grupo">Resumos</div>'+res.map(x=>'<div class="sr-item" onclick="srGoModule(\''+x.mid+'\')"><i class="ph ph-notebook"></i>'+esc(x.t)+'<span class="sr-mod">'+esc(x.n)+'</span></div>').join('');
+ if(!html)html='<div class="sr-item" style="color:var(--text-muted)">Nada encontrado para "'+esc(q)+'"</div>';
+ box.innerHTML=html;box.style.display='block'}
+function srHide(){const b=$('search-results');if(b){b.style.display='none';b.innerHTML=''}const i=$('global-search');if(i)i.value=''}
+function srGoModule(id){srHide();go('view-acervo');openModule(id)}
+function srOpenItem(mid,type,idx){srHide();openItem(mid,type,idx)}
+
+/* ═══ EXPORT / IMPORT ═══ */
+function exportData(){
+ const payload={v:2,app:'cuscuz-med',exported:new Date().toISOString(),db:DB,done:[...DONE],fav:[...FAV],quiz:QUIZS,
+  last:lsGet('acv_last',null),days:lsGet('acv_days',[]),sims:SIMS,decks:DECKS,wrong:[...WRONG],
+  drive:DRIVE,users:lsGet('cuscuz_users',{}),resumos:RESUMOS,fc:FCS,fcsrs:FCSRS};
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(new Blob([JSON.stringify(payload)],{type:'application/json'}));
+ a.download='cuscuz-med-backup-'+todayKey()+'.json';a.click();toast('Backup exportado ✅','success')}
+function importData(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();
+ r.onload=()=>{try{const p=deepClean(JSON.parse(r.result));
+  if(!p.db){toast('Arquivo inválido','error');return}
+  if(!confirm('Substituir todos os dados locais por este backup?'))return;
+  lsSet(LS,p.db);lsSet('acv_done',p.done||[]);lsSet('acv_fav',p.fav||[]);lsSet('acv_quiz',p.quiz||{});
+  lsSet('acv_last',p.last||null);lsSet('acv_days',p.days||[]);lsSet('acv_sims',p.sims||[]);
+  lsSet('acv_decks',p.decks||[]);lsSet('acv_wrong',p.wrong||[]);lsSet('cuscuz_med_drive',p.drive||{videos:[],apostilas:[]});
+  lsSet('acv_resumos',p.resumos||{});lsSet('acv_fc',p.fc||[]);lsSet('acv_fc_srs',p.fcsrs||{});
+  if(p.users)lsSet('cuscuz_users',p.users);
+  toast('Backup restaurado! Recarregando...','success');setTimeout(()=>location.reload(),700)}catch(e){toast('Arquivo inválido','error')}};
+ r.readAsText(f);ev.target.value=''}
+
+/* ═══ INIT ═══ */
 window.addEventListener('DOMContentLoaded',()=>{
  applyTheme();
- injectExtras();
- catalog();
- buildSubjectNav();
- 
- if(localStorage.getItem('medplan_logged')==='1'){
-     // Será iniciado após o load do GAPI via checkSyncFile
+ try{if(firebaseConfig.databaseURL&&typeof firebase!=='undefined'){firebase.initializeApp(firebaseConfig);FBDB=firebase.database();CLOUD_ON=true}}catch(e){console.warn('Firebase off:',e)}
+ catalog();buildSubjectNav();
+ const searchInput = document.getElementById('global-search');
+ if(searchInput){
+   searchInput.addEventListener('input', e=>searchDebounced(e.target.value));
+   document.addEventListener('click', e => { if(!e.target.closest('#search-wrap')) srHide() });
  }
+ if(localStorage.getItem('medplan_logged')==='1'){SYNC_USER=localStorage.getItem('medplan_user');startApp()}else refreshAll();
+ updateWrongBtn();
 });
 window.addEventListener('load',()=>{if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'});
 </script>
